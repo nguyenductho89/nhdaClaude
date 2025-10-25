@@ -417,48 +417,64 @@ export default class GameScene extends Phaser.Scene {
   spawnGroundObstacle() {
     const { width } = this.scale;
 
-    // Ground obstacles - work/stress themed enemies
+    // Ground obstacles - work/stress themed enemies (uniform size)
     const groundObstacles = [
-      { key: 'stress', width: 40, height: 50, emoji: '😰', label: 'Stress' },
-      { key: 'deadline', width: 45, height: 55, emoji: '⏰', label: 'Deadline' },
-      { key: 'work', width: 40, height: 50, emoji: '💼', label: 'Công việc' },
-      { key: 'boss', width: 45, height: 60, emoji: '👔', label: 'Ông sếp' },
-      { key: 'overtime', width: 40, height: 55, emoji: '🌙', label: 'OT' },
-      { key: 'meeting', width: 45, height: 50, emoji: '📊', label: 'Meeting' }
+      { key: 'stress', emoji: '😰', label: 'Stress' },
+      { key: 'deadline', emoji: '⏰', label: 'Deadline' },
+      { key: 'work', emoji: '💼', label: 'Công việc' },
+      { key: 'boss', emoji: '👔', label: 'Ông sếp' },
+      { key: 'overtime', emoji: '🌙', label: 'OT' },
+      { key: 'meeting', emoji: '📊', label: 'Meeting' }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(groundObstacles);
 
-    // Create obstacle at ground level
-    const obstacleY = this.groundY - type.height / 2;
+    // Uniform size for all ground obstacles
+    const obstacleSize = 48; // Larger and consistent
+    const obstacleY = this.groundY - obstacleSize;
 
-    // Create emoji obstacle
-    const obstacle = this.add.text(width + 50, obstacleY, type.emoji, {
-      fontSize: '42px'
-    }).setOrigin(0.5);
+    // Container for emoji + label
+    const container = this.add.container(width + 50, obstacleY);
 
-    this.physics.add.existing(obstacle);
-    obstacle.body.setAllowGravity(false);
-    obstacle.body.setImmovable(true);
+    // Create emoji obstacle (larger)
+    const emoji = this.add.text(0, -5, type.emoji, {
+      fontSize: '48px'
+    }).setOrigin(0.5, 1);
 
-    // Tighter hitbox for fairer collision
-    obstacle.body.setSize(type.width, type.height);
-    obstacle.setData('type', type.key);
-    obstacle.setData('isFlying', false);
+    // Add label text below emoji
+    const label = this.add.text(0, 2, type.label, {
+      fontSize: '10px',
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      padding: { x: 3, y: 1 }
+    }).setOrigin(0.5, 0);
 
-    this.obstacles.add(obstacle);
+    container.add([emoji, label]);
+
+    // Physics on container
+    this.physics.add.existing(container);
+    container.body.setAllowGravity(false);
+    container.body.setImmovable(true);
+
+    // Uniform hitbox
+    container.body.setSize(42, 42);
+    container.setData('type', type.key);
+    container.setData('isFlying', false);
+
+    this.obstacles.add(container);
   }
 
   spawnFlyingEnemy() {
     const { width } = this.scale;
 
-    // Flying enemies - work stress flying at you
+    // Flying enemies - work stress (uniform size)
     const flyingEnemies = [
-      { key: 'email', width: 40, height: 35, emoji: '📧', label: 'Email khẩn' },
-      { key: 'report', width: 40, height: 35, emoji: '📄', label: 'Báo cáo' },
-      { key: 'phone', width: 35, height: 35, emoji: '📞', label: 'Điện thoại' },
-      { key: 'angry-boss', width: 45, height: 40, emoji: '😡', label: 'Sếp giận' },
-      { key: 'task', width: 40, height: 35, emoji: '📝', label: 'Task mới' }
+      { key: 'email', emoji: '📧', label: 'Email khẩn' },
+      { key: 'report', emoji: '📄', label: 'Báo cáo' },
+      { key: 'phone', emoji: '📞', label: 'Điện thoại' },
+      { key: 'angry-boss', emoji: '😡', label: 'Sếp giận' },
+      { key: 'task', emoji: '📝', label: 'Task mới' }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(flyingEnemies);
@@ -471,25 +487,40 @@ export default class GameScene extends Phaser.Scene {
     ];
     const flyY = Phaser.Utils.Array.GetRandom(flyHeights);
 
-    // Create flying enemy
-    const enemy = this.add.text(width + 50, flyY, type.emoji, {
-      fontSize: '38px'
-    }).setOrigin(0.5);
+    // Container for emoji + label
+    const container = this.add.container(width + 50, flyY);
 
-    this.physics.add.existing(enemy);
-    enemy.body.setAllowGravity(false);
-    enemy.body.setImmovable(true);
+    // Create emoji (larger and uniform)
+    const emoji = this.add.text(0, -5, type.emoji, {
+      fontSize: '42px'
+    }).setOrigin(0.5, 1);
 
-    // Hitbox
-    enemy.body.setSize(type.width, type.height);
-    enemy.setData('type', type.key);
-    enemy.setData('isFlying', true);
+    // Add label text below emoji
+    const label = this.add.text(0, 2, type.label, {
+      fontSize: '10px',
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      padding: { x: 3, y: 1 }
+    }).setOrigin(0.5, 0);
 
-    this.obstacles.add(enemy);
+    container.add([emoji, label]);
+
+    // Physics on container
+    this.physics.add.existing(container);
+    container.body.setAllowGravity(false);
+    container.body.setImmovable(true);
+
+    // Uniform hitbox
+    container.body.setSize(40, 40);
+    container.setData('type', type.key);
+    container.setData('isFlying', true);
+
+    this.obstacles.add(container);
 
     // Flying animation (bobbing up and down)
     this.tweens.add({
-      targets: enemy,
+      targets: container,
       y: flyY - 10,
       duration: 500,
       yoyo: true,
@@ -522,12 +553,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     const itemConfig = {
-      tien: { emoji: '💰', color: 0xFFD700, size: 20 },
-      tin: { emoji: '🏠', color: 0x8B4513, size: 25 },
-      nha: { emoji: '🏡', color: 0xFF6347, size: 30 },
-      xe: { emoji: '🚗', color: 0x4169E1, size: 30 },
-      soDo: { emoji: '📜', color: 0xFF1493, size: 25 },
-      vang: { emoji: '💍', color: 0xFFD700, size: 30 }
+      tien: { emoji: '💰', label: 'Tiền +10', size: 32 },
+      tin: { emoji: '🏠', label: 'Tin +50', size: 36 },
+      nha: { emoji: '🏡', label: 'Nhà +100', size: 40 },
+      xe: { emoji: '🚗', label: 'Xe +150', size: 40 },
+      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 36 },
+      vang: { emoji: '💍', label: 'Vàng +300', size: 40 }
     };
 
     const config = itemConfig[itemType];
@@ -536,20 +567,36 @@ export default class GameScene extends Phaser.Scene {
     const heightVariation = Phaser.Math.Between(-150, -50);
     const y = this.groundY + heightVariation;
 
-    const item = this.add.text(width + 50, y, config.emoji, {
+    // Container for emoji + label
+    const container = this.add.container(width + 50, y);
+
+    // Create emoji (uniform sizes)
+    const emoji = this.add.text(0, -5, config.emoji, {
       fontSize: `${config.size}px`
-    }).setOrigin(0.5);
+    }).setOrigin(0.5, 1);
 
-    this.physics.add.existing(item);
-    item.body.setAllowGravity(false);
-    item.setData('itemType', itemType);
-    item.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+    // Add label text below emoji
+    const label = this.add.text(0, 2, config.label, {
+      fontSize: '10px',
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: { x: 3, y: 1 }
+    }).setOrigin(0.5, 0);
 
-    this.collectibles.add(item);
+    container.add([emoji, label]);
+
+    // Physics on container
+    this.physics.add.existing(container);
+    container.body.setAllowGravity(false);
+    container.setData('itemType', itemType);
+    container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+
+    this.collectibles.add(container);
 
     // Floating animation
     this.tweens.add({
-      targets: item,
+      targets: container,
       y: y - 10,
       duration: 1000,
       yoyo: true,
@@ -607,6 +654,49 @@ export default class GameScene extends Phaser.Scene {
     this.isInvincible = true;
     this.player.setTint(0x00FFFF); // Cyan tint
 
+    // Create animated notification
+    const { width, height } = this.scale;
+    const notification = this.add.text(width / 2, height / 2 - 50, '🚗 BẤT TỬ 5S!', {
+      fontSize: '48px',
+      fontFamily: 'Arial',
+      color: '#00FFFF',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 6,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0).setScale(0.5);
+
+    // Animate in
+    this.tweens.add({
+      targets: notification,
+      alpha: 1,
+      scale: 1.2,
+      duration: 300,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        // Pulse animation
+        this.tweens.add({
+          targets: notification,
+          scale: 1.3,
+          duration: 500,
+          yoyo: true,
+          repeat: 8, // 5 seconds / 0.5s per pulse
+          ease: 'Sine.easeInOut'
+        });
+        // Fade out after 4.5 seconds
+        this.time.delayedCall(4500, () => {
+          this.tweens.add({
+            targets: notification,
+            alpha: 0,
+            y: notification.y - 50,
+            duration: 500,
+            onComplete: () => notification.destroy()
+          });
+        });
+      }
+    });
+
     this.time.addEvent({
       delay: GAME_CONSTANTS.INVINCIBILITY_DURATION,
       callback: () => {
@@ -619,6 +709,50 @@ export default class GameScene extends Phaser.Scene {
   activateMultiplier() {
     this.scoreMultiplier = GAME_CONSTANTS.MULTIPLIER_GOLD;
     this.multiplierText.setText(`⭐ x${this.scoreMultiplier}`).setVisible(true);
+
+    // Create animated notification
+    const { width, height } = this.scale;
+    const notification = this.add.text(width / 2, height / 2 - 50, '💍 ĐIỂM x2 - 10S!', {
+      fontSize: '48px',
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      fontStyle: 'bold',
+      stroke: '#FF8C00',
+      strokeThickness: 6,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: { x: 20, y: 10 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0).setScale(0.5);
+
+    // Animate in with bounce
+    this.tweens.add({
+      targets: notification,
+      alpha: 1,
+      scale: 1.2,
+      duration: 400,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        // Sparkle/pulse animation
+        this.tweens.add({
+          targets: notification,
+          scale: 1.3,
+          duration: 600,
+          yoyo: true,
+          repeat: 15, // 10 seconds / 0.6s per pulse
+          ease: 'Sine.easeInOut'
+        });
+        // Fade out after 9.5 seconds
+        this.time.delayedCall(9500, () => {
+          this.tweens.add({
+            targets: notification,
+            alpha: 0,
+            y: notification.y - 50,
+            scale: 0.8,
+            duration: 500,
+            onComplete: () => notification.destroy()
+          });
+        });
+      }
+    });
 
     this.time.addEvent({
       delay: GAME_CONSTANTS.MULTIPLIER_DURATION,

@@ -1,353 +1,253 @@
-# 🦖 Gameplay Update: Mario → Dinosaur Endless Runner
+# 🎮 Current Gameplay - Endless Runner
 
-## 📋 Summary of Changes
-
-PRD đã được cập nhật từ **Mario Platformer** sang **Dinosaur Endless Runner** (Chrome Dino style)
-
----
-
-## 🎮 Major Gameplay Changes
-
-### Before (Mario Platformer)
-- ❌ Platformer with left/right movement
-- ❌ Multiple controls (move, jump, sprint)
-- ❌ Level-based với đích cuối
-- ❌ Checkpoints
-- ❌ Tương đối phức tạp cho người mới
-
-### After (Dinosaur Endless Runner)
-- ✅ Auto-run endless runner
-- ✅ Single button control (jump only)
-- ✅ Procedurally generated obstacles
-- ✅ Time-based or collision-based end
-- ✅ Cực kỳ đơn giản - học trong 5 giây
+## 📋 Game Type
+**Dinosaur Endless Runner** (Chrome Dino Style) với theme công việc/stress
 
 ---
 
-## 🕹️ Control Changes
+## 🎯 Core Mechanics
 
-### Desktop
-**Before:**
-- Arrow keys: Move left/right
-- Spacebar: Jump
-- Shift: Sprint
+### Auto-Run
+- Nhân vật chạy tự động từ trái sang phải
+- Tốc độ tăng dần: 300px/s → 600px/s
+- Không có điều khiển trái/phải
 
-**After:**
-- **Spacebar**: Jump (chỉ 1 nút!)
-- **Up Arrow**: Jump (alternative)
-- **Click anywhere**: Jump (mouse)
-- Tap vs Hold = Low jump vs High jump
+### Jump Controls
+**Desktop:**
+- Spacebar / Up Arrow / Click anywhere
 
-### Mobile
-**Before:**
-- Virtual D-pad (left/right)
-- Jump button
-- Sprint button
-- 3 controls phức tạp
+**Mobile:**
+- Nút ⬆ góc phải dưới (100px, ultra responsive)
+- Tap anywhere cũng được (desktop mode)
 
-**After:**
-- **Tap anywhere on screen** = Jump
-- **Hold tap** = High jump
-- NO buttons needed!
-- Perfect cho người lớn tuổi
+### Game Duration
+- **2 phút** để hoàn thành
+- Có thể kết thúc sớm nếu va chạm obstacles
 
 ---
 
-## 🎯 Scoring System Changes
+## 😰 Enemies - Work/Stress Theme
 
-### Before (Platformer)
-- Items collected
-- Time to complete
-- Completion bonus
+### Ground Enemies (70% spawn rate)
+- **😰 Stress** - Lo âu công việc
+- **⏰ Deadline** - Hạn chót
+- **💼 Công việc** - Áp lực work
+- **👔 Ông sếp** - Ông sếp khó tính
+- **🌙 OT** - Làm thêm giờ
+- **📊 Meeting** - Cuộc họp
 
-### After (Endless Runner)
+### Flying Enemies (30% spawn rate)
+Bay ở 3 độ cao khác nhau:
+- **📧 Email khẩn** - Email cần trả lời gấp
+- **📄 Báo cáo** - Report cần làm
+- **📞 Điện thoại** - Cuộc gọi không ngừng
+- **😡 Sếp giận** - Ông sếp nổi giận
+- **📝 Task mới** - Công việc mới xuất hiện
+
+**Flying Heights:**
+- Low: 80px (cúi người hoặc timing)
+- Medium: 120px (nhảy vừa)
+- High: 160px (nhảy cao)
+
+---
+
+## 💰 Collectibles - Của Hồi Môn
+
+### Items (theo độ hiếm)
+- **💰 Tiền** (50%) - 10 điểm
+- **🏠 Tin** (25%) - 50 điểm
+- **🏡 Nhà** (13%) - 100 điểm
+- **🚗 Xe** (6%) - 150 điểm + 5s invincibility
+- **📜 Sổ đỏ** (4%) - 200 điểm
+- **💍 Vàng** (2%) - 300 điểm + x2 multiplier 10s
+
+### Spawn Mechanics
+- Procedurally generated
+- Risk vs Reward positioning
+- Cao/thấp khác nhau, phải timing nhảy
+- Spawn mỗi 2 giây
+
+---
+
+## 📊 Scoring System
+
+### Score Calculation
 ```
-Score = Distance + Items + Bonuses
+Final Score = Distance + Items + Bonuses
 
 Distance: 1 point/meter (auto-increment)
+
 Items:
-  - Tiền: 10 pts
-  - Tin: 50 pts
-  - Nhà: 100 pts
-  - Xe: 150 pts (+ invincibility)
-  - Sổ đỏ: 200 pts
-  - Vàng: 300 pts (+ 2x multiplier)
+- Tiền: 10 pts
+- Tin: 50 pts
+- Nhà: 100 pts
+- Xe: 150 pts (+ invincibility)
+- Sổ đỏ: 200 pts
+- Vàng: 300 pts (+ 2x multiplier)
 
 Bonuses:
-  - Combo (5+ items): +50 pts
-  - Survival time: +10 pts/10s
-  - Perfect run (2 min no hit): +1000 pts
-  - Multipliers: x1.5 (combo), x2 (gold item)
+- Combo (5+ items): +50 pts
+- Survival time: +10 pts/10s
+- Perfect run (no hit + 2 min): +1000 pts
+
+Multipliers:
+- Combo active: x1.5
+- Gold item: x2 (10 seconds)
 ```
 
 ---
 
-## 🚧 Obstacles Changes
+## 🎯 Difficulty Scaling
 
-### Before (Platformer)
-- Platforms to jump on
-- Enemies (Goomba, Koopa)
-- Pipes, blocks
-- Static level design
+### Speed Progression
+- Start: 300px/s
+- Max: 600px/s
+- Increase: +30px/s every 30 seconds
 
-### After (Endless Runner)
-**Ground Obstacles:**
-- 🎂 Bánh cưới (low - easy)
-- 🎁 Hộp quà (medium)
-- 💐 Bó hoa (high jump needed)
-- 🍾 Chai champagne (tall)
-- 💒 Cổng hoa (wide timing)
+### Obstacle Density
+- Gap: 1500-3000ms (start)
+- Reduces: 200ms every tier
+- Min gap: 1000ms (max difficulty)
 
-**Flying Obstacles:**
-- 🎈 Balloons (duck or time jump)
-- 🕊️ Chim bồ câu (timing)
-- 🎊 Confetti cannons
+### Safe Periods
+- First 5 seconds: no obstacles
+- Every 45 seconds: 3s safe zone (breather)
 
 ---
 
-## 📊 Difficulty Progression
+## 🏆 End Conditions
 
-### Before (Platformer)
-- Fixed level difficulty
-- Optional checkpoints
+### Game Over
+- Collision with any obstacle
+- Shows score + stats
 
-### After (Endless Runner)
-- **Dynamic difficulty scaling:**
-  - Speed: 300px/s → 600px/s (gradual)
-  - Obstacle density increases every 30s
-  - Max difficulty at 2 minutes
-  - Random "breather" periods (safe zones)
+### Victory
+- Complete 2 minutes without dying
+- +1000 Perfect Run Bonus (if no collision)
+- Shows full stats + leaderboard
 
 ---
 
-## 🎨 Visual Style Changes
+## 📱 Mobile Optimizations
 
-### Before (Platformer)
-- Tileset-based levels
-- Platform graphics
-- Enemy sprites
-- Level backgrounds
+### Fullscreen UI
+- **Margins:** 5px absolute minimum
+- **Canvas:** 100vw x 100vh (RESIZE mode)
+- **Ground:** 30px from bottom
 
-### After (Endless Runner)
-- **Parallax scrolling backgrounds:**
-  - Sky layer (static/slow)
-  - Cloud layer (medium)
-  - Mountain layer (fast)
-  - Ground layer (repeating tile)
-- **Simpler assets needed:**
-  - Character sprite (running animation)
-  - Obstacle sprites (wedding themed)
-  - Collectible icons (PNG)
-  - No complex level design required
+### UI Layout
+```
+TOP-LEFT (5px):
+- Score: [number only]
+- Distance: [number]m
 
----
+TOP-RIGHT (5px):
+- Timer: 0:00
+- Pause: ⏸
 
-## 💰 Collectibles - Của Hồi Môn (Unchanged Content)
+BOTTOM-RIGHT (10px):
+- Jump Button: ⬆ (100px circle)
 
-Items vẫn giữ nguyên văn hóa Việt Nam:
-- 💰 Tiền (Money)
-- 🏠 Tin (Small house/apartment)
-- 🏡 Nhà (Villa/House)
-- 🚗 Xe (Car)
-- 📜 Sổ đỏ (Red book/Property deed)
-- 💍 Vàng (Gold/Ring)
+CENTER (when active):
+- Combo: 🔥 COMBO x5
+- Multiplier: ⭐ x2
+```
 
-**Spawn mechanics:**
-- Procedurally generated along path
-- Risk vs Reward positioning
-- Combo system for consecutive collection
+### Font Sizes
+- Mobile: 16px base / 12px small
+- Desktop: 24px base / 18px small
 
 ---
 
-## ⏱️ Game Duration
+## ⚡ Power-Ups
 
-### Before (Platformer)
-- 3-5 minutes per level
-- Player-paced (can stop, go back)
-- Finish when reach end goal
+### 🚗 Xe (Car) - Invincibility
+- Duration: 5 seconds
+- Effect: Cyan tint on player
+- Can pass through all obstacles
 
-### After (Endless Runner)
-- **2-3 minutes per run**
-- Constant forward motion (can't stop)
-- End conditions:
-  1. Collision with obstacle → Game Over
-  2. Complete 2 minutes → Success + Bonus
+### 💍 Vàng (Gold) - Score Multiplier
+- Duration: 10 seconds
+- Effect: x2 score for all points
+- Gold star indicator shown
 
 ---
 
-## 🎯 Accessibility Improvements
+## 🎨 Visual Style
 
-### Easier for Everyone
-- ✅ **One button** vs multiple controls
-- ✅ **Auto-run** - không cần lo di chuyển
-- ✅ **Simple timing** - chỉ cần nhảy đúng lúc
-- ✅ **Visual feedback** rõ ràng
-- ✅ **Forgiving difficulty** - có safe zones
-- ✅ **Perfect for elderly** - không phức tạp
-- ✅ **Mobile friendly** - tap anywhere
-- ✅ **One-hand playable**
+### Player
+- Simple rectangle (40x60px)
+- Gray color (#535353) like Chrome Dino
+- Fixed position: 100-150px from left
 
-### Learning Curve
-- Mario Platformer: ~2-3 phút để hiểu
-- **Dinosaur Runner: ~5 giây để hiểu** ⭐
+### Backgrounds
+- Sky: Static gradient (#87CEEB)
+- Clouds: Slow parallax (x0.2)
+- Mountains: Medium parallax (x0.5)
+- Ground: Scrolling (x1.0)
 
----
-
-## 🏗️ Technical Advantages
-
-### Simpler to Implement
-- ✅ No complex level design needed
-- ✅ No collision with platforms (chỉ obstacles)
-- ✅ Simpler physics (gravity + jump only)
-- ✅ Procedural generation dễ hơn tile-based
-- ✅ Less assets needed overall
-- ✅ Easier to balance difficulty
-- ✅ Better performance (less objects on screen)
-
-### Better for Wedding Context
-- ✅ Quick games (2-3 min vs 5+ min)
-- ✅ Easier for all ages
-- ✅ More replayable (random generation)
-- ✅ Leaderboard more competitive
-- ✅ Perfect for casual mobile gaming
+### Emoji Sizes
+- Ground obstacles: 48px
+- Flying enemies: 42px
+- Collectibles: 32-40px (by rarity)
 
 ---
 
 ## 🎮 Gameplay Loop
 
-### Chrome Dino Style Flow
-
-```
-1. START
-   ↓
-2. Auto-run forward (constant speed)
-   ↓
-3. Obstacles appear from right
-   ↓
-4. Player taps/presses to JUMP
-   ↓
-5. Collect items mid-air (optional)
-   ↓
-6. Land safely
-   ↓
-7. Speed increases gradually
-   ↓
-8. Repeat steps 3-7
-   ↓
-9. END (collision or time complete)
-   ↓
-10. Show score + wedding info + leaderboard
-```
+1. **Start** - Auto-run begins
+2. **Obstacles appear** - Ground + Flying enemies
+3. **Jump to avoid** - Single button control
+4. **Collect items** - Risk vs Reward
+5. **Speed increases** - Every 30 seconds
+6. **Survive 2 minutes** - Victory!
+7. **Or collision** - Game Over
+8. **Show stats** - Score + Leaderboard
 
 ---
 
-## 📱 Mobile Optimization
+## 💡 Tips for Players
 
-### Perfect for Landscape Mobile
-- Full screen tap = jump
-- No virtual buttons cluttering screen
-- Clean, minimalist UI
-- Score counter top-left (safe from Dynamic Island)
-- Pause button top-right
-- **Optimal UX for wedding guests**
-
----
-
-## 🆚 Comparison Table
-
-| Aspect | Mario Platformer | Dinosaur Runner |
-|--------|------------------|-----------------|
-| **Controls** | 3+ buttons | 1 button |
-| **Complexity** | Medium | Very Low |
-| **Learning time** | 2-3 minutes | 5 seconds |
-| **Mobile friendly** | Moderate | Excellent |
-| **Elderly friendly** | Moderate | Excellent |
-| **Game duration** | 3-5 min | 2-3 min |
-| **Replayability** | Low | High |
-| **Development** | Complex | Simple |
-| **Performance** | Medium | Excellent |
-| **Assets needed** | Many | Fewer |
+- **Hold space** không còn - chỉ nhấn 1 lần là nhảy
+- **Flying enemies** bay ở nhiều độ cao - cần timing
+- **Xe item** cho invincibility - ưu tiên lấy khi khó
+- **Vàng item** x2 điểm - lấy trước khi thu thập nhiều items
+- **Combo system** - lấy 5+ items liên tiếp = +50 bonus
+- **Perfect run** - không va chạm + 2 phút = +1000!
 
 ---
 
-## 🎊 Why This Change is Better for Wedding Game
+## 🚀 Current Status
 
-1. **Accessibility**: Mọi người đều chơi được, kể cả người lớn tuổi
-2. **Quick & Fun**: 2-3 phút - perfect cho event
-3. **Mobile Perfect**: Tap anywhere - không cần aim buttons
-4. **Competitive**: Random generation → high replay value
-5. **Simple**: Giải thích trong 5 giây
-6. **Less Development**: Faster to build & deploy
-7. **Better Performance**: Smooth 60 FPS easier to achieve
-8. **Universal Appeal**: Chrome Dino game = everyone knows it!
-
----
-
-## 🔄 What Stays The Same
-
-- ✅ Wedding theme & Vietnamese culture
-- ✅ Collectibles (tiền, nhà, xe, sổ đỏ, vàng)
-- ✅ Leaderboard system
-- ✅ RSVP integration
-- ✅ Firebase + Vercel stack
-- ✅ Wedding info display
-- ✅ Prize for highest score
-- ✅ Landscape mobile orientation
-- ✅ High-contrast mode
-- ✅ Accessibility features
+✅ Core endless runner mechanics
+✅ Work/stress themed enemies
+✅ Ground + Flying obstacles
+✅ Procedural generation
+✅ Dynamic difficulty scaling
+✅ Combo system
+✅ Power-ups (invincibility, multiplier)
+✅ Fullscreen mobile optimized
+✅ Responsive UI (desktop + mobile)
+✅ Safe area insets (iPhone notch)
+✅ Landscape mode enforcement
+✅ Score tracking + leaderboard integration
 
 ---
 
-## 🚀 Implementation Priority
+## 📝 Technical Details
 
-### Phase 1: Core Gameplay (Week 1)
-- [x] Auto-run character
-- [x] Jump mechanics (tap/hold)
-- [x] Collision detection
-- [x] Basic obstacles
-- [x] Score counter
+### Phaser Config
+- Mode: RESIZE (mobile) / FIT (desktop)
+- Physics: Arcade
+- Gravity: 1000 (per-object)
+- Canvas: 100% viewport
 
-### Phase 2: Content (Week 2)
-- [x] Wedding themed obstacles
-- [x] Collectibles (tiền, nhà, xe, etc.)
-- [x] Parallax background
-- [x] Sound effects
-
-### Phase 3: Polish (Week 3)
-- [x] Difficulty scaling
-- [x] Combo system
-- [x] Multipliers
-- [x] UI polish
-- [x] Wedding info integration
-
-### Phase 4: Deployment (Week 4)
-- [x] Firebase integration
-- [x] Leaderboard
-- [x] Testing
-- [x] Vercel deployment
+### Performance
+- Target: 60 FPS
+- Smooth scrolling
+- Efficient spawning/cleanup
+- Memory-optimized tweens
 
 ---
 
-## 🎯 Success Metrics (Same as Before)
-
-- Completion rate (target: >70%)
-- Average score (for balancing)
-- Play time (target: 2-3 min)
-- Replay rate (target: >40%)
-- RSVP conversion (track skip vs play)
-- Leaderboard submissions
-
----
-
-## ✅ Ready to Implement!
-
-PRD đã updated hoàn chỉnh. Game giờ đơn giản hơn, dễ chơi hơn, và phù hợp hơn cho wedding context!
-
-**Advantages:**
-- 🎯 Simpler = Better for all ages
-- 🎮 Chrome Dino = Familiar to everyone
-- 📱 Perfect for mobile wedding guests
-- ⚡ Faster development time
-- 🏆 More competitive leaderboard
-
-**Next step:** Update game code to implement endless runner mechanics!
+**Game ready for production! 🎉**

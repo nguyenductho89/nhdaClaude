@@ -1,24 +1,43 @@
 import Phaser from 'phaser';
 
+// Detect if mobile device
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  || window.innerWidth < 768;
+
+// Base dimensions for scaling
+const BASE_WIDTH = isMobile ? 800 : 1200;
+const BASE_HEIGHT = isMobile ? 450 : 600;
+
 export const gameConfig = {
   type: Phaser.AUTO,
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: BASE_WIDTH,
+  height: BASE_HEIGHT,
   backgroundColor: '#87CEEB',
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 800 },
+      gravity: { y: 0 }, // Set to 0, we'll use per-object gravity
       debug: false
     }
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: BASE_WIDTH,
+    height: BASE_HEIGHT,
+    min: {
+      width: 320,
+      height: 180
+    },
+    max: {
+      width: 1920,
+      height: 1080
+    }
   },
   render: {
-    pixelArt: true,
-    antialias: false
+    pixelArt: false,
+    antialias: true,
+    roundPixels: true
   }
 };
 

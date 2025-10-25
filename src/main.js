@@ -24,9 +24,17 @@ const config = {
 // Create game instance
 const game = new Phaser.Game(config);
 
-// Handle window resize
+// Handle window resize - game will auto-scale with FIT mode
 window.addEventListener('resize', () => {
-  game.scale.resize(window.innerWidth, window.innerHeight);
+  // Phaser's FIT mode will handle this automatically
+  game.scale.refresh();
+});
+
+// Handle orientation change on mobile
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    game.scale.refresh();
+  }, 100);
 });
 
 export default game;

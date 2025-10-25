@@ -179,69 +179,71 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const isMobile = this.isMobileDevice();
 
-    // Responsive font sizes
-    const scoreFontSize = isMobile ? '20px' : '24px';
-    const smallFontSize = isMobile ? '16px' : '18px';
-    const timerFontSize = isMobile ? '20px' : '24px';
+    // Responsive font sizes based on screen size
+    const scale = Math.min(width / 800, height / 450);
+    const baseFontSize = Math.max(16, Math.floor(20 * scale));
+    const smallFontSize = Math.max(14, Math.floor(16 * scale));
 
-    // Mobile-optimized positioning
-    const topMargin = isMobile ? 50 : 60;
-    const leftMargin = isMobile ? 12 : 20;
-    const rightMargin = isMobile ? 12 : 20;
+    // Responsive positioning
+    const topMargin = Math.max(40, Math.floor(50 * scale));
+    const leftMargin = Math.max(10, Math.floor(15 * scale));
+    const rightMargin = Math.max(10, Math.floor(15 * scale));
+
+    const padding = Math.max(6, Math.floor(8 * scale));
 
     // Score display (top-left, avoiding Dynamic Island)
     this.scoreText = this.add.text(leftMargin, topMargin, 'Điểm: 0', {
-      fontSize: scoreFontSize,
+      fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: isMobile ? 8 : 12, y: isMobile ? 4 : 6 }
+      padding: { x: padding, y: padding / 2 }
     }).setScrollFactor(0).setDepth(100);
 
     // Distance display (below score)
-    this.distanceText = this.add.text(leftMargin, topMargin + (isMobile ? 30 : 35), 'Khoảng cách: 0m', {
-      fontSize: smallFontSize,
+    this.distanceText = this.add.text(leftMargin, topMargin + baseFontSize + 10, 'Khoảng cách: 0m', {
+      fontSize: `${smallFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: isMobile ? 6 : 10, y: isMobile ? 3 : 5 }
+      padding: { x: padding, y: padding / 2 }
     }).setScrollFactor(0).setDepth(100);
 
     // Timer display (top-right, safe from Dynamic Island)
     this.timerText = this.add.text(width - rightMargin, topMargin, '0:00', {
-      fontSize: timerFontSize,
+      fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: isMobile ? 8 : 12, y: isMobile ? 4 : 6 }
+      padding: { x: padding, y: padding / 2 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
 
     // Combo display (appears when combo active) - center screen
-    this.comboText = this.add.text(width / 2, isMobile ? 80 : 100, '', {
-      fontSize: isMobile ? '18px' : '20px',
+    this.comboText = this.add.text(width / 2, topMargin + 20, '', {
+      fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
       color: '#FFD700',
       backgroundColor: '#000000',
-      padding: { x: isMobile ? 8 : 10, y: isMobile ? 4 : 5 }
+      padding: { x: padding, y: padding / 2 }
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
 
     // Multiplier display (below timer)
-    this.multiplierText = this.add.text(width - rightMargin, topMargin + (isMobile ? 30 : 35), '', {
-      fontSize: smallFontSize,
+    this.multiplierText = this.add.text(width - rightMargin, topMargin + baseFontSize + 10, '', {
+      fontSize: `${smallFontSize}px`,
       fontFamily: 'Arial',
       color: '#FFD700',
       backgroundColor: '#000000',
-      padding: { x: isMobile ? 6 : 8, y: isMobile ? 3 : 4 }
+      padding: { x: padding, y: padding / 2 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100).setVisible(false);
 
     // Pause button (top-right, above timer)
     const pauseText = isMobile ? '⏸' : '⏸ Tạm dừng';
-    this.pauseButton = this.add.text(width - rightMargin, isMobile ? 10 : 20, pauseText, {
-      fontSize: smallFontSize,
+    this.pauseButton = this.add.text(width - rightMargin, topMargin / 2, pauseText, {
+      fontSize: `${smallFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: isMobile ? 8 : 10, y: isMobile ? 4 : 5 }
+      padding: { x: padding, y: padding / 2 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.pauseGame());
@@ -260,10 +262,11 @@ export default class GameScene extends Phaser.Scene {
   createMobileJumpButton() {
     const { width, height } = this.scale;
 
-    // Optimized for mobile - larger, better positioned
-    const isLandscape = width > height;
-    const buttonSize = isLandscape ? 120 : 100;
-    const margin = isLandscape ? 40 : 30;
+    // Scale button based on screen size
+    const scale = Math.min(width / 800, height / 450);
+    const baseButtonSize = 100;
+    const buttonSize = Math.max(80, Math.floor(baseButtonSize * scale));
+    const margin = Math.max(20, Math.floor(30 * scale));
 
     const buttonX = width - buttonSize / 2 - margin;
     const buttonY = height - buttonSize / 2 - margin;
@@ -274,21 +277,24 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     // Add border for better visibility
-    const buttonBorder = this.add.circle(buttonX, buttonY, buttonSize / 2 + 3, 0xFFFFFF, 0.2)
+    const borderSize = Math.max(3, Math.floor(4 * scale));
+    const buttonBorder = this.add.circle(buttonX, buttonY, buttonSize / 2 + borderSize, 0xFFFFFF, 0.2)
       .setScrollFactor(0)
       .setDepth(99);
 
-    // Button icon - larger for easier visibility
+    // Button icon - scaled properly
+    const iconSize = Math.max(40, Math.floor(52 * scale));
     this.jumpButtonIcon = this.add.text(buttonX, buttonY, '⬆', {
-      fontSize: isLandscape ? '56px' : '52px',
+      fontSize: `${iconSize}px`,
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: 2
+      strokeThickness: Math.max(2, Math.floor(3 * scale))
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
 
-    // Button interactive area (even larger for easier tapping on mobile)
-    this.jumpButton = this.add.rectangle(buttonX, buttonY, buttonSize + 20, buttonSize + 20, 0x000000, 0)
+    // Button interactive area (larger for easier tapping)
+    const hitAreaSize = buttonSize + Math.floor(20 * scale);
+    this.jumpButton = this.add.rectangle(buttonX, buttonY, hitAreaSize, hitAreaSize, 0x000000, 0)
       .setScrollFactor(0)
       .setDepth(102)
       .setInteractive({ useHandCursor: true })
@@ -297,7 +303,7 @@ export default class GameScene extends Phaser.Scene {
           this.jump();
           // Enhanced visual feedback
           this.jumpButtonBg.setAlpha(0.7);
-          this.jumpButtonIcon.setScale(1.3);
+          this.jumpButtonIcon.setScale(1.2);
           buttonBorder.setAlpha(0.5);
         }
       })

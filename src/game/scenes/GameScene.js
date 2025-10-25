@@ -140,7 +140,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createPlayer() {
-    const { height } = this.scale;
+    const { width, height } = this.scale;
 
     // Create player sprite (simple rectangle for now - can be replaced with image)
     const playerWidth = 40;
@@ -158,8 +158,11 @@ export default class GameScene extends Phaser.Scene {
     const playerTexture = graphics.generateTexture('player', playerWidth, playerHeight);
     graphics.destroy();
 
-    // Create player - fixed at x=150
-    this.player = this.physics.add.sprite(150, this.groundY - playerHeight / 2, 'player');
+    // Position player further left on smaller screens
+    const playerX = width < 600 ? 100 : 150;
+
+    // Create player - positioned relative to screen
+    this.player = this.physics.add.sprite(playerX, this.groundY - playerHeight / 2, 'player');
     this.player.setCollideWorldBounds(false);
     this.player.setDisplaySize(playerWidth, playerHeight);
 
@@ -179,17 +182,15 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const isMobile = this.isMobileDevice();
 
-    // Responsive font sizes based on screen size
-    const scale = Math.min(width / 800, height / 450);
-    const baseFontSize = Math.max(16, Math.floor(20 * scale));
-    const smallFontSize = Math.max(14, Math.floor(16 * scale));
+    // Responsive font sizes - smaller on mobile for more gameplay space
+    const baseFontSize = isMobile ? 18 : 24;
+    const smallFontSize = isMobile ? 14 : 18;
 
-    // Responsive positioning
-    const topMargin = Math.max(40, Math.floor(50 * scale));
-    const leftMargin = Math.max(10, Math.floor(15 * scale));
-    const rightMargin = Math.max(10, Math.floor(15 * scale));
-
-    const padding = Math.max(6, Math.floor(8 * scale));
+    // Minimal margins on mobile for fullscreen feel
+    const topMargin = isMobile ? 10 : 60;
+    const leftMargin = isMobile ? 8 : 20;
+    const rightMargin = isMobile ? 8 : 20;
+    const padding = isMobile ? 6 : 8;
 
     // Score display (top-left, avoiding Dynamic Island)
     this.scoreText = this.add.text(leftMargin, topMargin, 'Điểm: 0', {
@@ -262,11 +263,9 @@ export default class GameScene extends Phaser.Scene {
   createMobileJumpButton() {
     const { width, height } = this.scale;
 
-    // Scale button based on screen size
-    const scale = Math.min(width / 800, height / 450);
-    const baseButtonSize = 100;
-    const buttonSize = Math.max(80, Math.floor(baseButtonSize * scale));
-    const margin = Math.max(20, Math.floor(30 * scale));
+    // Larger button for fullscreen mobile
+    const buttonSize = 110;
+    const margin = 15; // Minimal margin for fullscreen
 
     const buttonX = width - buttonSize / 2 - margin;
     const buttonY = height - buttonSize / 2 - margin;
@@ -277,23 +276,21 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     // Add border for better visibility
-    const borderSize = Math.max(3, Math.floor(4 * scale));
-    const buttonBorder = this.add.circle(buttonX, buttonY, buttonSize / 2 + borderSize, 0xFFFFFF, 0.2)
+    const buttonBorder = this.add.circle(buttonX, buttonY, buttonSize / 2 + 4, 0xFFFFFF, 0.2)
       .setScrollFactor(0)
       .setDepth(99);
 
-    // Button icon - scaled properly
-    const iconSize = Math.max(40, Math.floor(52 * scale));
+    // Button icon - large and clear
     this.jumpButtonIcon = this.add.text(buttonX, buttonY, '⬆', {
-      fontSize: `${iconSize}px`,
+      fontSize: '56px',
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: Math.max(2, Math.floor(3 * scale))
+      strokeThickness: 3
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
 
     // Button interactive area (larger for easier tapping)
-    const hitAreaSize = buttonSize + Math.floor(20 * scale);
+    const hitAreaSize = buttonSize + 25;
     this.jumpButton = this.add.rectangle(buttonX, buttonY, hitAreaSize, hitAreaSize, 0x000000, 0)
       .setScrollFactor(0)
       .setDepth(102)

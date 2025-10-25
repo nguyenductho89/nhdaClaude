@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Players collection - for leaderboard
+    match /players/{playerId} {
+      // Allow anyone to read leaderboard
+      allow read: if true;
+
+      // Allow create with validation
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.name.size() >= 2 &&
+                       request.resource.data.name.size() <= 50 &&
+                       request.resource.data.score is int &&
+                       request.resource.data.score >= 0 &&
+                       request.resource.data.score < 100000 &&
+                       request.resource.data.time is int &&
+                       request.resource.data.time > 0 &&
+                       request.resource.data.device in ['mobile', 'desktop'];
+
+      // Prevent updates and deletes (data integrity)
+      allow update, delete: if false;
+    }
+
+    // RSVP collection (optional)
+    match /rsvp/{rsvpId} {
+      // Only authenticated admin can read
+      allow read: if request.auth != null;
+
+      // Anyone can create RSVP
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.phone is string;
+
+      // Prevent updates and deletes
+      allow update, delete: if false;
+    }
+
+    // Deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

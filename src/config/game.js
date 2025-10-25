@@ -30,11 +30,9 @@ export const GAME_CONSTANTS = {
   SPEED_INCREMENT: 30,         // px/s - speed increase every 30 seconds
   SPEED_INCREMENT_INTERVAL: 30000, // ms - 30 seconds
 
-  // Jump mechanics
-  JUMP_VELOCITY_LOW: -400,     // Quick tap = low jump
-  JUMP_VELOCITY_HIGH: -550,    // Hold tap = high jump
-  JUMP_HOLD_THRESHOLD: 200,    // ms - hold duration for high jump
-  GRAVITY: 800,
+  // Jump mechanics (simpler like Chrome Dino)
+  JUMP_VELOCITY_HIGH: -500,    // Single jump velocity
+  GRAVITY: 1000,               // Stronger gravity for snappier feel
 
   // Game duration
   GAME_DURATION: 120000,       // ms - 2 minutes

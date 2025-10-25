@@ -146,36 +146,37 @@ export default class GameScene extends Phaser.Scene {
     const playerWidth = 40;
     const playerHeight = 60;
 
-    // Generate player texture
+    // Generate player texture - simpler, more like Chrome Dino
     const graphics = this.add.graphics();
-    graphics.fillStyle(0xFF6B6B); // Red color for groom
+    graphics.fillStyle(0x535353); // Gray color like Chrome Dino
     graphics.fillRect(0, 0, playerWidth, playerHeight);
+    // Simple details
     graphics.fillStyle(0x000000); // Black for head
-    graphics.fillCircle(playerWidth / 2, 10, 8);
+    graphics.fillCircle(playerWidth / 2, playerHeight * 0.2, 6);
+    // Arms
+    graphics.fillRect(0, playerHeight * 0.4, playerWidth, 8);
     const playerTexture = graphics.generateTexture('player', playerWidth, playerHeight);
     graphics.destroy();
 
-    // Create player
-    this.player = this.physics.add.sprite(150, this.groundY - playerHeight, 'player');
+    // Create player - fixed at x=150
+    this.player = this.physics.add.sprite(150, this.groundY - playerHeight / 2, 'player');
     this.player.setCollideWorldBounds(false);
     this.player.setDisplaySize(playerWidth, playerHeight);
 
-    // Physics
+    // Set body size for more precise collision
+    this.player.body.setSize(playerWidth * 0.8, playerHeight * 0.9);
+    this.player.body.setOffset(playerWidth * 0.1, playerHeight * 0.05);
+
+    // Physics - Chrome Dino style (simple gravity)
+    this.player.body.setGravityY(GAME_CONSTANTS.GRAVITY);
     this.physics.add.collider(this.player, this.ground);
 
-    // Running animation (simple bob up and down)
-    this.tweens.add({
-      targets: this.player,
-      y: this.groundY - playerHeight - 5,
-      duration: 200,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
+    // No running animation tween - keep it simple and stable
+    // Player stays at fixed position, only jumps
   }
 
   createUI() {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
 
     // Score display (top-left, avoiding Dynamic Island)
     this.scoreText = this.add.text(20, 60, 'Điểm: 0', {
@@ -232,6 +233,59 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.pauseGame());
+
+    // Mobile jump button (visible on mobile/touch devices)
+    if (this.isMobileDevice()) {
+      this.createMobileJumpButton();
+    }
+  }
+
+  isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (window.innerWidth < 768);
+  }
+
+  createMobileJumpButton() {
+    const { width, height } = this.scale;
+
+    // Large jump button on the right side (like Chrome Dino on mobile)
+    const buttonSize = 100;
+    const buttonX = width - buttonSize / 2 - 30;
+    const buttonY = height - buttonSize / 2 - 30;
+
+    // Button background circle
+    this.jumpButtonBg = this.add.circle(buttonX, buttonY, buttonSize / 2, 0xFFFFFF, 0.3)
+      .setScrollFactor(0)
+      .setDepth(100);
+
+    // Button icon
+    this.jumpButtonIcon = this.add.text(buttonX, buttonY, '⬆', {
+      fontSize: '48px',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+    // Button interactive area (larger for easier tapping)
+    this.jumpButton = this.add.rectangle(buttonX, buttonY, buttonSize, buttonSize, 0x000000, 0)
+      .setScrollFactor(0)
+      .setDepth(102)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        if (!this.isGameOver) {
+          this.jump();
+          // Visual feedback
+          this.jumpButtonBg.setAlpha(0.6);
+          this.jumpButtonIcon.setScale(1.2);
+        }
+      })
+      .on('pointerup', () => {
+        this.jumpButtonBg.setAlpha(0.3);
+        this.jumpButtonIcon.setScale(1);
+      })
+      .on('pointerout', () => {
+        this.jumpButtonBg.setAlpha(0.3);
+        this.jumpButtonIcon.setScale(1);
+      });
   }
 
   setupControls() {
@@ -239,16 +293,19 @@ export default class GameScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
 
-    // Mouse/Touch controls - tap anywhere to jump
-    this.input.on('pointerdown', (pointer) => {
-      if (!this.isGameOver && !this.isPaused) {
-        this.startJump();
-      }
-    });
-
-    this.input.on('pointerup', () => {
-      this.endJump();
-    });
+    // Mouse/Touch controls - tap anywhere to jump (except UI elements)
+    if (!this.isMobileDevice()) {
+      // Desktop: click anywhere to jump
+      this.input.on('pointerdown', (pointer) => {
+        if (!this.isGameOver && !this.isPaused) {
+          // Don't jump if clicking on UI buttons
+          if (pointer.y > 140) { // Below UI area
+            this.jump();
+          }
+        }
+      });
+    }
+    // Mobile uses dedicated jump button created in createMobileJumpButton()
   }
 
   setupGameTimers() {
@@ -285,26 +342,10 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  startJump() {
+  jump() {
+    // Simple jump like Chrome Dino - just one jump strength
     if (this.player.body.touching.down && !this.isGameOver) {
-      this.jumpStartTime = Date.now();
-      this.isJumpHeld = true;
-
-      // Initial jump (will be modified if held)
-      this.player.setVelocityY(GAME_CONSTANTS.JUMP_VELOCITY_LOW);
-    }
-  }
-
-  endJump() {
-    if (this.isJumpHeld) {
-      const holdDuration = Date.now() - this.jumpStartTime;
-
-      // If held long enough, apply high jump
-      if (holdDuration >= GAME_CONSTANTS.JUMP_HOLD_THRESHOLD && this.player.body.velocity.y < 0) {
-        this.player.setVelocityY(GAME_CONSTANTS.JUMP_VELOCITY_HIGH);
-      }
-
-      this.isJumpHeld = false;
+      this.player.setVelocityY(GAME_CONSTANTS.JUMP_VELOCITY_HIGH);
     }
   }
 
@@ -325,37 +366,33 @@ export default class GameScene extends Phaser.Scene {
 
     const { width } = this.scale;
 
-    // Obstacle types (wedding themed)
+    // Obstacle types (wedding themed) - simpler, more like Chrome Dino cacti
     const obstacleTypes = [
-      { key: 'cake', width: 50, height: 60, color: 0xFFB6C1, emoji: '🎂' },
-      { key: 'gift', width: 40, height: 50, color: 0xFF69B4, emoji: '🎁' },
-      { key: 'flower', width: 30, height: 70, color: 0xFF1493, emoji: '💐' },
-      { key: 'champagne', width: 25, height: 80, color: 0xFFD700, emoji: '🍾' }
+      { key: 'cake', width: 40, height: 50, color: 0xFFB6C1, emoji: '🎂' },
+      { key: 'gift', width: 35, height: 45, color: 0xFF69B4, emoji: '🎁' },
+      { key: 'flower', width: 30, height: 60, color: 0xFF1493, emoji: '💐' },
+      { key: 'champagne', width: 25, height: 70, color: 0xFFD700, emoji: '🍾' }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(obstacleTypes);
 
-    // Create obstacle
-    const obstacle = this.add.rectangle(
-      width + 50,
-      this.groundY - type.height / 2,
-      type.width,
-      type.height,
-      type.color
-    );
+    // Create obstacle at ground level
+    const obstacleY = this.groundY - type.height / 2;
 
-    // Add emoji label
-    const label = this.add.text(obstacle.x, obstacle.y, type.emoji, {
-      fontSize: '32px'
+    // Add emoji label (no background rectangle for cleaner look)
+    const label = this.add.text(width + 50, obstacleY, type.emoji, {
+      fontSize: '38px'
     }).setOrigin(0.5);
 
-    this.physics.add.existing(obstacle);
-    obstacle.body.setAllowGravity(false);
-    obstacle.body.setImmovable(true);
-    obstacle.setData('label', label);
-    obstacle.setData('type', type.key);
+    this.physics.add.existing(label);
+    label.body.setAllowGravity(false);
+    label.body.setImmovable(true);
 
-    this.obstacles.add(obstacle);
+    // Tighter hitbox for fairer collision (like Chrome Dino)
+    label.body.setSize(type.width, type.height);
+    label.setData('type', type.key);
+
+    this.obstacles.add(label);
 
     // Schedule next obstacle
     this.scheduleNextObstacle();
@@ -697,10 +734,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Handle jump input (keyboard)
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.upKey)) {
-      this.startJump();
-    }
-    if (Phaser.Input.Keyboard.JustUp(this.spaceKey) || Phaser.Input.Keyboard.JustUp(this.upKey)) {
-      this.endJump();
+      this.jump();
     }
   }
 
@@ -749,16 +783,8 @@ export default class GameScene extends Phaser.Scene {
     this.obstacles.getChildren().forEach(obstacle => {
       obstacle.x -= scrollDistance;
 
-      // Update label position
-      const label = obstacle.getData('label');
-      if (label) {
-        label.x = obstacle.x;
-        label.y = obstacle.y;
-      }
-
       // Remove off-screen obstacles
       if (obstacle.x < -100) {
-        if (label) label.destroy();
         obstacle.destroy();
       }
     });

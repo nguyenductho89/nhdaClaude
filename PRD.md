@@ -1,19 +1,20 @@
 # Product Requirements Document (PRD)
-## Mario Style Wedding Invitation Game
+## Dinosaur Run Wedding Invitation Game
 
 ---
 
 ## 1. Overview
 
 ### 1.1 Product Vision
-Một trò chơi theo phong cách Mario được thiết kế đặc biệt làm thiệp mời đám cưới tương tác, mang đến trải nghiệm độc đáo và thú vị cho khách mời.
+Một trò chơi endless runner theo phong cách Chrome Dinosaur Game, được thiết kế đặc biệt làm thiệp mời đám cưới tương tác, mang đến trải nghiệm đơn giản, thú vị và dễ chơi cho mọi lứa tuổi.
 
 ### 1.2 Target Audience
 - Khách mời đám cưới (gia đình, bạn bè, đồng nghiệp)
+- Mọi lứa tuổi (từ trẻ em đến người lớn tuổi)
 - Người chơi trên mobile (chế độ landscape) và desktop
 
 ### 1.3 Core Concept
-Game platformer 2D theo phong cách Super Mario Bros, trong đó nhân vật chú rể (Mario) vượt qua các chướng ngại vật để đến với cô dâu (thay thế cho công chúa), kết hợp thông tin đám cưới vào gameplay.
+Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân vật chú rể chạy tự động và nhảy vượt qua các chướng ngại vật, thu thập items (tiền, nhà, xe, sổ đỏ, vàng) để đạt điểm cao. Game kết thúc sau một khoảng thời gian hoặc khi va chạm chướng ngại vật, sau đó hiển thị thông tin đám cưới và leaderboard.
 
 ---
 
@@ -119,38 +120,94 @@ Game platformer 2D theo phong cách Super Mario Bros, trong đó nhân vật ch�
 
 ## 3. Core Features
 
-### 3.1 Gameplay Mechanics
+### 3.1 Gameplay Mechanics - Endless Runner (Dinosaur Style)
 
 #### 3.1.1 Character Control
-- **Mario (Chú rể)**
-  - Di chuyển: trái/phải
-  - Nhảy: nút jump (có double jump)
-  - Sprint: giữ nút để chạy nhanh hơn
+- **Chú rể (Runner)**
+  - **Auto-run**: Chạy tự động từ trái sang phải với tốc độ constant
+  - **Jump**: 1 nút duy nhất - nhảy lên để vượt chướng ngại vật
+    - Single tap/spacebar: Nhảy thấp
+    - Hold tap/spacebar: Nhảy cao hơn (variable jump height)
+  - **Không có di chuyển trái/phải** - chỉ focus vào timing nhảy
 
-#### 3.1.2 Level Design
-- **1 level chính** từ điểm bắt đầu đến đích (cô dâu)
-- Độ dài: 3-5 phút gameplay
-- Checkpoints để không phải chơi lại từ đầu
+#### 3.1.2 Endless Level Design
+- **Infinite scrolling**: Level tự động scroll từ phải qua trái
+- **Procedural generation**: Obstacles và items spawn randomly
+- **Increasing difficulty**:
+  - Tốc độ tăng dần theo thời gian (từ 300px/s → 600px/s)
+  - Obstacles xuất hiện dày hơn sau mỗi 30 giây
+  - Max difficulty đạt sau 2 phút
+- **Duration**: Game tự kết thúc sau 2-3 phút hoặc khi va chạm obstacle
+- **Background**: Parallax scrolling (clouds, mountains) cho depth effect
 
-#### 3.1.3 Obstacles & Enemies
-- Goomba/Koopa được themed theo đám cưới
-- Pipes, blocks, platforms
-- Không quá khó, phù hợp với mọi lứa tuổi
+#### 3.1.3 Obstacles (Wedding Themed)
+**Ground Obstacles (phải nhảy qua):**
+- 🎂 Bánh cưới nhỏ (thấp - easy jump)
+- 🎁 Hộp quà (medium height)
+- 💐 Bó hoa lớn (cao - require high jump)
+- 🍾 Chai rượu champagne (tall obstacle)
+- 💒 Cổng hoa nhỏ (wide obstacle - timing challenge)
+
+**Flying Obstacles (phải duck hoặc nhảy timing):**
+- 🎈 Balloon clusters (bay ở độ cao nhảy - phải duck)
+- 🕊️ Chim bồ câu (fly across - timing)
+- 🎊 Confetti cannons (projectile pattern)
+
+**Obstacle Patterns:**
+- Single obstacles: Dễ nhất
+- Double obstacles: Spacing khác nhau
+- Alternating high-low: Require rhythm
+- Moving obstacles: Advanced difficulty
+
+**Safety Zone:**
+- Không spawn obstacle trong 5 giây đầu
+- Minimum gap giữa obstacles: 1.5 giây
+- Random safe periods mỗi 45 giây (breather)
 
 ### 3.2 Wedding Integration
 
 #### 3.2.1 Story Elements
-- **Intro screen**: Câu chuyện tình yêu ngắn gọn
-- **In-game collectibles** (theo văn hóa Việt Nam):
-  - **Coins**: Tiền (xu vàng, tiền giấy)
-  - **Power-ups**:
-    - Tin (nhà tin/nhà trọ) - tăng tốc độ
-    - Nhà (căn nhà) - invincibility
-    - Xe (ô tô) - sprint boost
-    - Sổ đỏ (sổ hồng) - extra life
-    - Vàng (thỏi vàng, nhẫn vàng) - điểm cao
-  - Mỗi item có giá trị điểm khác nhau
-- **End screen**: Thông tin đám cưới chi tiết
+- **Intro screen**: "Chú rể đang chạy đến đón dâu! Giúp anh ấy vượt qua các chướng ngại vật và thu thập của hồi môn!"
+- **In-game collectibles** (theo văn hóa Việt Nam - Của hồi môn):
+
+  **Collectibles spawn trên đường chạy:**
+  - 💰 **Tiền** (Coins) - 10 điểm
+    - Spawn thường xuyên (mỗi 2-3 giây)
+    - Bay ở độ cao vừa phải, dễ nhảy lấy
+    - Trail pattern (3-5 coins liên tiếp)
+
+  - 🏠 **Tin** (Nhà tin/Nhà trọ) - 50 điểm
+    - Spawn ít hơn (mỗi 15-20 giây)
+    - Ở vị trí khó hơn (cao hoặc giữa obstacles)
+
+  - 🏡 **Nhà** (Căn nhà) - 100 điểm
+    - Rare spawn (mỗi 30-40 giây)
+    - Vị trí challenging
+
+  - 🚗 **Xe** (Ô tô) - 150 điểm
+    - Rare item
+    - Bonus: +5 giây invincibility (ghost mode)
+
+  - 📜 **Sổ đỏ** (Sổ hồng) - 200 điểm
+    - Very rare (mỗi 60 giây)
+    - Require perfect timing jump
+
+  - 💍 **Vàng** (Nhẫn vàng, Vòng vàng) - 300 điểm
+    - Ultra rare (1-2 lần mỗi game)
+    - Hidden in hard-to-reach places
+    - Bonus: x2 score multiplier trong 10 giây
+
+**Collectible Mechanics:**
+- Thu thập bằng cách nhảy chạm vào
+- Không bắt buộc - có thể skip để tránh risk
+- Risk vs Reward: Items quý ở vị trí nguy hiểm hơn
+- Combo system: Lấy liên tiếp 5+ items → +50 bonus
+
+**End State:**
+- Game kết thúc khi:
+  1. Va chạm obstacle → Game Over
+  2. Hoàn thành 2 phút → Success với bonus
+- **End screen**: Hiển thị điểm, items collected, thông tin đám cưới
 
 #### 3.2.2 Wedding Information Display
 - Tên cô dâu - chú rể
@@ -160,24 +217,31 @@ Game platformer 2D theo phong cách Super Mario Bros, trong đó nhân vật ch�
 - RSVP button/form
 
 #### 3.2.3 Customization
-- Sprite của Mario → hình ảnh chú rể
-- Sprite của Princess → hình ảnh cô dâu
+- Sprite của Dinosaur/Runner → hình ảnh chú rể (có thể dùng PNG)
+- Background → Themed theo đám cưới (romantic landscape)
+- Obstacles → Wedding themed items
+- Collectibles → PNG icons (tiền, nhà, xe, sổ đỏ, vàng)
 - Background music → nhạc đám cưới/nhạc chủ đề của cặp đôi
 - Color scheme theo theme đám cưới
 
 ### 3.3 Player History & Leaderboard System
 
-#### 3.3.1 Score Tracking
+#### 3.3.1 Score Tracking (Endless Runner Style)
 - **Score calculation**:
-  - Coins collected: 10 points/coin
-  - Power-ups:
-    - Tin: 20 points
-    - Nhà: 50 points
-    - Xe: 30 points
-    - Sổ đỏ: 100 points
-    - Vàng: 200 points
-  - Time bonus: Càng nhanh càng cao điểm
-  - Completion bonus: 500 points
+  - **Distance traveled**: 1 point per meter (auto-increment)
+  - **Collectibles**:
+    - Tiền: 10 points
+    - Tin: 50 points
+    - Nhà: 100 points
+    - Xe: 150 points (+ invincibility bonus)
+    - Sổ đỏ: 200 points
+    - Vàng: 300 points (+ 2x multiplier)
+  - **Combo bonus**: 5+ items liên tiếp → +50 points
+  - **Survival time bonus**: +10 points mỗi 10 giây survive
+  - **Perfect run bonus**: Không va chạm obstacle + hoàn thành 2 phút → +1000 points
+  - **Multiplier effects**:
+    - Vàng item: x2 score trong 10 giây
+    - Combo chain: x1.5 khi combo active
 
 #### 3.3.2 Player Data Storage
 - **Local Storage** (optional login):
@@ -207,13 +271,20 @@ Game platformer 2D theo phong cách Super Mario Bros, trong đó nhân vật ch�
 - **Prize announcement**: Banner thông báo quà cho người cao điểm nhất
 - **Export function**: Admin có thể export danh sách để trao quà
 
-### 3.4 Mobile Controls
+### 3.4 Controls - Single Button (Ultra Simple)
 
-#### 3.4.1 Touch Interface
-- **Virtual D-pad**: Di chuyển trái/phải (bên trái màn hình)
-- **Jump button**: Bên phải màn hình
-- **Sprint button**: Optional, có thể auto-sprint
-- Buttons lớn, dễ bấm (min 60px)
+#### 3.4.1 Mobile Touch Controls
+- **Tap anywhere** = Jump
+  - Single tap: Nhảy thấp
+  - Hold tap: Nhảy cao hơn (variable height)
+  - No buttons needed - toàn bộ màn hình là touch area
+- **Visual feedback**:
+  - Ripple effect khi tap
+  - Character animation khi prepare jump
+- **Optimal for**:
+  - Người lớn tuổi (không phức tạp)
+  - Một tay chơi được
+  - Easy to learn trong 5 giây
 
 #### 3.4.2 Landscape Optimization
 - Force landscape orientation
@@ -232,10 +303,15 @@ Game platformer 2D theo phong cách Super Mario Bros, trong đó nhân vật ch�
 - **Testing**: Test trên các iPhone có Dynamic Island
 - **Fallback**: Margin an toàn 44px từ top cho landscape
 
-### 3.5 Desktop Controls
-- Keyboard: Arrow keys / WASD
-- Spacebar: Jump
-- Shift: Sprint
+### 3.5 Desktop Controls (Single Key)
+- **Spacebar** = Jump (primary)
+- **Up Arrow** = Jump (alternative)
+- **Click anywhere** = Jump (mouse support)
+- **Key behaviors**:
+  - Tap: Quick jump (short height)
+  - Hold: High jump (variable height based on hold duration)
+  - Max hold: 0.5 seconds for max height
+- **No other keys needed** - auto-run game
 
 ### 3.6 Accessibility Features
 
@@ -1696,9 +1772,12 @@ firebase deploy --only hosting
 ## Appendix
 
 ### A. Reference Games
-- Super Mario Bros (NES)
-- New Super Mario Bros
-- HTML5 platformer examples
+- **Chrome Dinosaur Game** (T-Rex Runner) - Primary inspiration
+- **Flappy Bird** - Simple one-button mechanic
+- **Jetpack Joyride** - Endless runner with collectibles
+- **Dino Run** - Prehistoric endless runner
+- **Canabalt** - Auto-runner simplicity
+- HTML5 endless runner examples
 
 ### B. Tools & Libraries
 
@@ -1717,33 +1796,70 @@ firebase deploy --only hosting
 #### Development Tools
 - **Code Editor**: VS Code
 - **Version Control**: Git + GitHub
-- **Level Editor**: Tiled Map Editor (optional)
 - **Asset Creation**:
-  - Pixel Art: Aseprite, Photopea
+  - Character Sprites: Piskel, Aseprite (pixel art) hoặc PNG export
+  - Icons/Items: Canva, Figma (PNG icons)
   - PNG Optimization: TinyPNG, ImageOptim
   - Audio: Audacity, FL Studio
 - **Testing**:
   - Local: Chrome DevTools
   - Mobile: BrowserStack (optional), real devices
   - iPhone Simulator (for Dynamic Island testing)
+  - Performance: Chrome DevTools Performance tab (60 FPS required)
 
 ### C. Asset Requirements
 
-#### Image Assets
+#### Image Assets (Endless Runner Specific)
 - **Format**: PNG with transparent background (alpha channel)
-- **Character sprites**:
-  - Pixel art: 32x32px or 64x64px
-  - PNG photos: 128x128px to 256x256px (will be scaled)
-  - Animation frames supported
-- **Collectible items**:
-  - Tiền: 32x32px
-  - Tin, Nhà, Xe, Sổ đỏ, Vàng: 48x48px to 64x64px
-  - PNG format cho phép dùng icon/ảnh thật
-- **Tileset**: 16x16px (if using pixel art)
-- **Background**: 1920x1080px (responsive)
-- **Enemy sprites**: 32x32px or 64x64px
+
+- **Character (Chú rể)**:
+  - Idle/Running animation: 64x64px per frame
+  - Jump animation: 3-4 frames
+  - Landing animation: 2 frames
+  - Có thể dùng photo PNG của chú rể (128x128px, auto-scaled)
+
+- **Collectible Items** (PNG icons):
+  - Tiền: 32x32px (coin icon)
+  - Tin: 48x48px (house/apartment icon)
+  - Nhà: 48x48px (villa icon)
+  - Xe: 48x48px (car icon)
+  - Sổ đỏ: 48x48px (red book/document icon)
+  - Vàng: 48x48px (gold ring/bar icon)
+
+- **Obstacles** (Wedding themed):
+  - Ground obstacles: 64x64px to 128x64px
+  - Flying obstacles: 64x64px
+  - Wedding items: Cake, gifts, flowers, bottles
+
+- **Background Layers** (Parallax scrolling):
+  - Sky layer: 1920x1080px (static or slow scroll)
+  - Cloud layer: 1920x400px (medium scroll)
+  - Mountain/Hill layer: 1920x600px (fast scroll)
+  - Ground layer: Repeating tile 128x64px
+
+- **UI Elements**:
+  - Score counter background
+  - Pause button: 48x48px
+  - Game over screen background
+  - Wedding info decorations
 
 #### Audio Assets
-- Background music: MP3/OGG format
-- Sound effects: WAV/MP3 format
-- Max file size: 5MB per audio file
+- **Background music**: MP3/OGG format, looping
+  - Wedding themed music (romantic, upbeat)
+  - 8-bit style (optional)
+  - Max: 3MB
+
+- **Sound effects**: WAV/MP3 format
+  - Jump sound
+  - Collect item sound (different for each item type)
+  - Collision sound
+  - Combo achievement sound
+  - Background ambient (optional)
+  - Max: 500KB per SFX
+
+#### Animation Requirements
+- **60 FPS** target for smooth gameplay
+- Character running animation: 6-8 frames, loop
+- Jump arc: Smooth physics-based
+- Collectible idle animation: Gentle float/spin
+- Parallax background: Smooth multi-layer scrolling

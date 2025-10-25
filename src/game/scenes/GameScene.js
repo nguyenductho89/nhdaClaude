@@ -177,65 +177,77 @@ export default class GameScene extends Phaser.Scene {
 
   createUI() {
     const { width, height } = this.scale;
+    const isMobile = this.isMobileDevice();
+
+    // Responsive font sizes
+    const scoreFontSize = isMobile ? '20px' : '24px';
+    const smallFontSize = isMobile ? '16px' : '18px';
+    const timerFontSize = isMobile ? '20px' : '24px';
+
+    // Mobile-optimized positioning
+    const topMargin = isMobile ? 50 : 60;
+    const leftMargin = isMobile ? 12 : 20;
+    const rightMargin = isMobile ? 12 : 20;
 
     // Score display (top-left, avoiding Dynamic Island)
-    this.scoreText = this.add.text(20, 60, 'Điểm: 0', {
-      fontSize: '24px',
+    this.scoreText = this.add.text(leftMargin, topMargin, 'Điểm: 0', {
+      fontSize: scoreFontSize,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: 12, y: 6 }
+      padding: { x: isMobile ? 8 : 12, y: isMobile ? 4 : 6 }
     }).setScrollFactor(0).setDepth(100);
 
-    // Distance display
-    this.distanceText = this.add.text(20, 95, 'Khoảng cách: 0m', {
-      fontSize: '18px',
+    // Distance display (below score)
+    this.distanceText = this.add.text(leftMargin, topMargin + (isMobile ? 30 : 35), 'Khoảng cách: 0m', {
+      fontSize: smallFontSize,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: 10, y: 5 }
+      padding: { x: isMobile ? 6 : 10, y: isMobile ? 3 : 5 }
     }).setScrollFactor(0).setDepth(100);
 
     // Timer display (top-right, safe from Dynamic Island)
-    this.timerText = this.add.text(width - 20, 60, '0:00', {
-      fontSize: '24px',
+    this.timerText = this.add.text(width - rightMargin, topMargin, '0:00', {
+      fontSize: timerFontSize,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: 12, y: 6 }
+      padding: { x: isMobile ? 8 : 12, y: isMobile ? 4 : 6 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
 
-    // Combo display (appears when combo active)
-    this.comboText = this.add.text(width / 2, 100, '', {
-      fontSize: '20px',
+    // Combo display (appears when combo active) - center screen
+    this.comboText = this.add.text(width / 2, isMobile ? 80 : 100, '', {
+      fontSize: isMobile ? '18px' : '20px',
       fontFamily: 'Arial',
       color: '#FFD700',
       backgroundColor: '#000000',
-      padding: { x: 10, y: 5 }
+      padding: { x: isMobile ? 8 : 10, y: isMobile ? 4 : 5 }
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
 
-    // Multiplier display
-    this.multiplierText = this.add.text(width - 20, 100, '', {
-      fontSize: '18px',
+    // Multiplier display (below timer)
+    this.multiplierText = this.add.text(width - rightMargin, topMargin + (isMobile ? 30 : 35), '', {
+      fontSize: smallFontSize,
       fontFamily: 'Arial',
       color: '#FFD700',
       backgroundColor: '#000000',
-      padding: { x: 8, y: 4 }
+      padding: { x: isMobile ? 6 : 8, y: isMobile ? 3 : 4 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100).setVisible(false);
 
-    // Pause button (top-right)
-    this.pauseButton = this.add.text(width - 20, 20, '⏸ Tạm dừng', {
-      fontSize: '18px',
+    // Pause button (top-right, above timer)
+    const pauseText = isMobile ? '⏸' : '⏸ Tạm dừng';
+    this.pauseButton = this.add.text(width - rightMargin, isMobile ? 10 : 20, pauseText, {
+      fontSize: smallFontSize,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: '#ffffff',
-      padding: { x: 10, y: 5 }
+      padding: { x: isMobile ? 8 : 10, y: isMobile ? 4 : 5 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.pauseGame());
 
     // Mobile jump button (visible on mobile/touch devices)
-    if (this.isMobileDevice()) {
+    if (isMobile) {
       this.createMobileJumpButton();
     }
   }
@@ -248,44 +260,60 @@ export default class GameScene extends Phaser.Scene {
   createMobileJumpButton() {
     const { width, height } = this.scale;
 
-    // Large jump button on the right side (like Chrome Dino on mobile)
-    const buttonSize = 100;
-    const buttonX = width - buttonSize / 2 - 30;
-    const buttonY = height - buttonSize / 2 - 30;
+    // Optimized for mobile - larger, better positioned
+    const isLandscape = width > height;
+    const buttonSize = isLandscape ? 120 : 100;
+    const margin = isLandscape ? 40 : 30;
 
-    // Button background circle
-    this.jumpButtonBg = this.add.circle(buttonX, buttonY, buttonSize / 2, 0xFFFFFF, 0.3)
+    const buttonX = width - buttonSize / 2 - margin;
+    const buttonY = height - buttonSize / 2 - margin;
+
+    // Button background circle with better contrast
+    this.jumpButtonBg = this.add.circle(buttonX, buttonY, buttonSize / 2, 0xFFFFFF, 0.4)
       .setScrollFactor(0)
       .setDepth(100);
 
-    // Button icon
+    // Add border for better visibility
+    const buttonBorder = this.add.circle(buttonX, buttonY, buttonSize / 2 + 3, 0xFFFFFF, 0.2)
+      .setScrollFactor(0)
+      .setDepth(99);
+
+    // Button icon - larger for easier visibility
     this.jumpButtonIcon = this.add.text(buttonX, buttonY, '⬆', {
-      fontSize: '48px',
+      fontSize: isLandscape ? '56px' : '52px',
       color: '#ffffff',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 2
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
 
-    // Button interactive area (larger for easier tapping)
-    this.jumpButton = this.add.rectangle(buttonX, buttonY, buttonSize, buttonSize, 0x000000, 0)
+    // Button interactive area (even larger for easier tapping on mobile)
+    this.jumpButton = this.add.rectangle(buttonX, buttonY, buttonSize + 20, buttonSize + 20, 0x000000, 0)
       .setScrollFactor(0)
       .setDepth(102)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         if (!this.isGameOver) {
           this.jump();
-          // Visual feedback
-          this.jumpButtonBg.setAlpha(0.6);
-          this.jumpButtonIcon.setScale(1.2);
+          // Enhanced visual feedback
+          this.jumpButtonBg.setAlpha(0.7);
+          this.jumpButtonIcon.setScale(1.3);
+          buttonBorder.setAlpha(0.5);
         }
       })
       .on('pointerup', () => {
-        this.jumpButtonBg.setAlpha(0.3);
+        this.jumpButtonBg.setAlpha(0.4);
         this.jumpButtonIcon.setScale(1);
+        buttonBorder.setAlpha(0.2);
       })
       .on('pointerout', () => {
-        this.jumpButtonBg.setAlpha(0.3);
+        this.jumpButtonBg.setAlpha(0.4);
         this.jumpButtonIcon.setScale(1);
+        buttonBorder.setAlpha(0.2);
       });
+
+    // Store border reference for cleanup
+    this.jumpButtonBorder = buttonBorder;
   }
 
   setupControls() {
@@ -366,36 +394,101 @@ export default class GameScene extends Phaser.Scene {
 
     const { width } = this.scale;
 
-    // Obstacle types (wedding themed) - simpler, more like Chrome Dino cacti
-    const obstacleTypes = [
-      { key: 'cake', width: 40, height: 50, color: 0xFFB6C1, emoji: '🎂' },
-      { key: 'gift', width: 35, height: 45, color: 0xFF69B4, emoji: '🎁' },
-      { key: 'flower', width: 30, height: 60, color: 0xFF1493, emoji: '💐' },
-      { key: 'champagne', width: 25, height: 70, color: 0xFFD700, emoji: '🍾' }
+    // Randomly spawn ground or flying obstacle
+    const spawnFlying = Math.random() < 0.3; // 30% chance for flying
+
+    if (spawnFlying) {
+      this.spawnFlyingEnemy();
+    } else {
+      this.spawnGroundObstacle();
+    }
+
+    // Schedule next obstacle
+    this.scheduleNextObstacle();
+  }
+
+  spawnGroundObstacle() {
+    const { width } = this.scale;
+
+    // Ground obstacles - work/stress themed enemies
+    const groundObstacles = [
+      { key: 'stress', width: 40, height: 50, emoji: '😰', label: 'Stress' },
+      { key: 'deadline', width: 45, height: 55, emoji: '⏰', label: 'Deadline' },
+      { key: 'work', width: 40, height: 50, emoji: '💼', label: 'Công việc' },
+      { key: 'boss', width: 45, height: 60, emoji: '👔', label: 'Ông sếp' },
+      { key: 'overtime', width: 40, height: 55, emoji: '🌙', label: 'OT' },
+      { key: 'meeting', width: 45, height: 50, emoji: '📊', label: 'Meeting' }
     ];
 
-    const type = Phaser.Utils.Array.GetRandom(obstacleTypes);
+    const type = Phaser.Utils.Array.GetRandom(groundObstacles);
 
     // Create obstacle at ground level
     const obstacleY = this.groundY - type.height / 2;
 
-    // Add emoji label (no background rectangle for cleaner look)
-    const label = this.add.text(width + 50, obstacleY, type.emoji, {
+    // Create emoji obstacle
+    const obstacle = this.add.text(width + 50, obstacleY, type.emoji, {
+      fontSize: '42px'
+    }).setOrigin(0.5);
+
+    this.physics.add.existing(obstacle);
+    obstacle.body.setAllowGravity(false);
+    obstacle.body.setImmovable(true);
+
+    // Tighter hitbox for fairer collision
+    obstacle.body.setSize(type.width, type.height);
+    obstacle.setData('type', type.key);
+    obstacle.setData('isFlying', false);
+
+    this.obstacles.add(obstacle);
+  }
+
+  spawnFlyingEnemy() {
+    const { width } = this.scale;
+
+    // Flying enemies - work stress flying at you
+    const flyingEnemies = [
+      { key: 'email', width: 40, height: 35, emoji: '📧', label: 'Email khẩn' },
+      { key: 'report', width: 40, height: 35, emoji: '📄', label: 'Báo cáo' },
+      { key: 'phone', width: 35, height: 35, emoji: '📞', label: 'Điện thoại' },
+      { key: 'angry-boss', width: 45, height: 40, emoji: '😡', label: 'Sếp giận' },
+      { key: 'task', width: 40, height: 35, emoji: '📝', label: 'Task mới' }
+    ];
+
+    const type = Phaser.Utils.Array.GetRandom(flyingEnemies);
+
+    // Flying at different heights (like pterodactyls in Chrome Dino)
+    const flyHeights = [
+      this.groundY - 80,  // Low flying
+      this.groundY - 120, // Medium flying
+      this.groundY - 160  // High flying
+    ];
+    const flyY = Phaser.Utils.Array.GetRandom(flyHeights);
+
+    // Create flying enemy
+    const enemy = this.add.text(width + 50, flyY, type.emoji, {
       fontSize: '38px'
     }).setOrigin(0.5);
 
-    this.physics.add.existing(label);
-    label.body.setAllowGravity(false);
-    label.body.setImmovable(true);
+    this.physics.add.existing(enemy);
+    enemy.body.setAllowGravity(false);
+    enemy.body.setImmovable(true);
 
-    // Tighter hitbox for fairer collision (like Chrome Dino)
-    label.body.setSize(type.width, type.height);
-    label.setData('type', type.key);
+    // Hitbox
+    enemy.body.setSize(type.width, type.height);
+    enemy.setData('type', type.key);
+    enemy.setData('isFlying', true);
 
-    this.obstacles.add(label);
+    this.obstacles.add(enemy);
 
-    // Schedule next obstacle
-    this.scheduleNextObstacle();
+    // Flying animation (bobbing up and down)
+    this.tweens.add({
+      targets: enemy,
+      y: flyY - 10,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
   }
 
   spawnCollectible() {
@@ -783,8 +876,15 @@ export default class GameScene extends Phaser.Scene {
     this.obstacles.getChildren().forEach(obstacle => {
       obstacle.x -= scrollDistance;
 
+      // Update flying animation position if it exists
+      if (obstacle.getData('isFlying')) {
+        // Flying enemies already have tween animation
+      }
+
       // Remove off-screen obstacles
       if (obstacle.x < -100) {
+        // Stop any tweens on this obstacle
+        this.tweens.killTweensOf(obstacle);
         obstacle.destroy();
       }
     });

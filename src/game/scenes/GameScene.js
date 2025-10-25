@@ -117,7 +117,8 @@ export default class GameScene extends Phaser.Scene {
   createGround() {
     const { width, height } = this.scale;
 
-    this.groundY =  height - 40; // Ground level
+    // Ground closer to bottom for more play space
+    this.groundY = height - 30;
 
     // Create repeating ground tiles
     this.groundTiles = this.add.group();
@@ -128,7 +129,7 @@ export default class GameScene extends Phaser.Scene {
       const tile = this.add.rectangle(
         i * tileWidth,
         this.groundY,
-        tileWidth, 40,
+        tileWidth, 30,
         0x8B4513
       ).setOrigin(0, 0);
       this.groundTiles.add(tile);
@@ -182,74 +183,77 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const isMobile = this.isMobileDevice();
 
-    // Responsive font sizes - smaller on mobile for more gameplay space
-    const baseFontSize = isMobile ? 18 : 24;
-    const smallFontSize = isMobile ? 14 : 18;
+    // Compact font sizes for mobile
+    const baseFontSize = isMobile ? 16 : 24;
+    const smallFontSize = isMobile ? 12 : 18;
 
-    // Minimal margins on mobile for fullscreen feel
-    const topMargin = isMobile ? 10 : 60;
-    const leftMargin = isMobile ? 8 : 20;
-    const rightMargin = isMobile ? 8 : 20;
-    const padding = isMobile ? 6 : 8;
+    // Absolute minimal margins
+    const topMargin = isMobile ? 5 : 60;
+    const leftMargin = isMobile ? 5 : 20;
+    const rightMargin = isMobile ? 5 : 20;
+    const padding = isMobile ? 4 : 8;
 
-    // Score display (top-left, avoiding Dynamic Island)
+    // Line spacing for mobile
+    const lineSpacing = isMobile ? 22 : 35;
+
+    // LEFT COLUMN - Score and Distance
     this.scoreText = this.add.text(leftMargin, topMargin, 'Điểm: 0', {
       fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       padding: { x: padding, y: padding / 2 }
     }).setScrollFactor(0).setDepth(100);
 
-    // Distance display (below score)
-    this.distanceText = this.add.text(leftMargin, topMargin + baseFontSize + 10, 'Khoảng cách: 0m', {
+    this.distanceText = this.add.text(leftMargin, topMargin + lineSpacing, '0m', {
       fontSize: `${smallFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       padding: { x: padding, y: padding / 2 }
     }).setScrollFactor(0).setDepth(100);
 
-    // Timer display (top-right, safe from Dynamic Island)
+    // RIGHT COLUMN - Timer on top
     this.timerText = this.add.text(width - rightMargin, topMargin, '0:00', {
       fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
       color: '#000000',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       padding: { x: padding, y: padding / 2 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
 
-    // Combo display (appears when combo active) - center screen
-    this.comboText = this.add.text(width / 2, topMargin + 20, '', {
+    // Pause button below timer (right side)
+    const pauseText = isMobile ? '⏸' : '⏸';
+    this.pauseButton = this.add.text(width - rightMargin, topMargin + lineSpacing, pauseText, {
       fontSize: `${baseFontSize}px`,
       fontFamily: 'Arial',
-      color: '#FFD700',
-      backgroundColor: '#000000',
-      padding: { x: padding, y: padding / 2 }
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
-
-    // Multiplier display (below timer)
-    this.multiplierText = this.add.text(width - rightMargin, topMargin + baseFontSize + 10, '', {
-      fontSize: `${smallFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      backgroundColor: '#000000',
-      padding: { x: padding, y: padding / 2 }
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(100).setVisible(false);
-
-    // Pause button (top-right, above timer)
-    const pauseText = isMobile ? '⏸' : '⏸ Tạm dừng';
-    this.pauseButton = this.add.text(width - rightMargin, topMargin / 2, pauseText, {
-      fontSize: `${smallFontSize}px`,
-      fontFamily: 'Arial',
       color: '#000000',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       padding: { x: padding, y: padding / 2 }
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(100)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.pauseGame());
 
-    // Mobile jump button (visible on mobile/touch devices)
+    // CENTER - Combo and Multiplier (only show when active)
+    const centerY = isMobile ? 60 : 100;
+
+    this.comboText = this.add.text(width / 2, centerY, '', {
+      fontSize: `${baseFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: padding + 2, y: padding }
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
+
+    this.multiplierText = this.add.text(width / 2, centerY + 25, '', {
+      fontSize: `${smallFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: padding, y: padding / 2 }
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
+
+    // Mobile jump button
     if (isMobile) {
       this.createMobileJumpButton();
     }
@@ -263,9 +267,9 @@ export default class GameScene extends Phaser.Scene {
   createMobileJumpButton() {
     const { width, height } = this.scale;
 
-    // Larger button for fullscreen mobile
-    const buttonSize = 110;
-    const margin = 15; // Minimal margin for fullscreen
+    // Large button, positioned at absolute corner
+    const buttonSize = 100;
+    const margin = 10; // Ultra minimal margin
 
     const buttonX = width - buttonSize / 2 - margin;
     const buttonY = height - buttonSize / 2 - margin;
@@ -781,8 +785,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   updateScoreDisplay() {
-    this.scoreText.setText(`Điểm: ${this.score}`);
-    this.distanceText.setText(`Khoảng cách: ${Math.floor(this.distanceTraveled)}m`);
+    const isMobile = this.isMobileDevice();
+
+    // Mobile: compact format, Desktop: full format
+    if (isMobile) {
+      this.scoreText.setText(`${this.score}`);
+      this.distanceText.setText(`${Math.floor(this.distanceTraveled)}m`);
+    } else {
+      this.scoreText.setText(`Điểm: ${this.score}`);
+      this.distanceText.setText(`Khoảng cách: ${Math.floor(this.distanceTraveled)}m`);
+    }
   }
 
   update(time, delta) {

@@ -117,7 +117,7 @@ export default class GameScene extends Phaser.Scene {
   createGround() {
     const { width, height } = this.scale;
 
-    this.groundY = height - 100; // Ground level
+    this.groundY =  height - 40; // Ground level
 
     // Create repeating ground tiles
     this.groundTiles = this.add.group();
@@ -128,7 +128,7 @@ export default class GameScene extends Phaser.Scene {
       const tile = this.add.rectangle(
         i * tileWidth,
         this.groundY,
-        tileWidth, 20,
+        tileWidth, 40,
         0x8B4513
       ).setOrigin(0, 0);
       this.groundTiles.add(tile);

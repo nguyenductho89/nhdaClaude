@@ -656,7 +656,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Create animated notification
     const { width, height } = this.scale;
-    const notification = this.add.text(width / 2, height / 2 - 50, '🚗 BẤT TỬ 5S!', {
+    const notification = this.add.text(width / 2, height / 2 - 150, '🚗 BẤT TỬ 5S!', {
       fontSize: '48px',
       fontFamily: 'Arial',
       color: '#00FFFF',
@@ -712,7 +712,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Create animated notification
     const { width, height } = this.scale;
-    const notification = this.add.text(width / 2, height / 2 - 50, '💍 ĐIỂM x2 - 10S!', {
+    const notification = this.add.text(width / 2, height / 2 - 150, '💍 ĐIỂM x2 - 10S!', {
       fontSize: '48px',
       fontFamily: 'Arial',
       color: '#FFD700',

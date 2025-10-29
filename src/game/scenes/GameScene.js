@@ -302,25 +302,6 @@ export default class GameScene extends Phaser.Scene {
 
       const tile = this.add.image(tileX, this.groundY, 'groundTile' + i).setOrigin(0, 0);
       this.groundTiles.add(tile);
-
-      // Add random flowers and rocks on some tiles
-      if (Math.random() < 0.3) {
-        const decorX = tileX + Math.random() * tileWidth;
-        const decorY = this.groundY - 5;
-
-        if (Math.random() < 0.5) {
-          // Flower
-          const flower = this.add.text(decorX, decorY, '🌸', {
-            fontSize: '16px'
-          }).setOrigin(0.5, 1);
-          this.groundTiles.add(flower);
-        } else {
-          // Rock
-          const rock = this.add.ellipse(decorX, decorY, 12, 8, 0x757575, 1);
-          rock.setOrigin(0.5, 1);
-          this.groundTiles.add(rock);
-        }
-      }
     }
 
     // Ground collision body

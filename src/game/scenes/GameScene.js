@@ -155,27 +155,24 @@ export default class GameScene extends Phaser.Scene {
     // Position player further left on smaller screens
     const playerX = width < 600 ? 100 : 150;
 
-    // Player stands ON the ground (bottom of sprite touches ground)
-    const playerY = this.groundY - playerHeight - 30;
+    // Player Y position - use default origin (0.5, 0.5) for simpler calculation
+    const playerY = this.groundY - playerHeight / 2;
 
-    // Create player using the loaded image - will stretch to fit size
+    // Create player using the loaded image
     this.player = this.physics.add.sprite(playerX, playerY, 'playerImage');
     this.player.setCollideWorldBounds(false);
-    //this.player.setOrigin(0.5, 0); // Origin at bottom center so it stands on ground
+    // Use default origin (0.5, 0.5) - center of sprite
 
     // Stretch image to fit the exact size
     this.player.setDisplaySize(playerWidth, playerHeight);
 
-    // Set body size for precise collision
-    // Make hitbox slightly smaller than visual for fair gameplay
-    // But keep it simple - no complex offset needed since origin is at bottom-center
-    const bodyWidth = playerWidth * 0.85;  // 85% width (account for dress sides)
-    const bodyHeight = playerHeight * 0.95; // 95% height (very close to full height)
-    this.player.body.setSize(bodyWidth, bodyHeight);
+    // Set hitbox - full height, 85% width (to avoid dress edges)
+    const hitboxWidth = 2.2*playerWidth;
+    const hitboxHeight = 3.0*playerHeight;
+    this.player.body.setSize(hitboxWidth, hitboxHeight);
     
-    // Center hitbox horizontally only, keep bottom aligned with sprite bottom
-    // Offset X: center the hitbox, Offset Y: 0 to keep feet on ground
-  //  this.player.body.setOffset((playerWidth - bodyWidth) / 2, 0);
+    // Center hitbox horizontally, vertically centered by default
+   // this.player.body.setOffset((playerWidth - hitboxWidth) / 2, (playerHeight - hitboxHeight) / 2);
 
     // Physics - Chrome Dino style (simple gravity)
     this.player.body.setGravityY(GAME_CONSTANTS.GRAVITY);
@@ -437,22 +434,22 @@ export default class GameScene extends Phaser.Scene {
     const obstacleHeight = type.height;
     const obstacleY = this.groundY - obstacleHeight;
 
-    // Container for emoji + label (origin at bottom)
+    // Container for emoji + label
     const container = this.add.container(width + 50, obstacleY);
 
-    // Create emoji obstacle (bottom-aligned, standing on ground)
+    // Create emoji obstacle (centered)
     const emoji = this.add.text(0, 0, type.emoji, {
-      fontSize: '64px'
-    }).setOrigin(0.5, 0);
+      fontSize: '60px'
+    }).setOrigin(0.5, 0.5);
 
-    // Add label text below emoji (on the ground)
-    const label = this.add.text(0, 70, type.label, {
+    // Add label text below emoji
+    const label = this.add.text(0, 35, type.label, {
       fontSize: '12px',
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: 'rgba(255, 255, 255, 0.85)',
       padding: { x: 4, y: 2 }
-    }).setOrigin(0.5, 0);
+    }).setOrigin(0.5, 0.5);
 
     container.add([emoji, label]);
 
@@ -461,11 +458,11 @@ export default class GameScene extends Phaser.Scene {
     container.body.setAllowGravity(false);
     container.body.setImmovable(true);
 
-    // Hitbox for the obstacle - 80% of emoji size for fair collision
-    const obstacleBodyWidth = 50;  // ~80% of 64px emoji
-    const obstacleBodyHeight = 56; // ~80% of 70px height
+    // Hitbox - tight around the emoji (90% of emoji size)
+    const obstacleBodyWidth = 54;  // 90% of 60px emoji
+    const obstacleBodyHeight = 54; // Square hitbox
     container.body.setSize(obstacleBodyWidth, obstacleBodyHeight);
-    container.body.setOffset(-obstacleBodyWidth / 2, 7); // Center horizontally, slight gap from bottom
+    container.body.setOffset(-obstacleBodyWidth / 2, -obstacleBodyHeight / 2);
     container.setData('type', type.key);
     container.setData('isFlying', false);
 

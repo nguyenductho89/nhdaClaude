@@ -315,8 +315,8 @@ export default class GameScene extends Phaser.Scene {
     this.player.setDisplaySize(playerWidth, playerHeight);
 
     // Set hitbox - full height, 85% width (to avoid dress edges)
-    const hitboxWidth = 2.2*playerWidth;
-    const hitboxHeight = 3.0*playerHeight;
+    const hitboxWidth = 3.0*playerWidth;
+    const hitboxHeight = 3.5*playerHeight;
     this.player.body.setSize(hitboxWidth, hitboxHeight);
     
     // Center hitbox horizontally, vertically centered by default

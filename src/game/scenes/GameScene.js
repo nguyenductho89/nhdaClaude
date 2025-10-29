@@ -149,8 +149,8 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Player dimensions (keep same as before)
-    const playerWidth = 40;
-    const playerHeight = 60;
+    const playerWidth = 80;
+    const playerHeight = 120;
 
     // Position player further left on smaller screens
     const playerX = width < 600 ? 100 : 150;

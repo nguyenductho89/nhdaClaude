@@ -418,33 +418,33 @@ export default class GameScene extends Phaser.Scene {
   spawnGroundObstacle() {
     const { width } = this.scale;
 
-    // Ground obstacles - work/stress themed enemies (scaled to match player)
+    // Ground obstacles - SMALL relative to large player hitbox (player must jump over)
     const groundObstacles = [
-      { key: 'stress', emoji: '😰', label: 'Stress', height: 70 },
-      { key: 'deadline', emoji: '⏰', label: 'Deadline', height: 70 },
-      { key: 'work', emoji: '💼', label: 'Công việc', height: 70 },
-      { key: 'boss', emoji: '👔', label: 'Ông sếp', height: 70 },
-      { key: 'overtime', emoji: '🌙', label: 'OT', height: 70 },
-      { key: 'meeting', emoji: '📊', label: 'Meeting', height: 70 }
+      { key: 'stress', emoji: '😰', label: 'Stress', height: 50 },
+      { key: 'deadline', emoji: '⏰', label: 'Deadline', height: 50 },
+      { key: 'work', emoji: '💼', label: 'Công việc', height: 50 },
+      { key: 'boss', emoji: '👔', label: 'Ông sếp', height: 50 },
+      { key: 'overtime', emoji: '🌙', label: 'OT', height: 50 },
+      { key: 'meeting', emoji: '📊', label: 'Meeting', height: 50 }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(groundObstacles);
 
-    // Obstacle stands ON the ground (like player)
+    // Obstacle stands ON the ground (smaller than player)
     const obstacleHeight = type.height;
-    const obstacleY = this.groundY - obstacleHeight;
+    const obstacleY = this.groundY - obstacleHeight / 2;
 
     // Container for emoji + label
     const container = this.add.container(width + 50, obstacleY);
 
-    // Create emoji obstacle (centered)
+    // Create emoji obstacle (small - easy to see and avoid)
     const emoji = this.add.text(0, 0, type.emoji, {
-      fontSize: '60px'
+      fontSize: '48px'
     }).setOrigin(0.5, 0.5);
 
     // Add label text below emoji
-    const label = this.add.text(0, 35, type.label, {
-      fontSize: '12px',
+    const label = this.add.text(0, 30, type.label, {
+      fontSize: '11px',
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: 'rgba(255, 255, 255, 0.85)',
@@ -458,9 +458,9 @@ export default class GameScene extends Phaser.Scene {
     container.body.setAllowGravity(false);
     container.body.setImmovable(true);
 
-    // Hitbox - tight around the emoji (90% of emoji size)
-    const obstacleBodyWidth = 54;  // 90% of 60px emoji
-    const obstacleBodyHeight = 54; // Square hitbox
+    // Hitbox - compact (much smaller than player)
+    const obstacleBodyWidth = 45;
+    const obstacleBodyHeight = 45;
     container.body.setSize(obstacleBodyWidth, obstacleBodyHeight);
     container.body.setOffset(-obstacleBodyWidth / 2, -obstacleBodyHeight / 2);
     container.setData('type', type.key);
@@ -493,22 +493,22 @@ export default class GameScene extends Phaser.Scene {
       itemType = 'vang'; // 2% chance
     }
 
-    // Increased sizes for better visibility and balance with player size
-    // Hitbox is ~75% of visual size for easier collection
+    // SMALL collectibles relative to large player (player must jump to collect)
+    // Hitbox is ~80% of visual size for easier collection
     const itemConfig = {
-      tien: { emoji: '💰', label: 'Tiền +10', size: 44, hitbox: 36 },
-      tin: { emoji: '❤️', label: 'Hạnh phúc +50', size: 48, hitbox: 38 },
-      nha: { emoji: '🏡', label: 'Nhà +100', size: 52, hitbox: 42 },
-      xe: { emoji: '🚗', label: 'Xe +150', size: 52, hitbox: 42 },
-      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 48, hitbox: 38 },
-      vang: { emoji: '💍', label: 'Vàng +300', size: 52, hitbox: 42 }
+      tien: { emoji: '💰', label: 'Tiền +10', size: 36, hitbox: 30 },
+      tin: { emoji: '❤️', label: 'Hạnh phúc +50', size: 40, hitbox: 32 },
+      nha: { emoji: '🏡', label: 'Nhà +100', size: 44, hitbox: 36 },
+      xe: { emoji: '🚗', label: 'Xe +150', size: 44, hitbox: 36 },
+      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 40, hitbox: 32 },
+      vang: { emoji: '💍', label: 'Vàng +300', size: 44, hitbox: 36 }
     };
 
     const config = itemConfig[itemType];
 
     // Items float in the AIR above ground - player must JUMP to collect
-    // Player can jump about 150-180px high from ground
-    const heightAboveGround = Phaser.Math.Between(60, 160); // Float 60-160px above ground (easy to reach)
+    // Small items at various heights (easier to collect with large player hitbox)
+    const heightAboveGround = Phaser.Math.Between(50, 200);
     const y = this.groundY - heightAboveGround;
 
     // Container for emoji + label
@@ -519,9 +519,9 @@ export default class GameScene extends Phaser.Scene {
       fontSize: `${config.size}px`
     }).setOrigin(0.5, 0.5);
 
-    // Add label text above emoji (so it's visible in the sky)
-    const label = this.add.text(0, -35, config.label, {
-      fontSize: '12px',
+    // Add label text above emoji (small)
+    const label = this.add.text(0, -28, config.label, {
+      fontSize: '11px',
       fontFamily: 'Arial',
       color: '#FFD700',
       backgroundColor: 'rgba(0, 0, 0, 0.75)',

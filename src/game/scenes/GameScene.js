@@ -89,55 +89,238 @@ export default class GameScene extends Phaser.Scene {
   createParallaxBackground() {
     const { width, height } = this.scale;
 
-    // Sky layer (static gradient)
-    const sky = this.add.rectangle(0, 0, width, height, 0x87CEEB).setOrigin(0);
+    // Sky layer with beautiful gradient (top to bottom: dark blue to light blue)
+    const skyGraphics = this.add.graphics();
+    skyGraphics.fillGradientStyle(0x5B9BD5, 0x5B9BD5, 0x87CEEB, 0x87CEEB, 1);
+    skyGraphics.fillRect(0, 0, width, height * 0.6);
+    skyGraphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE6F3FF, 0xE6F3FF, 1);
+    skyGraphics.fillRect(0, height * 0.6, width, height * 0.4);
 
-    // Clouds layer (slow scroll)
+    // Sun (mặt trời)
+    const sun = this.add.circle(width * 0.85, height * 0.15, 40, 0xFDB813, 1);
+    sun.setAlpha(0.9);
+    // Sun glow
+    const sunGlow = this.add.circle(width * 0.85, height * 0.15, 55, 0xFDB813, 0.3);
+
+    // Clouds layer (beautiful fluffy clouds)
     this.cloudsLayer = this.add.group();
-    for (let i = 0; i < 3; i++) {
-      const cloud = this.add.ellipse(
-        i * 400 + Math.random() * 200,
-        50 + Math.random() * 100,
-        80, 40, 0xffffff, 0.8
-      );
-      cloud.setData('baseX', cloud.x);
-      this.cloudsLayer.add(cloud);
+    for (let i = 0; i < 8; i++) {
+      const cloudX = i * 250 + Math.random() * 150;
+      const cloudY = 40 + Math.random() * 120;
+
+      // Create cloud group with multiple circles for fluffy effect
+      const cloudContainer = this.add.container(cloudX, cloudY);
+
+      // Main cloud body
+      const cloud1 = this.add.ellipse(0, 0, 100, 50, 0xffffff, 0.9);
+      const cloud2 = this.add.ellipse(-30, -10, 70, 45, 0xffffff, 0.85);
+      const cloud3 = this.add.ellipse(30, -5, 80, 40, 0xffffff, 0.85);
+      const cloud4 = this.add.ellipse(0, 10, 60, 35, 0xffffff, 0.8);
+
+      cloudContainer.add([cloud1, cloud2, cloud3, cloud4]);
+      cloudContainer.setData('baseX', cloudX);
+      cloudContainer.setData('speed', 0.8 + Math.random() * 0.4);
+      this.cloudsLayer.add(cloudContainer);
     }
 
-    // Mountains layer (medium scroll)
+    // Birds flying (chim bay)
+    this.birdsLayer = this.add.group();
+    for (let i = 0; i < 5; i++) {
+      const birdX = Math.random() * width;
+      const birdY = 80 + Math.random() * 150;
+
+      // Simple bird shape (V shape)
+      const birdGraphics = this.add.graphics();
+      birdGraphics.lineStyle(2, 0x2C3E50, 1);
+      birdGraphics.beginPath();
+      birdGraphics.moveTo(-8, 0);
+      birdGraphics.lineTo(0, -5);
+      birdGraphics.lineTo(8, 0);
+      birdGraphics.strokePath();
+
+      const birdTexture = birdGraphics.generateTexture('bird' + i, 16, 10);
+      birdGraphics.destroy();
+
+      const bird = this.add.image(birdX, birdY, 'bird' + i);
+      bird.setData('baseX', birdX);
+      bird.setData('baseY', birdY);
+      bird.setData('speed', 1.5 + Math.random() * 1);
+      this.birdsLayer.add(bird);
+
+      // Animate bird flapping
+      this.tweens.add({
+        targets: bird,
+        scaleY: 0.8,
+        duration: 300,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Far mountains (núi xa - darker, smaller)
+    const farMountainGraphics = this.add.graphics();
+    farMountainGraphics.fillStyle(0x6B8E23, 0.5);
+    for (let i = 0; i < 6; i++) {
+      const x = i * 250;
+      farMountainGraphics.fillTriangle(
+        x, height - 180,
+        x + 100, height - 320,
+        x + 200, height - 180
+      );
+    }
+    const farMountainTexture = farMountainGraphics.generateTexture('farMountains', width * 2, height);
+    farMountainGraphics.destroy();
+
+    this.farMountainsBg = this.add.image(0, 0, 'farMountains').setOrigin(0);
+    this.farMountainsBg2 = this.add.image(width * 2, 0, 'farMountains').setOrigin(0);
+
+    // Near mountains (núi gần - brighter, bigger)
     this.mountainsLayer = this.add.group();
     const mountainGraphics = this.add.graphics();
-    mountainGraphics.fillStyle(0x8B7355, 0.6);
-    for (let i = 0; i < 4; i++) {
-      const x = i * 300;
-      mountainGraphics.fillTriangle(x, height - 150, x + 150, height - 300, x + 300, height - 150);
+    mountainGraphics.fillStyle(0x8B7355, 0.7);
+    for (let i = 0; i < 5; i++) {
+      const x = i * 350;
+      mountainGraphics.fillTriangle(
+        x, height - 120,
+        x + 175, height - 350,
+        x + 350, height - 120
+      );
+      // Mountain shadows
+      mountainGraphics.fillStyle(0x654321, 0.3);
+      mountainGraphics.fillTriangle(
+        x + 175, height - 350,
+        x + 350, height - 120,
+        x + 250, height - 120
+      );
+      mountainGraphics.fillStyle(0x8B7355, 0.7);
     }
-    const mountainTexture = mountainGraphics.generateTexture('mountains', width, height);
+    const mountainTexture = mountainGraphics.generateTexture('mountains', width * 2, height);
     mountainGraphics.destroy();
 
     this.mountainsBg = this.add.image(0, 0, 'mountains').setOrigin(0);
-    this.mountainsBg2 = this.add.image(width, 0, 'mountains').setOrigin(0);
+    this.mountainsBg2 = this.add.image(width * 2, 0, 'mountains').setOrigin(0);
+
+    // River (sông) - behind the ground
+    const riverGraphics = this.add.graphics();
+    riverGraphics.fillGradientStyle(0x4A90E2, 0x4A90E2, 0x87CEEB, 0x87CEEB, 1);
+    riverGraphics.fillRect(0, height - 100, width * 2, 70);
+    const riverTexture = riverGraphics.generateTexture('river', width * 2, 100);
+    riverGraphics.destroy();
+
+    this.riverBg = this.add.image(0, height - 100, 'river').setOrigin(0);
+    this.riverBg2 = this.add.image(width * 2, height - 100, 'river').setOrigin(0);
+
+    // Water waves (sóng nước)
+    this.wavesLayer = this.add.group();
+    for (let i = 0; i < 10; i++) {
+      const waveX = i * 200;
+      const waveY = height - 70;
+
+      const waveGraphics = this.add.graphics();
+      waveGraphics.lineStyle(3, 0xffffff, 0.5);
+      waveGraphics.beginPath();
+      for (let x = 0; x < 100; x += 10) {
+        const y = Math.sin(x * 0.1) * 5;
+        if (x === 0) {
+          waveGraphics.moveTo(x, y);
+        } else {
+          waveGraphics.lineTo(x, y);
+        }
+      }
+      waveGraphics.strokePath();
+
+      const waveTexture = waveGraphics.generateTexture('wave' + i, 100, 20);
+      waveGraphics.destroy();
+
+      const wave = this.add.image(waveX, waveY, 'wave' + i);
+      wave.setData('baseX', waveX);
+      wave.setData('phase', i * 0.5);
+      this.wavesLayer.add(wave);
+
+      // Animate waves
+      this.tweens.add({
+        targets: wave,
+        y: waveY - 3,
+        duration: 1000 + Math.random() * 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
   }
 
   createGround() {
     const { width, height } = this.scale;
 
     // Ground closer to bottom for more play space
-    this.groundY = height - 30;
+    this.groundY = height - 40;
 
-    // Create repeating ground tiles
+    // Create beautiful ground with grass and dirt
     this.groundTiles = this.add.group();
     const tileWidth = 64;
     const tilesNeeded = Math.ceil(width / tileWidth) + 2;
 
     for (let i = 0; i < tilesNeeded; i++) {
-      const tile = this.add.rectangle(
-        i * tileWidth,
-        this.groundY,
-        tileWidth, 30,
-        0x8B4513
-      ).setOrigin(0, 0);
+      const tileX = i * tileWidth;
+
+      // Create ground tile with gradient (grass on top, dirt below)
+      const tileGraphics = this.add.graphics();
+
+      // Grass layer (top)
+      tileGraphics.fillStyle(0x4CAF50, 1); // Green grass
+      tileGraphics.fillRect(0, 0, tileWidth, 12);
+
+      // Grass blades
+      tileGraphics.lineStyle(2, 0x388E3C, 1);
+      for (let j = 0; j < 8; j++) {
+        const grassX = j * 8 + Math.random() * 4;
+        tileGraphics.beginPath();
+        tileGraphics.moveTo(grassX, 10);
+        tileGraphics.lineTo(grassX + 1, 2);
+        tileGraphics.strokePath();
+      }
+
+      // Dirt layer (middle)
+      tileGraphics.fillStyle(0x8B4513, 1); // Brown dirt
+      tileGraphics.fillRect(0, 12, tileWidth, 18);
+
+      // Dirt texture (small dots)
+      for (let j = 0; j < 10; j++) {
+        const dotX = Math.random() * tileWidth;
+        const dotY = 12 + Math.random() * 18;
+        tileGraphics.fillStyle(0x654321, 0.6);
+        tileGraphics.fillCircle(dotX, dotY, 1);
+      }
+
+      // Deep dirt layer (bottom)
+      tileGraphics.fillStyle(0x5D4037, 1); // Dark brown
+      tileGraphics.fillRect(0, 30, tileWidth, 10);
+
+      const tileTexture = tileGraphics.generateTexture('groundTile' + i, tileWidth, 40);
+      tileGraphics.destroy();
+
+      const tile = this.add.image(tileX, this.groundY, 'groundTile' + i).setOrigin(0, 0);
       this.groundTiles.add(tile);
+
+      // Add random flowers and rocks on some tiles
+      if (Math.random() < 0.3) {
+        const decorX = tileX + Math.random() * tileWidth;
+        const decorY = this.groundY - 5;
+
+        if (Math.random() < 0.5) {
+          // Flower
+          const flower = this.add.text(decorX, decorY, '🌸', {
+            fontSize: '16px'
+          }).setOrigin(0.5, 1);
+          this.groundTiles.add(flower);
+        } else {
+          // Rock
+          const rock = this.add.ellipse(decorX, decorY, 12, 8, 0x757575, 1);
+          rock.setOrigin(0.5, 1);
+          this.groundTiles.add(rock);
+        }
+      }
     }
 
     // Ground collision body
@@ -181,6 +364,10 @@ export default class GameScene extends Phaser.Scene {
     // DEBUG: Create graphics for hitbox visualization
     this.playerHitboxGraphics = this.add.graphics();
     this.playerHitboxGraphics.setDepth(1000);
+
+    // DEBUG: Create red border for player sprite
+    this.playerBorderGraphics = this.add.graphics();
+    this.playerBorderGraphics.setDepth(1000);
 
     // No running animation tween - keep it simple and stable
     // Player stays at fixed position, only jumps
@@ -882,10 +1069,26 @@ export default class GameScene extends Phaser.Scene {
     if (this.playerHitboxGraphics) {
       this.playerHitboxGraphics.clear();
     }
+    if (this.playerBorderGraphics) {
+      this.playerBorderGraphics.clear();
+    }
 
-    // Draw player hitbox
+    // Draw player sprite border (red)
+    if (this.player) {
+      const playerWidth = 80;
+      const playerHeight = 120;
+      this.playerBorderGraphics.lineStyle(2, 0xff0000, 1); // Red color for sprite border
+      this.playerBorderGraphics.strokeRect(
+        this.player.x - playerWidth / 2,
+        this.player.y - playerHeight / 2,
+        playerWidth,
+        playerHeight
+      );
+    }
+
+    // Draw player body/hitbox (red, thicker)
     if (this.player && this.player.body) {
-      this.playerHitboxGraphics.lineStyle(2, 0xff0000, 1); // Red color, 2px width
+      this.playerHitboxGraphics.lineStyle(3, 0xff0000, 0.8); // Red color, 3px width for body
       this.playerHitboxGraphics.strokeRect(
         this.player.body.x,
         this.player.body.y,
@@ -978,13 +1181,43 @@ export default class GameScene extends Phaser.Scene {
 
     // Clouds (slow)
     this.cloudsLayer.getChildren().forEach(cloud => {
-      cloud.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_CLOUDS;
-      if (cloud.x < -100) {
-        cloud.x = this.scale.width + 100;
+      const speed = cloud.getData('speed') || 1;
+      cloud.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
+      if (cloud.x < -150) {
+        cloud.x = this.scale.width + 150;
       }
     });
 
-    // Mountains (medium)
+    // Birds flying (very slow, natural movement)
+    if (this.birdsLayer) {
+      this.birdsLayer.getChildren().forEach(bird => {
+        const speed = bird.getData('speed') || 1;
+        bird.x -= scrollDistance * 0.3 * speed;
+        // Add slight vertical bobbing
+        const baseY = bird.getData('baseY');
+        bird.y = baseY + Math.sin(Date.now() * 0.001 + bird.x * 0.01) * 10;
+
+        if (bird.x < -50) {
+          bird.x = this.scale.width + 50;
+          bird.setData('baseY', 80 + Math.random() * 150);
+        }
+      });
+    }
+
+    // Far mountains (slower than near mountains)
+    if (this.farMountainsBg && this.farMountainsBg2) {
+      this.farMountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS * 0.5;
+      this.farMountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS * 0.5;
+
+      if (this.farMountainsBg.x + this.farMountainsBg.width < 0) {
+        this.farMountainsBg.x = this.farMountainsBg2.x + this.farMountainsBg2.width;
+      }
+      if (this.farMountainsBg2.x + this.farMountainsBg2.width < 0) {
+        this.farMountainsBg2.x = this.farMountainsBg.x + this.farMountainsBg.width;
+      }
+    }
+
+    // Near mountains (medium)
     this.mountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
     this.mountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
 
@@ -993,6 +1226,29 @@ export default class GameScene extends Phaser.Scene {
     }
     if (this.mountainsBg2.x + this.mountainsBg2.width < 0) {
       this.mountainsBg2.x = this.mountainsBg.x + this.mountainsBg.width;
+    }
+
+    // River (fast, like ground)
+    if (this.riverBg && this.riverBg2) {
+      this.riverBg.x -= scrollDistance * 0.8;
+      this.riverBg2.x -= scrollDistance * 0.8;
+
+      if (this.riverBg.x + this.riverBg.width < 0) {
+        this.riverBg.x = this.riverBg2.x + this.riverBg2.width;
+      }
+      if (this.riverBg2.x + this.riverBg2.width < 0) {
+        this.riverBg2.x = this.riverBg.x + this.riverBg.width;
+      }
+    }
+
+    // Waves (fast with water)
+    if (this.wavesLayer) {
+      this.wavesLayer.getChildren().forEach(wave => {
+        wave.x -= scrollDistance * 0.9;
+        if (wave.x < -100) {
+          wave.x = this.scale.width + 100;
+        }
+      });
     }
   }
 

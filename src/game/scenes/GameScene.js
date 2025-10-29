@@ -256,53 +256,37 @@ export default class GameScene extends Phaser.Scene {
     // Ground closer to bottom for more play space
     this.groundY = height - 40;
 
-    // Create beautiful ground with grass and dirt
-    this.groundTiles = this.add.group();
-    const tileWidth = 64;
-    const tilesNeeded = Math.ceil(width / tileWidth) + 2;
+    // Create a wide seamless ground texture
+    const groundWidth = Math.max(width * 2, 2048); // Ensure minimum width
+    const groundHeight = 40;
+    const groundGraphics = this.add.graphics();
 
-    for (let i = 0; i < tilesNeeded; i++) {
-      const tileX = i * tileWidth;
+    // Layer 1: Grass (top) - bright green
+    groundGraphics.fillStyle(0x4CAF50, 1);
+    groundGraphics.fillRect(0, 0, groundWidth, 12);
+    
+    // Add lighter green top edge for grass highlight
+    groundGraphics.fillStyle(0x66BB6A, 1);
+    groundGraphics.fillRect(0, 0, groundWidth, 3);
 
-      // Create ground tile with gradient (grass on top, dirt below)
-      const tileGraphics = this.add.graphics();
+    // Layer 2: Dirt (middle) - brown
+    groundGraphics.fillStyle(0x8B4513, 1);
+    groundGraphics.fillRect(0, 12, groundWidth, 18);
 
-      // Grass layer (top)
-      tileGraphics.fillStyle(0x4CAF50, 1); // Green grass
-      tileGraphics.fillRect(0, 0, tileWidth, 12);
+    // Layer 3: Deep dirt (bottom) - dark brown
+    groundGraphics.fillStyle(0x5D4037, 1);
+    groundGraphics.fillRect(0, 30, groundWidth, 10);
 
-      // Grass blades
-      tileGraphics.lineStyle(2, 0x388E3C, 1);
-      for (let j = 0; j < 8; j++) {
-        const grassX = j * 8 + Math.random() * 4;
-        tileGraphics.beginPath();
-        tileGraphics.moveTo(grassX, 10);
-        tileGraphics.lineTo(grassX + 1, 2);
-        tileGraphics.strokePath();
-      }
+    // Generate texture and destroy graphics
+    groundGraphics.generateTexture('seamlessGround', groundWidth, groundHeight);
+    groundGraphics.destroy();
 
-      // Dirt layer (middle)
-      tileGraphics.fillStyle(0x8B4513, 1); // Brown dirt
-      tileGraphics.fillRect(0, 12, tileWidth, 18);
+    // Create TWO ground images for seamless infinite scrolling
+    this.ground1 = this.add.image(0, this.groundY, 'seamlessGround').setOrigin(0, 0).setDepth(10);
+    this.ground2 = this.add.image(groundWidth, this.groundY, 'seamlessGround').setOrigin(0, 0).setDepth(10);
 
-      // Dirt texture (small dots)
-      for (let j = 0; j < 10; j++) {
-        const dotX = Math.random() * tileWidth;
-        const dotY = 12 + Math.random() * 18;
-        tileGraphics.fillStyle(0x654321, 0.6);
-        tileGraphics.fillCircle(dotX, dotY, 1);
-      }
-
-      // Deep dirt layer (bottom)
-      tileGraphics.fillStyle(0x5D4037, 1); // Dark brown
-      tileGraphics.fillRect(0, 30, tileWidth, 10);
-
-      const tileTexture = tileGraphics.generateTexture('groundTile' + i, tileWidth, 40);
-      tileGraphics.destroy();
-
-      const tile = this.add.image(tileX, this.groundY, 'groundTile' + i).setOrigin(0, 0);
-      this.groundTiles.add(tile);
-    }
+    // Store width for wrapping
+    this.groundWidth = groundWidth;
 
     // Ground collision body
     this.ground = this.add.rectangle(width / 2, this.groundY + 10, width * 2, 20, 0x000000, 0);
@@ -1236,17 +1220,19 @@ export default class GameScene extends Phaser.Scene {
   updateGround(deltaInSeconds) {
     const scrollDistance = this.scrollSpeed * deltaInSeconds;
 
-    this.groundTiles.getChildren().forEach(tile => {
-      tile.x -= scrollDistance;
+    // Scroll both ground images
+    this.ground1.x -= scrollDistance;
+    this.ground2.x -= scrollDistance;
 
-      // Wrap around when tile goes off-screen
-      if (tile.x + tile.width < 0) {
-        const rightmostTile = this.groundTiles.getChildren().reduce((max, t) =>
-          t.x > max.x ? t : max
-        );
-        tile.x = rightmostTile.x + tile.width;
-      }
-    });
+    // Wrap around seamlessly - use stored width to ensure no gaps
+    const groundWidth = this.groundWidth || this.ground1.width;
+    
+    if (this.ground1.x + groundWidth <= 0) {
+      this.ground1.x = this.ground2.x + groundWidth;
+    }
+    if (this.ground2.x + groundWidth <= 0) {
+      this.ground2.x = this.ground1.x + groundWidth;
+    }
   }
 
   updateObstacles(deltaInSeconds) {

@@ -6,6 +6,9 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
 
+    // Debug settings
+    this.DEBUG_HITBOXES = false; // Set to true to show all hitboxes
+
     // Game state
     this.isGameOver = false;
     this.isInvincible = false;
@@ -1030,6 +1033,18 @@ export default class GameScene extends Phaser.Scene {
   }
 
   debugDrawHitboxes() {
+    // Only draw if DEBUG_HITBOXES is enabled
+    if (!this.DEBUG_HITBOXES) {
+      // Clear graphics if debug is disabled
+      if (this.playerHitboxGraphics) {
+        this.playerHitboxGraphics.clear();
+      }
+      if (this.playerBorderGraphics) {
+        this.playerBorderGraphics.clear();
+      }
+      return;
+    }
+
     // Clear previous frame
     if (this.playerHitboxGraphics) {
       this.playerHitboxGraphics.clear();
@@ -1062,7 +1077,7 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    // Draw obstacles hitboxes
+    // Draw obstacles hitboxes (red)
     this.obstacles.getChildren().forEach(obstacle => {
       if (obstacle.body) {
         this.playerHitboxGraphics.lineStyle(2, 0xff0000, 1);
@@ -1075,7 +1090,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    // Draw collectibles hitboxes
+    // Draw collectibles hitboxes (green)
     this.collectibles.getChildren().forEach(item => {
       if (item.body) {
         this.playerHitboxGraphics.lineStyle(2, 0x00ff00, 1); // Green for collectibles

@@ -148,27 +148,42 @@ export default class GameScene extends Phaser.Scene {
   createPlayer() {
     const { width, height } = this.scale;
 
-    // Player dimensions (keep same as before)
+    // Player dimensions - fixed size for balanced gameplay
     const playerWidth = 80;
     const playerHeight = 120;
 
     // Position player further left on smaller screens
     const playerX = width < 600 ? 100 : 150;
 
-    // Create player using the loaded image - will stretch to fit size
-    this.player = this.physics.add.sprite(playerX, this.groundY - playerHeight / 2, 'playerImage');
-    this.player.setCollideWorldBounds(false);
+    // Player stands ON the ground (bottom of sprite touches ground)
+    const playerY = this.groundY - playerHeight - 30;
 
-    // Stretch image to fit the exact size (40x60)
+    // Create player using the loaded image - will stretch to fit size
+    this.player = this.physics.add.sprite(playerX, playerY, 'playerImage');
+    this.player.setCollideWorldBounds(false);
+    //this.player.setOrigin(0.5, 0); // Origin at bottom center so it stands on ground
+
+    // Stretch image to fit the exact size
     this.player.setDisplaySize(playerWidth, playerHeight);
 
-    // Set body size for more precise collision
-    this.player.body.setSize(playerWidth * 0.8, playerHeight * 0.9);
-    this.player.body.setOffset(playerWidth * 0.1, playerHeight * 0.05);
+    // Set body size for precise collision
+    // Make hitbox slightly smaller than visual for fair gameplay
+    // But keep it simple - no complex offset needed since origin is at bottom-center
+    const bodyWidth = playerWidth * 0.85;  // 85% width (account for dress sides)
+    const bodyHeight = playerHeight * 0.95; // 95% height (very close to full height)
+    this.player.body.setSize(bodyWidth, bodyHeight);
+    
+    // Center hitbox horizontally only, keep bottom aligned with sprite bottom
+    // Offset X: center the hitbox, Offset Y: 0 to keep feet on ground
+  //  this.player.body.setOffset((playerWidth - bodyWidth) / 2, 0);
 
     // Physics - Chrome Dino style (simple gravity)
     this.player.body.setGravityY(GAME_CONSTANTS.GRAVITY);
     this.physics.add.collider(this.player, this.ground);
+
+    // DEBUG: Create graphics for hitbox visualization
+    this.playerHitboxGraphics = this.add.graphics();
+    this.playerHitboxGraphics.setDepth(1000);
 
     // No running animation tween - keep it simple and stable
     // Player stays at fixed position, only jumps
@@ -396,14 +411,8 @@ export default class GameScene extends Phaser.Scene {
 
     const { width } = this.scale;
 
-    // Randomly spawn ground or flying obstacle
-    const spawnFlying = Math.random() < 0.3; // 30% chance for flying
-
-    if (spawnFlying) {
-      this.spawnFlyingEnemy();
-    } else {
-      this.spawnGroundObstacle();
-    }
+    // Only spawn ground obstacles (no flying enemies)
+    this.spawnGroundObstacle();
 
     // Schedule next obstacle
     this.scheduleNextObstacle();
@@ -412,37 +421,37 @@ export default class GameScene extends Phaser.Scene {
   spawnGroundObstacle() {
     const { width } = this.scale;
 
-    // Ground obstacles - work/stress themed enemies (uniform size)
+    // Ground obstacles - work/stress themed enemies (scaled to match player)
     const groundObstacles = [
-      { key: 'stress', emoji: '😰', label: 'Stress' },
-      { key: 'deadline', emoji: '⏰', label: 'Deadline' },
-      { key: 'work', emoji: '💼', label: 'Công việc' },
-      { key: 'boss', emoji: '👔', label: 'Ông sếp' },
-      { key: 'overtime', emoji: '🌙', label: 'OT' },
-      { key: 'meeting', emoji: '📊', label: 'Meeting' }
+      { key: 'stress', emoji: '😰', label: 'Stress', height: 70 },
+      { key: 'deadline', emoji: '⏰', label: 'Deadline', height: 70 },
+      { key: 'work', emoji: '💼', label: 'Công việc', height: 70 },
+      { key: 'boss', emoji: '👔', label: 'Ông sếp', height: 70 },
+      { key: 'overtime', emoji: '🌙', label: 'OT', height: 70 },
+      { key: 'meeting', emoji: '📊', label: 'Meeting', height: 70 }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(groundObstacles);
 
-    // Uniform size for all ground obstacles
-    const obstacleSize = 48; // Larger and consistent
-    const obstacleY = this.groundY - obstacleSize;
+    // Obstacle stands ON the ground (like player)
+    const obstacleHeight = type.height;
+    const obstacleY = this.groundY - obstacleHeight;
 
-    // Container for emoji + label
+    // Container for emoji + label (origin at bottom)
     const container = this.add.container(width + 50, obstacleY);
 
-    // Create emoji obstacle (larger)
-    const emoji = this.add.text(0, -5, type.emoji, {
-      fontSize: '48px'
-    }).setOrigin(0.5, 1);
+    // Create emoji obstacle (bottom-aligned, standing on ground)
+    const emoji = this.add.text(0, 0, type.emoji, {
+      fontSize: '64px'
+    }).setOrigin(0.5, 0);
 
-    // Add label text below emoji
-    const label = this.add.text(0, 2, type.label, {
-      fontSize: '10px',
+    // Add label text below emoji (on the ground)
+    const label = this.add.text(0, 70, type.label, {
+      fontSize: '12px',
       fontFamily: 'Arial',
       color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      padding: { x: 3, y: 1 }
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      padding: { x: 4, y: 2 }
     }).setOrigin(0.5, 0);
 
     container.add([emoji, label]);
@@ -452,77 +461,17 @@ export default class GameScene extends Phaser.Scene {
     container.body.setAllowGravity(false);
     container.body.setImmovable(true);
 
-    // Uniform hitbox
-    container.body.setSize(42, 42);
+    // Hitbox for the obstacle - 80% of emoji size for fair collision
+    const obstacleBodyWidth = 50;  // ~80% of 64px emoji
+    const obstacleBodyHeight = 56; // ~80% of 70px height
+    container.body.setSize(obstacleBodyWidth, obstacleBodyHeight);
+    container.body.setOffset(-obstacleBodyWidth / 2, 7); // Center horizontally, slight gap from bottom
     container.setData('type', type.key);
     container.setData('isFlying', false);
 
     this.obstacles.add(container);
   }
 
-  spawnFlyingEnemy() {
-    const { width } = this.scale;
-
-    // Flying enemies - work stress (uniform size)
-    const flyingEnemies = [
-      { key: 'email', emoji: '📧', label: 'Email khẩn' },
-      { key: 'report', emoji: '📄', label: 'Báo cáo' },
-      { key: 'phone', emoji: '📞', label: 'Điện thoại' },
-      { key: 'angry-boss', emoji: '😡', label: 'Sếp giận' },
-      { key: 'task', emoji: '📝', label: 'Task mới' }
-    ];
-
-    const type = Phaser.Utils.Array.GetRandom(flyingEnemies);
-
-    // Flying at different heights (like pterodactyls in Chrome Dino)
-    const flyHeights = [
-      this.groundY - 80,  // Low flying
-      this.groundY - 120, // Medium flying
-      this.groundY - 160  // High flying
-    ];
-    const flyY = Phaser.Utils.Array.GetRandom(flyHeights);
-
-    // Container for emoji + label
-    const container = this.add.container(width + 50, flyY);
-
-    // Create emoji (larger and uniform)
-    const emoji = this.add.text(0, -5, type.emoji, {
-      fontSize: '42px'
-    }).setOrigin(0.5, 1);
-
-    // Add label text below emoji
-    const label = this.add.text(0, 2, type.label, {
-      fontSize: '10px',
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      padding: { x: 3, y: 1 }
-    }).setOrigin(0.5, 0);
-
-    container.add([emoji, label]);
-
-    // Physics on container
-    this.physics.add.existing(container);
-    container.body.setAllowGravity(false);
-    container.body.setImmovable(true);
-
-    // Uniform hitbox
-    container.body.setSize(40, 40);
-    container.setData('type', type.key);
-    container.setData('isFlying', true);
-
-    this.obstacles.add(container);
-
-    // Flying animation (bobbing up and down)
-    this.tweens.add({
-      targets: container,
-      y: flyY - 10,
-      duration: 500,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
-  }
 
   spawnCollectible() {
     if (this.isGameOver) return;
@@ -547,53 +496,58 @@ export default class GameScene extends Phaser.Scene {
       itemType = 'vang'; // 2% chance
     }
 
+    // Increased sizes for better visibility and balance with player size
+    // Hitbox is ~75% of visual size for easier collection
     const itemConfig = {
-      tien: { emoji: '💰', label: 'Tiền +10', size: 32 },
-      tin: { emoji: '🏠', label: 'Tin +50', size: 36 },
-      nha: { emoji: '🏡', label: 'Nhà +100', size: 40 },
-      xe: { emoji: '🚗', label: 'Xe +150', size: 40 },
-      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 36 },
-      vang: { emoji: '💍', label: 'Vàng +300', size: 40 }
+      tien: { emoji: '💰', label: 'Tiền +10', size: 44, hitbox: 36 },
+      tin: { emoji: '❤️', label: 'Hạnh phúc +50', size: 48, hitbox: 38 },
+      nha: { emoji: '🏡', label: 'Nhà +100', size: 52, hitbox: 42 },
+      xe: { emoji: '🚗', label: 'Xe +150', size: 52, hitbox: 42 },
+      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 48, hitbox: 38 },
+      vang: { emoji: '💍', label: 'Vàng +300', size: 52, hitbox: 42 }
     };
 
     const config = itemConfig[itemType];
 
-    // Spawn at varying heights
-    const heightVariation = Phaser.Math.Between(-150, -50);
-    const y = this.groundY + heightVariation;
+    // Items float in the AIR above ground - player must JUMP to collect
+    // Player can jump about 150-180px high from ground
+    const heightAboveGround = Phaser.Math.Between(60, 160); // Float 60-160px above ground (easy to reach)
+    const y = this.groundY - heightAboveGround;
 
     // Container for emoji + label
     const container = this.add.container(width + 50, y);
 
-    // Create emoji (uniform sizes)
-    const emoji = this.add.text(0, -5, config.emoji, {
+    // Create emoji (centered)
+    const emoji = this.add.text(0, 0, config.emoji, {
       fontSize: `${config.size}px`
-    }).setOrigin(0.5, 1);
+    }).setOrigin(0.5, 0.5);
 
-    // Add label text below emoji
-    const label = this.add.text(0, 2, config.label, {
-      fontSize: '10px',
+    // Add label text above emoji (so it's visible in the sky)
+    const label = this.add.text(0, -35, config.label, {
+      fontSize: '12px',
       fontFamily: 'Arial',
       color: '#FFD700',
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      padding: { x: 3, y: 1 }
-    }).setOrigin(0.5, 0);
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5, 0.5);
 
     container.add([emoji, label]);
 
     // Physics on container
     this.physics.add.existing(container);
     container.body.setAllowGravity(false);
+    container.body.setSize(config.hitbox, config.hitbox);
+    container.body.setOffset(-config.hitbox / 2, -config.hitbox / 2);
     container.setData('itemType', itemType);
     container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
 
     this.collectibles.add(container);
 
-    // Floating animation
+    // Floating animation - gentle bobbing in the sky
     this.tweens.add({
       targets: container,
-      y: y - 10,
-      duration: 1000,
+      y: y - 20,
+      duration: 1200,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut'
@@ -852,7 +806,7 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
     yPos += 30;
-    const itemText = `💰 ${this.itemsCollected.tien}  🏠 ${this.itemsCollected.tin}  🏡 ${this.itemsCollected.nha}  🚗 ${this.itemsCollected.xe}  📜 ${this.itemsCollected.soDo}  💍 ${this.itemsCollected.vang}`;
+    const itemText = `💰 ${this.itemsCollected.tien}  ❤️ ${this.itemsCollected.tin}  🏡 ${this.itemsCollected.nha}  🚗 ${this.itemsCollected.xe}  📜 ${this.itemsCollected.soDo}  💍 ${this.itemsCollected.vang}`;
     this.add.text(width / 2, yPos, itemText, {
       fontSize: '18px',
       fontFamily: 'Arial',
@@ -926,6 +880,50 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  debugDrawHitboxes() {
+    // Clear previous frame
+    if (this.playerHitboxGraphics) {
+      this.playerHitboxGraphics.clear();
+    }
+
+    // Draw player hitbox
+    if (this.player && this.player.body) {
+      this.playerHitboxGraphics.lineStyle(2, 0xff0000, 1); // Red color, 2px width
+      this.playerHitboxGraphics.strokeRect(
+        this.player.body.x,
+        this.player.body.y,
+        this.player.body.width,
+        this.player.body.height
+      );
+    }
+
+    // Draw obstacles hitboxes
+    this.obstacles.getChildren().forEach(obstacle => {
+      if (obstacle.body) {
+        this.playerHitboxGraphics.lineStyle(2, 0xff0000, 1);
+        this.playerHitboxGraphics.strokeRect(
+          obstacle.body.x,
+          obstacle.body.y,
+          obstacle.body.width,
+          obstacle.body.height
+        );
+      }
+    });
+
+    // Draw collectibles hitboxes
+    this.collectibles.getChildren().forEach(item => {
+      if (item.body) {
+        this.playerHitboxGraphics.lineStyle(2, 0x00ff00, 1); // Green for collectibles
+        this.playerHitboxGraphics.strokeRect(
+          item.body.x,
+          item.body.y,
+          item.body.width,
+          item.body.height
+        );
+      }
+    });
+  }
+
   update(time, delta) {
     if (this.isGameOver) return;
 
@@ -973,6 +971,9 @@ export default class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.upKey)) {
       this.jump();
     }
+
+    // DEBUG: Draw hitboxes
+    this.debugDrawHitboxes();
   }
 
   updateParallax(deltaInSeconds) {
@@ -1020,15 +1021,8 @@ export default class GameScene extends Phaser.Scene {
     this.obstacles.getChildren().forEach(obstacle => {
       obstacle.x -= scrollDistance;
 
-      // Update flying animation position if it exists
-      if (obstacle.getData('isFlying')) {
-        // Flying enemies already have tween animation
-      }
-
       // Remove off-screen obstacles
       if (obstacle.x < -100) {
-        // Stop any tweens on this obstacle
-        this.tweens.killTweensOf(obstacle);
         obstacle.destroy();
       }
     });
@@ -1042,6 +1036,8 @@ export default class GameScene extends Phaser.Scene {
 
       // Remove off-screen collectibles
       if (item.x < -100) {
+        // Stop any tweens on this collectible
+        this.tweens.killTweensOf(item);
         item.destroy();
       }
     });

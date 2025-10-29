@@ -43,6 +43,11 @@ export default class GameScene extends Phaser.Scene {
     this.isInSafePeriod = false;
   }
 
+  preload() {
+    // Load player image
+    this.load.image('playerImage', '/player.png');
+  }
+
   create() {
     const { width, height } = this.scale;
 
@@ -143,28 +148,18 @@ export default class GameScene extends Phaser.Scene {
   createPlayer() {
     const { width, height } = this.scale;
 
-    // Create player sprite (simple rectangle for now - can be replaced with image)
+    // Player dimensions (keep same as before)
     const playerWidth = 40;
     const playerHeight = 60;
-
-    // Generate player texture - simpler, more like Chrome Dino
-    const graphics = this.add.graphics();
-    graphics.fillStyle(0x535353); // Gray color like Chrome Dino
-    graphics.fillRect(0, 0, playerWidth, playerHeight);
-    // Simple details
-    graphics.fillStyle(0x000000); // Black for head
-    graphics.fillCircle(playerWidth / 2, playerHeight * 0.2, 6);
-    // Arms
-    graphics.fillRect(0, playerHeight * 0.4, playerWidth, 8);
-    const playerTexture = graphics.generateTexture('player', playerWidth, playerHeight);
-    graphics.destroy();
 
     // Position player further left on smaller screens
     const playerX = width < 600 ? 100 : 150;
 
-    // Create player - positioned relative to screen
-    this.player = this.physics.add.sprite(playerX, this.groundY - playerHeight / 2, 'player');
+    // Create player using the loaded image - will stretch to fit size
+    this.player = this.physics.add.sprite(playerX, this.groundY - playerHeight / 2, 'playerImage');
     this.player.setCollideWorldBounds(false);
+
+    // Stretch image to fit the exact size (40x60)
     this.player.setDisplaySize(playerWidth, playerHeight);
 
     // Set body size for more precise collision

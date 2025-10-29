@@ -32,27 +32,27 @@ export const gameConfig = {
 
 // Game constants for Endless Runner
 export const GAME_CONSTANTS = {
-  // Auto-run speed settings
-  INITIAL_SCROLL_SPEED: 300,  // px/s - starting speed
-  MAX_SCROLL_SPEED: 600,       // px/s - maximum speed
-  SPEED_INCREMENT: 30,         // px/s - speed increase every 30 seconds
-  SPEED_INCREMENT_INTERVAL: 30000, // ms - 30 seconds
+  // Auto-run speed settings - FASTER AND HARDER
+  INITIAL_SCROLL_SPEED: 500,  // px/s - starting speed (was 300)
+  MAX_SCROLL_SPEED: 1000,      // px/s - maximum speed (was 600)
+  SPEED_INCREMENT: 50,         // px/s - speed increase every 20 seconds (was 30)
+  SPEED_INCREMENT_INTERVAL: 20000, // ms - 20 seconds (was 30000)
 
-  // Jump mechanics (simpler like Chrome Dino)
-  JUMP_VELOCITY_HIGH: -500,    // Single jump velocity
-  GRAVITY: 1000,               // Stronger gravity for snappier feel
+  // Jump mechanics - faster and snappier
+  JUMP_VELOCITY_HIGH: -600,    // Stronger jump for faster gameplay (was -500)
+  GRAVITY: 1200,               // Stronger gravity for snappier feel (was 1000)
 
   // Game duration
   GAME_DURATION: 120000,       // ms - 2 minutes
-  SAFE_PERIOD_START: 5000,     // ms - no obstacles in first 5 seconds
+  SAFE_PERIOD_START: 3000,     // ms - shorter safe period (was 5000)
   SAFE_PERIOD_INTERVAL: 45000, // ms - safe period every 45 seconds
-  SAFE_PERIOD_DURATION: 3000,  // ms - 3 second safe zone
+  SAFE_PERIOD_DURATION: 2000,  // ms - 2 second safe zone (was 3000)
 
   // Scoring system
-  DISTANCE_SCORE_MULTIPLIER: 1, // 1 point per meter
+  DISTANCE_SCORE_MULTIPLIER: 1.5, // 1.5 point per meter (was 1)
   ITEM_SCORES: {
     tien: 10,      // Tiền - coins
-    tin: 50,       // Nhà tin
+    tin: 50,       // Hạnh phúc
     nha: 100,      // Nhà
     xe: 150,       // Xe (+ invincibility)
     soDo: 200,     // Sổ đỏ
@@ -65,23 +65,23 @@ export const GAME_CONSTANTS = {
   MULTIPLIER_COMBO: 1.5,       // Multiplier during combo
   MULTIPLIER_GOLD: 2,          // Multiplier from gold item
 
-  // Obstacle spawning
-  OBSTACLE_MIN_GAP: 1500,      // ms - minimum time between obstacles
-  OBSTACLE_MAX_GAP: 3000,      // ms - maximum time between obstacles
-  OBSTACLE_DENSITY_INCREASE: 200, // ms - reduce gap over time
+  // Obstacle spawning - MORE FREQUENT, HARDER
+  OBSTACLE_MIN_GAP: 1000,      // ms - minimum time between obstacles (was 1500)
+  OBSTACLE_MAX_GAP: 2200,      // ms - maximum time between obstacles (was 3000)
+  OBSTACLE_DENSITY_INCREASE: 250, // ms - reduce gap over time (was 200)
 
   // Collectible spawning
-  COLLECTIBLE_SPAWN_INTERVAL: 2000, // ms - spawn collectibles every 2-3 seconds
+  COLLECTIBLE_SPAWN_INTERVAL: 1800, // ms - spawn more frequently (was 2000)
   COLLECTIBLE_RARE_CHANCE: 0.3,     // 30% chance for rare items
 
   // Power-ups
   INVINCIBILITY_DURATION: 5000,  // ms - from xe item
   MULTIPLIER_DURATION: 10000,    // ms - from vang item
 
-  // Parallax layers speed (relative to scroll speed)
+  // Parallax layers speed - FASTER for dynamic feel
   PARALLAX_SKY: 0,          // Static
-  PARALLAX_CLOUDS: 0.2,     // Slow
-  PARALLAX_MOUNTAINS: 0.5,  // Medium
+  PARALLAX_CLOUDS: 0.3,     // Faster clouds (was 0.2)
+  PARALLAX_MOUNTAINS: 0.6,  // Faster mountains (was 0.5)
   PARALLAX_GROUND: 1        // Same as scroll speed
 };
 

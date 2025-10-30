@@ -54,6 +54,9 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
+    // Auto fullscreen
+    this.scale.startFullscreen();
+
     // Initialize game time
     this.startTime = Date.now();
     this.gameTime = 0;

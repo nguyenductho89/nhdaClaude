@@ -15,6 +15,9 @@ export default class IntroScene extends Phaser.Scene {
     const centerX = width / 2;
     const centerY = height / 2;
 
+    // Auto fullscreen
+    this.scale.startFullscreen();
+
     // Background
     this.add.rectangle(0, 0, width, height, 0xff6b9d).setOrigin(0);
 

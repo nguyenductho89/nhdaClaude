@@ -15,6 +15,9 @@ export default class WeddingInfoScene extends Phaser.Scene {
   async create() {
     const { width, height } = this.scale;
 
+    // Auto fullscreen
+    this.scale.startFullscreen();
+
     // Scrollable container
     this.cameras.main.setBounds(0, 0, width, height * 3);
 

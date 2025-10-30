@@ -15,8 +15,8 @@ export default class IntroScene extends Phaser.Scene {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Auto fullscreen
-    this.scale.startFullscreen();
+    // Fullscreen handler for mobile (especially iOS Safari)
+    this.setupFullscreen();
 
     // Background
     this.add.rectangle(0, 0, width, height, 0xff6b9d).setOrigin(0);
@@ -141,5 +141,57 @@ export default class IntroScene extends Phaser.Scene {
     });
 
     return button;
+  }
+
+  setupFullscreen() {
+    // Detect iOS devices
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (!isMobile) return; // Skip for desktop
+
+    // Flag to track if fullscreen has been attempted
+    let fullscreenAttempted = false;
+
+    // Function to enter fullscreen - works for both iOS and Android
+    const enterFullscreen = () => {
+      if (fullscreenAttempted) return;
+      fullscreenAttempted = true;
+
+      // For iOS Safari - use webkit prefixed API
+      if (isIOS) {
+        const canvas = this.game.canvas;
+
+        // Try webkit fullscreen on the canvas first
+        if (canvas.webkitRequestFullscreen) {
+          canvas.webkitRequestFullscreen();
+        } else if (canvas.webkitEnterFullscreen) {
+          canvas.webkitEnterFullscreen();
+        }
+
+        // Also try on document.documentElement as fallback
+        const elem = document.documentElement;
+        if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.webkitEnterFullscreen) {
+          elem.webkitEnterFullscreen();
+        }
+
+        // iOS Safari specific: Try to hide address bar
+        window.scrollTo(0, 1);
+        setTimeout(() => window.scrollTo(0, 0), 0);
+      } else {
+        // For Android Chrome and other browsers - use Phaser's built-in method
+        this.scale.startFullscreen();
+      }
+    };
+
+    // Add fullscreen trigger on first user interaction
+    // This is required for iOS Safari which needs user gesture
+    this.input.once('pointerdown', enterFullscreen);
+
+    // Also try on touch start for better mobile support
+    const canvas = this.game.canvas;
+    canvas.addEventListener('touchstart', enterFullscreen, { once: true });
   }
 }

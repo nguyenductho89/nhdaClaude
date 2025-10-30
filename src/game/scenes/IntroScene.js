@@ -15,11 +15,11 @@ export default class IntroScene extends Phaser.Scene {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Fullscreen handler for mobile (especially iOS Safari)
-    this.setupFullscreen();
-
     // Background
     this.add.rectangle(0, 0, width, height, 0xff6b9d).setOrigin(0);
+
+    // iOS Safari: Hide address bar on load
+    this.hideAddressBar();
 
     // Title
     const title = this.add.text(centerX, centerY - 200, 'THIỆP MỜI CƯỚI', {
@@ -143,37 +143,13 @@ export default class IntroScene extends Phaser.Scene {
     return button;
   }
 
-  setupFullscreen() {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  hideAddressBar() {
+    // Scroll trick to hide address bar on iOS Safari
+    window.scrollTo(0, 1);
 
-    if (!isMobile) return; // Skip for desktop
-
-    // iOS Safari doesn't support Fullscreen API properly
-    // Instead, we use scroll tricks to hide the address bar
-    const hideAddressBar = () => {
-      // Scroll to hide address bar on iOS
-      setTimeout(() => {
-        window.scrollTo(0, 1);
-      }, 0);
-
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 1);
-    };
-
-    // Try to hide address bar on first interaction
-    this.input.once('pointerdown', hideAddressBar);
-
-    // Also try immediately
-    hideAddressBar();
-
-    // For Android Chrome - try native fullscreen API
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    if (isAndroid) {
-      this.input.once('pointerdown', () => {
-        if (this.scale.isFullscreen) return;
-        this.scale.startFullscreen();
-      });
-    }
+    // Scroll back to top after a short delay
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 0);
   }
 }

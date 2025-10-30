@@ -17,11 +17,22 @@ export const gameConfig = {
     }
   },
   scale: {
-    mode: isMobile ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: '100%',
-    height: '100%',
-    parent: 'game-container'
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game-container',
+    fullscreenTarget: 'game-container',
+    expandParent: true,
+    // iOS specific scale settings
+    min: {
+      width: 320,
+      height: 480
+    },
+    max: {
+      width: window.innerWidth * 2,
+      height: window.innerHeight * 2
+    }
   },
   render: {
     pixelArt: false,

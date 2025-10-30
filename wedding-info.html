@@ -81,14 +81,209 @@
       text-align: center;
     }
 
+    .section.invitation-text p {
+      text-align: center;
+      font-size: 20px;
+      color: #555;
+    }
+
     .family-info {
       text-align: center;
       margin: 20px 0;
     }
 
+    .family-info p {
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
     .event-details {
       font-size: 18px;
       line-height: 1.8;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .info-card {
+      background: #fff7fa;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(214, 51, 132, 0.1);
+      text-align: center;
+    }
+
+    .info-card h4 {
+      font-size: 20px;
+      color: #d63384;
+      margin-bottom: 10px;
+    }
+
+    .info-card p {
+      font-size: 17px;
+      color: #444;
+      margin: 6px 0;
+      line-height: 1.6;
+    }
+
+    .info-card a {
+      color: #d63384;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
+      align-items: center;
+      background: #fff7fa;
+      border-radius: 8px;
+      padding: 16px 20px;
+      border-left: 4px solid #d63384;
+    }
+
+    .timeline-time {
+      font-size: 18px;
+      font-weight: bold;
+      color: #d63384;
+      text-align: right;
+    }
+
+    .timeline-content {
+      text-align: left;
+      font-size: 17px;
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .timeline-content strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .tradition-list,
+    .menu-list,
+    .notes-list {
+      list-style: none;
+      margin-top: 12px;
+      padding-left: 0;
+    }
+
+    .tradition-list li,
+    .menu-list li,
+    .notes-list li {
+      font-size: 17px;
+      color: #444;
+      padding: 8px 12px;
+      margin: 6px 0;
+      background: #fff7fa;
+      border-radius: 6px;
+      text-align: left;
+    }
+
+    .tradition-list li strong {
+      color: #d63384;
+    }
+
+    .dresscode {
+      font-size: 17px;
+      color: #444;
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .dresscode span {
+      display: inline-block;
+      background: #ffe4e1;
+      color: #d63384;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin: 6px 6px 0 0;
+      font-weight: bold;
+    }
+
+    .map-section {
+      text-align: left;
+      font-size: 17px;
+      line-height: 1.7;
+      color: #444;
+    }
+
+    .map-section a.button-link {
+      display: inline-block;
+      margin-top: 12px;
+      background: #d63384;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .map-section a.button-link:hover {
+      transform: translateY(-2px);
+      background: #c02672;
+    }
+
+    .gift-section {
+      font-size: 17px;
+      color: #444;
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .gift-box {
+      background: #fff3cd;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 12px;
+      border: 1px dashed #f0ad4e;
+    }
+
+    .gift-box strong {
+      font-size: 18px;
+      color: #c28100;
+    }
+
+    .rsvp-section {
+      font-size: 17px;
+      color: #444;
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .rsvp-section .contacts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .rsvp-section .contact-card {
+      background: #fff7fa;
+      border-radius: 6px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+
+    .rsvp-section .contact-card strong {
+      color: #d63384;
+      display: block;
+      margin-bottom: 4px;
     }
 
     .player-score {
@@ -199,6 +394,19 @@
         padding: 20px;
       }
 
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-item {
+        grid-template-columns: 1fr;
+        text-align: left;
+      }
+
+      .timeline-time {
+        text-align: left;
+      }
+
       .section p, .event-details {
         font-size: 16px;
       }
@@ -223,36 +431,173 @@
       Còn 30 ngày nữa!
     </div>
 
-    <div class="section">
+    <div class="section invitation-text">
       <p><strong>Trân trọng kính mời</strong></p>
+      <p>Trong niềm hân hoan và hạnh phúc, gia đình chúng tôi kính mời Quý quan khách đến chung vui và chúc phúc cho lễ thành hôn của hai con:</p>
+      <p><strong>Nguyễn Văn A</strong> &amp; <strong>Trần Thị D</strong></p>
+      <p>Sự hiện diện của Quý vị là niềm vinh hạnh, góp phần lưu giữ khoảnh khắc thiêng liêng trong ngày trọng đại theo phong tục truyền thống Việt Nam.</p>
     </div>
 
     <h3>NHÀ TRAI</h3>
     <div class="section family-info">
-      <p>Ông: Nguyễn Văn B<br>
-      Bà: Trần Thị C</p>
-      <p>Trân trọng kính mời<br>
-      đến dự tiệc cưới của con trai</p>
+      <p>Ông: Nguyễn Văn B &nbsp;•&nbsp; Bà: Trần Thị C</p>
+      <p>Gia đình ngụ tại:<br><strong>123 Nguyễn Huệ, Phường 7, TP. Cao Lãnh, Đồng Tháp</strong></p>
+      <p>Trân trọng kính mời Quý quan khách đến dự lễ thành hôn của trưởng nam:</p>
       <p><strong>Nguyễn Văn A</strong></p>
     </div>
 
     <h3>NHÀ GÁI</h3>
     <div class="section family-info">
-      <p>Ông: Trần Văn E<br>
-      Bà: Lê Thị F</p>
-      <p>Trân trọng kính mời<br>
-      đến dự tiệc cưới của con gái</p>
+      <p>Ông: Trần Văn E &nbsp;•&nbsp; Bà: Lê Thị F</p>
+      <p>Gia đình ngụ tại:<br><strong>89 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh</strong></p>
+      <p>Kính mời Quý quan khách đến chứng kiến lễ vu quy của ái nữ:</p>
       <p><strong>Trần Thị D</strong></p>
     </div>
 
-    <h2>💒 LỄ THÀNH HÔN & TIỆC CƯỚI</h2>
+    <h2>💒 LỄ THÀNH HÔN &amp; TIỆC CƯỚI</h2>
     <div class="section event-details">
-      <p>🗓️ <strong>Thời gian:</strong> 18:00 - 15/12/2024</p>
-      <p>📍 <strong>Địa điểm:</strong> Trung Tâm Tiệc Cưới ABC<br>
-      456 Đường DEF, Quận 3, TP.HCM</p>
-      <p>📞 <strong>Liên hệ:</strong><br>
-      Chú rể: 0901234567<br>
-      Cô dâu: 0907654321</p>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🕊️ LỄ VU QUY</h4>
+          <p><strong>Thời gian:</strong> 08:00 | Chủ Nhật, 15/12/2024</p>
+          <p><strong>Địa điểm:</strong><br>Gia đình nhà gái<br>89 Lê Lợi, Quận 1, TP.HCM</p>
+          <p><strong>Nghi lễ:</strong> Lễ Nạp Tài, Rước Dâu, Lạy Gia Tiên</p>
+        </div>
+        <div class="info-card">
+          <h4>💍 LỄ THÀNH HÔN</h4>
+          <p><strong>Thời gian:</strong> 11:30 | Chủ Nhật, 15/12/2024</p>
+          <p><strong>Địa điểm:</strong><br>Gia đình nhà trai<br>123 Nguyễn Huệ, TP. Cao Lãnh</p>
+          <p><strong>Nghi lễ:</strong> Ra mắt họ hàng, trao dâu rể, nhận lời chúc phúc</p>
+        </div>
+        <div class="info-card">
+          <h4>🎉 TIỆC BÁO HỶ</h4>
+          <p><strong>Thời gian:</strong> 18:00 | Thứ Bảy, 21/12/2024</p>
+          <p><strong>Địa điểm:</strong><br>Trung Tâm Tiệc Cưới ABC - Sảnh Hồng Phúc<br>456 Đường DEF, Quận 3, TP.HCM</p>
+          <p><strong>Đón khách:</strong> Từ 17:30 | Khai tiệc: 18:15</p>
+        </div>
+        <div class="info-card">
+          <h4>📞 LIÊN HỆ</h4>
+          <p>Chú rể: 0901 234 567 (A)</p>
+          <p>Cô dâu: 0907 654 321 (D)</p>
+          <p>Phụ trách lễ tân: 0912 888 999 (Mai)</p>
+          <p><a href="tel:0901234567">Bấm để gọi ngay</a></p>
+        </div>
+      </div>
+    </div>
+
+    <h2>🗓️ CHƯƠNG TRÌNH TRONG NGÀY</h2>
+    <div class="section">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">07:30</div>
+          <div class="timeline-content">
+            <strong>Đoàn nhà trai khởi hành</strong>
+            Tập trung tại tư gia nhà trai, sắp xếp mâm quả, chuẩn bị xe hoa và đội hình rước dâu.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">08:30</div>
+          <div class="timeline-content">
+            <strong>Nghi thức Lễ Vu Quy</strong>
+            Làm lễ chào bàn gia tiên, trao lễ vật, đại diện hai bên phát biểu, cô dâu chú rể ra mắt họ hàng.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">09:30</div>
+          <div class="timeline-content">
+            <strong>Lễ Đón Dâu &amp; Rước Dâu</strong>
+            Đoàn rước dâu di chuyển về nhà trai, thực hiện nghi thức nhập gia, dâng trà và nhận lời chúc phúc.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">11:30</div>
+          <div class="timeline-content">
+            <strong>Tiệc Báo Hỷ Tại Cao Lãnh</strong>
+            Dùng bữa thân mật cùng họ hàng, đại diện hai bên phát biểu, trao quà chúc phúc.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">18:15</div>
+          <div class="timeline-content">
+            <strong>Tiệc Chính Tại TP.HCM</strong>
+            Đón khách, lễ gia tiên tượng trưng, rót rượu giao bôi, cắt bánh cưới, nâng ly khai tiệc.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>🌸 NGHI THỨC TRUYỀN THỐNG</h2>
+    <div class="section">
+      <ul class="tradition-list">
+        <li><strong>Mâm quả đủ lễ:</strong> Trầu cau, rượu trà, trái cây, bánh phu thê, heo quay – thể hiện sự sung túc và biết ơn tổ tiên.</li>
+        <li><strong>Trao sính lễ:</strong> Đại diện hai họ lần lượt giới thiệu, trao mâm quả và nhận lời đáp lễ.</li>
+        <li><strong>Lễ gia tiên:</strong> Cô dâu chú rể thắp hương, cúi lạy tổ tiên, đọc lời hứa nguyện trăm năm.</li>
+        <li><strong>Ra mắt họ hàng:</strong> Hai bên chúc phúc, tặng quà và gửi gắm lời dặn dò cho đôi uyên ương.</li>
+        <li><strong>Chúc rượu &amp; phát biểu:</strong> Tặng rượu, phát biểu cảm ơn, mời khách dùng tiệc trong không khí sum vầy.</li>
+      </ul>
+    </div>
+
+    <h2>🍽️ THỰC ĐƠN DỰ KIẾN</h2>
+    <div class="section">
+      <ul class="menu-list">
+        <li>Khai vị: Gỏi ngó sen tôm thịt, súp bào ngư hải sản</li>
+        <li>Món chính: Cá tầm hấp nấm hương, bò nấu tiêu xanh dùng kèm bánh mì, tôm càng sốt Singapore</li>
+        <li>Món ăn truyền thống: Xôi gấc đậu xanh, bánh phu thê, chè hạt sen long nhãn</li>
+        <li>Tráng miệng: Trái cây theo mùa &amp; bánh macaron</li>
+      </ul>
+    </div>
+
+    <h2>👗 TRANG PHỤC &amp; LƯU Ý</h2>
+    <div class="section">
+      <div class="dresscode">
+        <p>Quý khách vui lòng chọn trang phục thanh lịch, phù hợp không khí lễ cưới truyền thống.</p>
+        <p><span>Nữ</span> Áo dài, đầm màu pastel, tránh màu trắng tinh.</p>
+        <p><span>Nam</span> Áo sơ mi, vest sáng màu, cà vạt hoặc nơ.</p>
+        <ul class="notes-list">
+          <li>Vui lòng đến sớm 15 phút để ổn định chỗ ngồi.</li>
+          <li>Giữ gìn trật tự khi nghi thức gia tiên diễn ra.</li>
+          <li>Chương trình chụp hình tập thể diễn ra ngay sau nghi thức rót rượu.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>🎁 GỢI Ý QUÀ MỪNG</h2>
+    <div class="section gift-section">
+      <p>Sự hiện diện và lời chúc phúc của Quý khách là món quà quý giá nhất. Nếu không tiện tham dự, Quý khách có thể gửi lời chúc hoặc quà mừng qua thông tin sau:</p>
+      <div class="gift-box">
+        <p><strong>STK NGÂN HÀNG:</strong> 0123456789 (Nguyễn Văn A) – Vietcombank, CN Đồng Tháp</p>
+        <p><strong>MOMO:</strong> 0901 234 567 (Nguyễn Văn A)</p>
+        <p>Lời chúc có thể gửi về email: <a href="mailto:happywedding@example.com">happywedding@example.com</a></p>
+      </div>
+    </div>
+
+    <h2>🗺️ HƯỚNG DẪN DI CHUYỂN</h2>
+    <div class="section map-section">
+      <p>Trung Tâm Tiệc Cưới ABC nằm ngay mặt tiền đường DEF, đối diện Công viên Ánh Sáng. Quý khách có thể gửi xe tại tầng hầm hoặc bãi giữ xe đối diện. Nhà xe sẽ phục vụ đến 23:00.</p>
+      <p><strong>Tọa độ Google Maps:</strong> 10.777123, 106.695654</p>
+      <a class="button-link" href="https://maps.app.goo.gl/9q1ABCXYZ" target="_blank" rel="noopener">Mở chỉ đường</a>
+    </div>
+
+    <h2>📩 RSVP &amp; LIÊN HỆ</h2>
+    <div class="section rsvp-section">
+      <p>Để chúng tôi chuẩn bị chu đáo nhất, Quý khách vui lòng xác nhận tham dự trước ngày <strong>01/12/2024</strong> qua các kênh sau:</p>
+      <div class="contacts">
+        <div class="contact-card">
+          <strong>Phù Dâu - Linh</strong>
+          Zalo: 0902 456 789<br>
+          Email: <a href="mailto:linh.bridesmaid@example.com">linh.bridesmaid@example.com</a>
+        </div>
+        <div class="contact-card">
+          <strong>Phù Rể - Khoa</strong>
+          Zalo: 0908 765 432<br>
+          Email: <a href="mailto:khoa.groomsman@example.com">khoa.groomsman@example.com</a>
+        </div>
+        <div class="contact-card">
+          <strong>Đại diện gia đình</strong>
+          Ông B: 0913 222 333<br>
+          Bà F: 0914 555 666
+        </div>
+      </div>
     </div>
 
     <div id="player-score-section"></div>

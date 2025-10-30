@@ -68,7 +68,6 @@ export const GAME_CONSTANTS = {
     tin: 50,       // Hạnh phúc
     nha: 100,      // Nhà
     xe: 150,       // Xe (+ invincibility)
-    soDo: 200,     // Sổ đỏ
     vang: 300      // Vàng (+ 2x multiplier)
   },
   COMBO_THRESHOLD: 5,          // 5+ items for combo

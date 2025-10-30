@@ -22,7 +22,6 @@ export default class GameScene extends Phaser.Scene {
       tin: 0,
       nha: 0,
       xe: 0,
-      soDo: 0,
       vang: 0
     };
     this.comboCount = 0;
@@ -585,12 +584,12 @@ export default class GameScene extends Phaser.Scene {
 
     // Ground obstacles - SMALL relative to large player hitbox (player must jump over)
     const groundObstacles = [
-      { key: 'stress', emoji: '😰', label: 'Stress', height: 50 },
-      { key: 'deadline', emoji: '⏰', label: 'Deadline', height: 50 },
-      { key: 'work', emoji: '💼', label: 'Công việc', height: 50 },
-      { key: 'boss', emoji: '👔', label: 'Ông sếp', height: 50 },
-      { key: 'overtime', emoji: '🌙', label: 'OT', height: 50 },
-      { key: 'meeting', emoji: '📊', label: 'Meeting', height: 50 }
+      { key: 'stress', emoji: '😰', height: 50 },
+      { key: 'deadline', emoji: '⏰', height: 50 },
+      { key: 'work', emoji: '💼', height: 50 },
+      { key: 'boss', emoji: '👔', height: 50 },
+      { key: 'overtime', emoji: '🌙', height: 50 },
+      { key: 'meeting', emoji: '📊', height: 50 }
     ];
 
     const type = Phaser.Utils.Array.GetRandom(groundObstacles);
@@ -599,7 +598,7 @@ export default class GameScene extends Phaser.Scene {
     const obstacleHeight = type.height;
     const obstacleY = this.groundY - obstacleHeight / 2;
 
-    // Container for emoji + label
+    // Container for emoji obstacle
     const container = this.add.container(width + 50, obstacleY);
 
     // Create emoji obstacle (small - easy to see and avoid)
@@ -607,16 +606,7 @@ export default class GameScene extends Phaser.Scene {
       fontSize: '48px'
     }).setOrigin(0.5, 0.5);
 
-    // Add label text below emoji
-    const label = this.add.text(0, 30, type.label, {
-      fontSize: '11px',
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
-      padding: { x: 4, y: 2 }
-    }).setOrigin(0.5, 0.5);
-
-    container.add([emoji, label]);
+    container.add([emoji]);
 
     // Physics on container
     this.physics.add.existing(container);
@@ -650,23 +640,20 @@ export default class GameScene extends Phaser.Scene {
       itemType = 'tin'; // 25% chance
     } else if (rand < 0.88) {
       itemType = 'nha'; // 13% chance
-    } else if (rand < 0.94) {
-      itemType = 'xe'; // 6% chance
-    } else if (rand < 0.98) {
-      itemType = 'soDo'; // 4% chance
+    } else if (rand < 0.96) {
+      itemType = 'xe'; // 8% chance
     } else {
-      itemType = 'vang'; // 2% chance
+      itemType = 'vang'; // 4% chance
     }
 
     // SMALL collectibles relative to large player (player must jump to collect)
     // Hitbox is ~80% of visual size for easier collection
     const itemConfig = {
-      tien: { emoji: '💰', label: 'Tiền +10', size: 36, hitbox: 30 },
-      tin: { emoji: '❤️', label: 'Hạnh phúc +50', size: 40, hitbox: 32 },
-      nha: { emoji: '🏡', label: 'Nhà +100', size: 44, hitbox: 36 },
-      xe: { emoji: '🚗', label: 'Xe +150', size: 44, hitbox: 36 },
-      soDo: { emoji: '📜', label: 'Sổ đỏ +200', size: 40, hitbox: 32 },
-      vang: { emoji: '💍', label: 'Vàng +300', size: 44, hitbox: 36 }
+      tien: { emoji: '💰', valueText: '+10', size: 36, hitbox: 30 },
+      tin: { emoji: '❤️', valueText: '+50', size: 40, hitbox: 32 },
+      nha: { emoji: '🏡', valueText: '+100', size: 44, hitbox: 36 },
+      xe: { emoji: '🚗', valueText: '+150', size: 44, hitbox: 36 },
+      vang: { emoji: '💍', valueText: '+300', size: 44, hitbox: 36 }
     };
 
     const config = itemConfig[itemType];
@@ -679,7 +666,7 @@ export default class GameScene extends Phaser.Scene {
     const heightAboveGround = Phaser.Math.Between(50, maxHeightAboveGround);
     const y = this.groundY - heightAboveGround;
 
-    // Container for emoji + label
+    // Container for emoji + value text
     const container = this.add.container(width + 50, y);
 
     // Create emoji (centered)
@@ -687,8 +674,8 @@ export default class GameScene extends Phaser.Scene {
       fontSize: `${config.size}px`
     }).setOrigin(0.5, 0.5);
 
-    // Add label text above emoji (small)
-    const label = this.add.text(0, -28, config.label, {
+    // Add value text above emoji (small)
+    const valueLabel = this.add.text(0, -28, config.valueText, {
       fontSize: '11px',
       fontFamily: 'Arial',
       color: '#FFD700',
@@ -696,7 +683,7 @@ export default class GameScene extends Phaser.Scene {
       padding: { x: 4, y: 2 }
     }).setOrigin(0.5, 0.5);
 
-    container.add([emoji, label]);
+    container.add([emoji, valueLabel]);
 
     // Physics on container
     this.physics.add.existing(container);
@@ -974,7 +961,7 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
     yPos += 30;
-    const itemText = `💰 ${this.itemsCollected.tien}  ❤️ ${this.itemsCollected.tin}  🏡 ${this.itemsCollected.nha}  🚗 ${this.itemsCollected.xe}  📜 ${this.itemsCollected.soDo}  💍 ${this.itemsCollected.vang}`;
+    const itemText = `💰 ${this.itemsCollected.tien}  ❤️ ${this.itemsCollected.tin}  🏡 ${this.itemsCollected.nha}  🚗 ${this.itemsCollected.xe}  💍 ${this.itemsCollected.vang}`;
     this.add.text(width / 2, yPos, itemText, {
       fontSize: '18px',
       fontFamily: 'Arial',

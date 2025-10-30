@@ -144,7 +144,7 @@ wedding-game/
 ## 🎮 Game Features
 
 - ✅ Mario-style platformer gameplay
-- ✅ Collectibles: Tiền, Tin, Nhà, Xe, Sổ đỏ, Vàng
+- ✅ Collectibles: Tiền, Tin, Nhà, Xe, Vàng
 - ✅ Leaderboard với Firebase Firestore
 - ✅ Wedding info page theo văn hóa Việt Nam
 - ✅ Mobile controls (touch)

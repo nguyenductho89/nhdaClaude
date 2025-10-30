@@ -14,7 +14,7 @@ Một trò chơi endless runner theo phong cách Chrome Dinosaur Game, được 
 - Người chơi trên mobile (chế độ landscape) và desktop
 
 ### 1.3 Core Concept
-Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân vật chú rể chạy tự động và nhảy vượt qua các chướng ngại vật, thu thập items (tiền, nhà, xe, sổ đỏ, vàng) để đạt điểm cao. Game kết thúc sau một khoảng thời gian hoặc khi va chạm chướng ngại vật, sau đó hiển thị thông tin đám cưới và leaderboard.
+Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân vật chú rể chạy tự động và nhảy vượt qua các chướng ngại vật, thu thập items (tiền, tin, nhà, xe, vàng) để đạt điểm cao. Game kết thúc sau một khoảng thời gian hoặc khi va chạm chướng ngại vật, sau đó hiển thị thông tin đám cưới và leaderboard.
 
 ---
 
@@ -63,7 +63,6 @@ Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân v
         tin: number,
         nha: number,
         xe: number,
-        soDo: number,
         vang: number
       }
     - device: string ("mobile" | "desktop")
@@ -188,10 +187,6 @@ Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân v
     - Rare item
     - Bonus: +5 giây invincibility (ghost mode)
 
-  - 📜 **Sổ đỏ** (Sổ hồng) - 200 điểm
-    - Very rare (mỗi 60 giây)
-    - Require perfect timing jump
-
   - 💍 **Vàng** (Nhẫn vàng, Vòng vàng) - 300 điểm
     - Ultra rare (1-2 lần mỗi game)
     - Hidden in hard-to-reach places
@@ -220,7 +215,7 @@ Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân v
 - Sprite của Dinosaur/Runner → hình ảnh chú rể (có thể dùng PNG)
 - Background → Themed theo đám cưới (romantic landscape)
 - Obstacles → Wedding themed items
-- Collectibles → PNG icons (tiền, nhà, xe, sổ đỏ, vàng)
+- Collectibles → PNG icons (tiền, tin, nhà, xe, vàng)
 - Background music → nhạc đám cưới/nhạc chủ đề của cặp đôi
 - Color scheme theo theme đám cưới
 
@@ -234,7 +229,6 @@ Game endless runner 2D theo phong cách Chrome Dinosaur Game, trong đó nhân v
     - Tin: 50 points
     - Nhà: 100 points
     - Xe: 150 points (+ invincibility bonus)
-    - Sổ đỏ: 200 points
     - Vàng: 300 points (+ 2x multiplier)
   - **Combo bonus**: 5+ items liên tiếp → +50 points
   - **Survival time bonus**: +10 points mỗi 10 giây survive
@@ -495,7 +489,6 @@ Khi người dùng skip game, vẫn track và lưu thông tin:
   - Tin (icon nhà tin/nhà trọ)
   - Nhà (căn nhà, biệt thự)
   - Xe (ô tô, xe hơi)
-  - Sổ đỏ (sổ hồng bất động sản)
   - Vàng (thỏi vàng, nhẫn vàng, vòng vàng)
 
 ### 5.4 Audio
@@ -1181,7 +1174,6 @@ Tạo collection `players` với structure:
     tin: 2,
     nha: 1,
     xe: 1,
-    soDo: 0,
     vang: 3
   },
   device: "mobile", // or "desktop"
@@ -1823,7 +1815,6 @@ firebase deploy --only hosting
   - Tin: 48x48px (house/apartment icon)
   - Nhà: 48x48px (villa icon)
   - Xe: 48x48px (car icon)
-  - Sổ đỏ: 48x48px (red book/document icon)
   - Vàng: 48x48px (gold ring/bar icon)
 
 - **Obstacles** (Wedding themed):

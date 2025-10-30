@@ -57,9 +57,8 @@ Bay ở 3 độ cao khác nhau:
 - **💰 Tiền** (50%) - 10 điểm
 - **🏠 Tin** (25%) - 50 điểm
 - **🏡 Nhà** (13%) - 100 điểm
-- **🚗 Xe** (6%) - 150 điểm + 5s invincibility
-- **📜 Sổ đỏ** (4%) - 200 điểm
-- **💍 Vàng** (2%) - 300 điểm + x2 multiplier 10s
+- **🚗 Xe** (8%) - 150 điểm + 5s invincibility
+- **💍 Vàng** (4%) - 300 điểm + x2 multiplier 10s
 
 ### Spawn Mechanics
 - Procedurally generated
@@ -82,7 +81,6 @@ Items:
 - Tin: 50 pts
 - Nhà: 100 pts
 - Xe: 150 pts (+ invincibility)
-- Sổ đỏ: 200 pts
 - Vàng: 300 pts (+ 2x multiplier)
 
 Bonuses:

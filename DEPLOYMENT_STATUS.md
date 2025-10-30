@@ -87,7 +87,7 @@ All code has been generated and is ready to deploy.
 ### Game Features
 - ✅ Mario-style platformer với Phaser 3
 - ✅ 3 scenes: Intro, Game, Wedding Info
-- ✅ Collectibles: Tiền, Tin, Nhà, Xe, Sổ đỏ, Vàng
+- ✅ Collectibles: Tiền, Tin, Nhà, Xe, Vàng
 - ✅ Score calculation with time bonus
 - ✅ Mobile touch controls
 - ✅ Desktop keyboard controls

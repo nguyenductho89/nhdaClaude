@@ -266,29 +266,29 @@ export default class GameScene extends Phaser.Scene {
   createGround() {
     const { width, height } = this.scale;
 
-    // Ground very close to bottom edge
-    this.groundY = height - 10;
+    // Ground at the very bottom - thinner ground for more play space
+    const groundHeight = 25;
+    this.groundY = height - groundHeight;
 
     // Create a wide seamless ground texture
     const groundWidth = Math.max(width * 2, 2048); // Ensure minimum width
-    const groundHeight = 40;
     const groundGraphics = this.add.graphics();
 
     // Layer 1: Grass (top) - bright green
     groundGraphics.fillStyle(0x4CAF50, 1);
-    groundGraphics.fillRect(0, 0, groundWidth, 12);
-    
+    groundGraphics.fillRect(0, 0, groundWidth, 8);
+
     // Add lighter green top edge for grass highlight
     groundGraphics.fillStyle(0x66BB6A, 1);
-    groundGraphics.fillRect(0, 0, groundWidth, 3);
+    groundGraphics.fillRect(0, 0, groundWidth, 2);
 
     // Layer 2: Dirt (middle) - brown
     groundGraphics.fillStyle(0x8B4513, 1);
-    groundGraphics.fillRect(0, 12, groundWidth, 18);
+    groundGraphics.fillRect(0, 8, groundWidth, 10);
 
     // Layer 3: Deep dirt (bottom) - dark brown
     groundGraphics.fillStyle(0x5D4037, 1);
-    groundGraphics.fillRect(0, 30, groundWidth, 10);
+    groundGraphics.fillRect(0, 18, groundWidth, 7);
 
     // Generate texture and destroy graphics
     groundGraphics.generateTexture('seamlessGround', groundWidth, groundHeight);

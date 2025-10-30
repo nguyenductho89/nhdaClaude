@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WEDDING_INFO } from '../../config/game.js';
+import { releaseLandscapeOrientation } from '../../services/orientation.js';
 
 export default class IntroScene extends Phaser.Scene {
   constructor() {
@@ -14,6 +15,8 @@ export default class IntroScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const centerX = width / 2;
     const centerY = height / 2;
+
+    releaseLandscapeOrientation();
 
     // Background
     this.add.rectangle(0, 0, width, height, 0xff6b9d).setOrigin(0);

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { WEDDING_INFO } from '../../config/game.js';
 import { getLeaderboard } from '../../services/leaderboard.js';
+import { releaseLandscapeOrientation } from '../../services/orientation.js';
 
 export default class WeddingInfoScene extends Phaser.Scene {
   constructor() {
@@ -14,6 +15,8 @@ export default class WeddingInfoScene extends Phaser.Scene {
 
   async create() {
     const { width, height } = this.scale;
+
+    releaseLandscapeOrientation();
 
     // Auto fullscreen
     this.scale.startFullscreen();

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_CONSTANTS } from '../../config/game.js';
 import { submitScore, getDeviceType } from '../../services/leaderboard.js';
+import { requireLandscapeOrientation, releaseLandscapeOrientation } from '../../services/orientation.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -52,6 +53,10 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    requireLandscapeOrientation();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
+    this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
 
     // Safe area offset for mobile (avoid notch/status bar on iOS)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

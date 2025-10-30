@@ -170,14 +170,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Far mountains (núi xa - darker, smaller)
+    // Adjust mountain position on mobile to avoid safe area at top
+    const mountainOffset = this.safeAreaTop * 0.3; // Reduce mountain height slightly on mobile
     const farMountainGraphics = this.add.graphics();
     farMountainGraphics.fillStyle(0x6B8E23, 0.5);
     for (let i = 0; i < 6; i++) {
       const x = i * 250;
       farMountainGraphics.fillTriangle(
-        x, height - 180,
-        x + 100, height - 320,
-        x + 200, height - 180
+        x, height - 180 + mountainOffset,
+        x + 100, height - 320 + mountainOffset,
+        x + 200, height - 180 + mountainOffset
       );
     }
     const farMountainTexture = farMountainGraphics.generateTexture('farMountains', width * 2, height);
@@ -193,16 +195,16 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       const x = i * 350;
       mountainGraphics.fillTriangle(
-        x, height - 120,
-        x + 175, height - 350,
-        x + 350, height - 120
+        x, height - 120 + mountainOffset,
+        x + 175, height - 350 + mountainOffset,
+        x + 350, height - 120 + mountainOffset
       );
       // Mountain shadows
       mountainGraphics.fillStyle(0x654321, 0.3);
       mountainGraphics.fillTriangle(
-        x + 175, height - 350,
-        x + 350, height - 120,
-        x + 250, height - 120
+        x + 175, height - 350 + mountainOffset,
+        x + 350, height - 120 + mountainOffset,
+        x + 250, height - 120 + mountainOffset
       );
       mountainGraphics.fillStyle(0x8B7355, 0.7);
     }
@@ -671,7 +673,10 @@ export default class GameScene extends Phaser.Scene {
 
     // Items float in the AIR above ground - player must JUMP to collect
     // Small items at various heights (easier to collect with large player hitbox)
-    const heightAboveGround = Phaser.Math.Between(50, 200);
+    // Limit max height to avoid safe area (notch/status bar on mobile)
+    const { height } = this.scale;
+    const maxHeightAboveGround = Math.min(200, this.groundY - this.safeAreaTop - 100);
+    const heightAboveGround = Phaser.Math.Between(50, maxHeightAboveGround);
     const y = this.groundY - heightAboveGround;
 
     // Container for emoji + label

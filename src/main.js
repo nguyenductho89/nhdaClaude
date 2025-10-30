@@ -24,9 +24,30 @@ const config = {
 // Create game instance
 const game = new Phaser.Game(config);
 
-// Handle window resize
+// iOS Safari viewport fix
+// On iOS, window.innerHeight changes when address bar shows/hides
+const getViewportHeight = () => {
+  // Use visualViewport API if available (modern browsers)
+  if (window.visualViewport) {
+    return window.visualViewport.height;
+  }
+  return window.innerHeight;
+};
+
+// Handle window resize with iOS-specific fixes
 const handleResize = () => {
-  game.scale.resize(window.innerWidth, window.innerHeight);
+  const width = window.innerWidth;
+  const height = getViewportHeight();
+
+  game.scale.resize(width, height);
+
+  // iOS Safari: Hide address bar after resize
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+      setTimeout(() => window.scrollTo(0, 0), 0);
+    }, 100);
+  }
 };
 
 window.addEventListener('resize', handleResize);
@@ -35,15 +56,32 @@ window.addEventListener('resize', handleResize);
 window.addEventListener('orientationchange', () => {
   setTimeout(() => {
     handleResize();
-  }, 100);
+  }, 300); // Longer delay for orientation change
 });
+
+// Listen to visualViewport changes (iOS Safari address bar show/hide)
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', handleResize);
+  window.visualViewport.addEventListener('scroll', () => {
+    // Prevent scroll when viewport changes
+    window.scrollTo(0, 0);
+  });
+}
 
 // Handle mobile fullscreen on load
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-  // Force fullscreen on mobile
+  // Initial resize
   setTimeout(() => {
     handleResize();
   }, 200);
+
+  // iOS specific: Try to hide address bar on load
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+      setTimeout(() => window.scrollTo(0, 0), 0);
+    }, 500);
+  }
 }
 
 export default game;

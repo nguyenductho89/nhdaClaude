@@ -2,10 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
   <meta name="theme-color" content="#667eea">
   <title>Thiệp Mời Cưới - Wedding Game</title>
   <style>
@@ -22,6 +23,10 @@
       height: 100%;
       overflow: hidden;
       position: fixed;
+      /* iOS specific: Use dvh (dynamic viewport height) for proper fullscreen */
+      height: 100dvh;
+      /* Fallback for older browsers */
+      height: -webkit-fill-available;
     }
 
     body {
@@ -58,8 +63,11 @@
       user-select: none;
       width: 100vw !important;
       height: 100vh !important;
+      /* iOS specific viewport units */
+      height: 100dvh !important;
       max-width: 100vw;
       max-height: 100vh;
+      max-height: 100dvh;
       object-fit: cover; /* Fill the screen completely */
     }
 
@@ -80,6 +88,7 @@
       html, body, #app, #game-container {
         width: 100vw !important;
         height: 100vh !important;
+        height: 100dvh !important; /* iOS Safari dynamic viewport */
         margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;

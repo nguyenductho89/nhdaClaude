@@ -144,54 +144,36 @@ export default class IntroScene extends Phaser.Scene {
   }
 
   setupFullscreen() {
-    // Detect iOS devices
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (!isMobile) return; // Skip for desktop
 
-    // Flag to track if fullscreen has been attempted
-    let fullscreenAttempted = false;
-
-    // Function to enter fullscreen - works for both iOS and Android
-    const enterFullscreen = () => {
-      if (fullscreenAttempted) return;
-      fullscreenAttempted = true;
-
-      // For iOS Safari - use webkit prefixed API
-      if (isIOS) {
-        const canvas = this.game.canvas;
-
-        // Try webkit fullscreen on the canvas first
-        if (canvas.webkitRequestFullscreen) {
-          canvas.webkitRequestFullscreen();
-        } else if (canvas.webkitEnterFullscreen) {
-          canvas.webkitEnterFullscreen();
-        }
-
-        // Also try on document.documentElement as fallback
-        const elem = document.documentElement;
-        if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen();
-        } else if (elem.webkitEnterFullscreen) {
-          elem.webkitEnterFullscreen();
-        }
-
-        // iOS Safari specific: Try to hide address bar
+    // iOS Safari doesn't support Fullscreen API properly
+    // Instead, we use scroll tricks to hide the address bar
+    const hideAddressBar = () => {
+      // Scroll to hide address bar on iOS
+      setTimeout(() => {
         window.scrollTo(0, 1);
-        setTimeout(() => window.scrollTo(0, 0), 0);
-      } else {
-        // For Android Chrome and other browsers - use Phaser's built-in method
-        this.scale.startFullscreen();
-      }
+      }, 0);
+
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 1);
     };
 
-    // Add fullscreen trigger on first user interaction
-    // This is required for iOS Safari which needs user gesture
-    this.input.once('pointerdown', enterFullscreen);
+    // Try to hide address bar on first interaction
+    this.input.once('pointerdown', hideAddressBar);
 
-    // Also try on touch start for better mobile support
-    const canvas = this.game.canvas;
-    canvas.addEventListener('touchstart', enterFullscreen, { once: true });
+    // Also try immediately
+    hideAddressBar();
+
+    // For Android Chrome - try native fullscreen API
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      this.input.once('pointerdown', () => {
+        if (this.scale.isFullscreen) return;
+        this.scale.startFullscreen();
+      });
+    }
   }
 }

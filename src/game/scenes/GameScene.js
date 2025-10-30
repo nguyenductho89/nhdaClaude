@@ -54,6 +54,10 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
+    // Safe area offset for mobile (avoid notch/status bar on iOS)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    this.safeAreaTop = isMobile ? 50 : 0; // 50px offset for mobile notch/status bar
+
     // Auto fullscreen
     this.scale.startFullscreen();
 
@@ -103,16 +107,17 @@ export default class GameScene extends Phaser.Scene {
     skyGraphics.fillRect(0, height * 0.6, width, height * 0.4);
 
     // Sun (mặt trời)
-    const sun = this.add.circle(width * 0.85, height * 0.15, 40, 0xFDB813, 1);
+    const sunY = height * 0.15 + this.safeAreaTop;
+    const sun = this.add.circle(width * 0.85, sunY, 40, 0xFDB813, 1);
     sun.setAlpha(0.9);
     // Sun glow
-    const sunGlow = this.add.circle(width * 0.85, height * 0.15, 55, 0xFDB813, 0.3);
+    const sunGlow = this.add.circle(width * 0.85, sunY, 55, 0xFDB813, 0.3);
 
     // Clouds layer (beautiful fluffy clouds)
     this.cloudsLayer = this.add.group();
     for (let i = 0; i < 8; i++) {
       const cloudX = i * 250 + Math.random() * 150;
-      const cloudY = 40 + Math.random() * 120;
+      const cloudY = this.safeAreaTop + 40 + Math.random() * 120;
 
       // Create cloud group with multiple circles for fluffy effect
       const cloudContainer = this.add.container(cloudX, cloudY);
@@ -133,7 +138,7 @@ export default class GameScene extends Phaser.Scene {
     this.birdsLayer = this.add.group();
     for (let i = 0; i < 5; i++) {
       const birdX = Math.random() * width;
-      const birdY = 80 + Math.random() * 150;
+      const birdY = this.safeAreaTop + 80 + Math.random() * 150;
 
       // Simple bird shape (V shape)
       const birdGraphics = this.add.graphics();
@@ -352,8 +357,8 @@ export default class GameScene extends Phaser.Scene {
     const baseFontSize = isMobile ? 16 : 24;
     const smallFontSize = isMobile ? 12 : 18;
 
-    // Absolute minimal margins
-    const topMargin = isMobile ? 5 : 60;
+    // Absolute minimal margins (with safe area offset for mobile)
+    const topMargin = isMobile ? (5 + this.safeAreaTop) : 60;
     const leftMargin = isMobile ? 5 : 20;
     const rightMargin = isMobile ? 5 : 20;
     const padding = isMobile ? 4 : 8;
@@ -760,7 +765,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Create animated notification
     const { width, height } = this.scale;
-    const notification = this.add.text(width / 2, height / 2 - 150, '🚗 BẤT TỬ 5S!', {
+    const notificationY = height / 2 - 150 + this.safeAreaTop;
+    const notification = this.add.text(width / 2, notificationY, '🚗 BẤT TỬ 5S!', {
       fontSize: '48px',
       fontFamily: 'Arial',
       color: '#00FFFF',
@@ -816,7 +822,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Create animated notification
     const { width, height } = this.scale;
-    const notification = this.add.text(width / 2, height / 2 - 150, '💍 ĐIỂM x2 - 10S!', {
+    const notificationY = height / 2 - 150 + this.safeAreaTop;
+    const notification = this.add.text(width / 2, notificationY, '💍 ĐIỂM x2 - 10S!', {
       fontSize: '48px',
       fontFamily: 'Arial',
       color: '#FFD700',
@@ -920,9 +927,10 @@ export default class GameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(200);
 
-    // Title
+    // Title (with safe area offset for mobile)
     const title = isVictory ? '🎉 HOÀN THÀNH!' : '💥 GAME OVER';
-    this.add.text(width / 2, height / 2 - 180, title, {
+    const titleY = height / 2 - 180 + (this.safeAreaTop / 2); // Half offset to keep centered
+    this.add.text(width / 2, titleY, title, {
       fontSize: '48px',
       fontFamily: 'Arial',
       color: isVictory ? '#FFD700' : '#FF6B6B',

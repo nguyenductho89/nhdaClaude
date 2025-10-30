@@ -266,8 +266,8 @@ export default class GameScene extends Phaser.Scene {
   createGround() {
     const { width, height } = this.scale;
 
-    // Ground closer to bottom for more play space
-    this.groundY = height - 40;
+    // Ground very close to bottom edge
+    this.groundY = height - 10;
 
     // Create a wide seamless ground texture
     const groundWidth = Math.max(width * 2, 2048); // Ensure minimum width

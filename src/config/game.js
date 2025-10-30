@@ -5,7 +5,7 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
   || window.innerWidth < 768;
 
 export const gameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL, // Force WebGL for better rendering quality
   width: window.innerWidth,
   height: window.innerHeight,
   backgroundColor: '#87CEEB',
@@ -24,6 +24,8 @@ export const gameConfig = {
     parent: 'game-container',
     fullscreenTarget: 'game-container',
     expandParent: true,
+    // High DPI support for sharp rendering on Retina/mobile displays
+    resolution: window.devicePixelRatio || 1,
     // iOS specific scale settings
     min: {
       width: 320,
@@ -37,7 +39,7 @@ export const gameConfig = {
   render: {
     pixelArt: false,
     antialias: true,
-    roundPixels: true
+    roundPixels: false // Changed to false for sharper text
   }
 };
 

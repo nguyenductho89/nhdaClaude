@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#ffe4e1">
+  <title>Thông Tin Đám Cưới</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #ffe4e1;
+      color: #333;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 42px;
+      color: #d63384;
+      text-align: center;
+      margin: 30px 0;
+      font-weight: bold;
+    }
+
+    h2 {
+      font-size: 28px;
+      color: #d63384;
+      text-align: center;
+      margin: 40px 0 20px;
+      font-weight: bold;
+    }
+
+    h3 {
+      font-size: 24px;
+      color: #d63384;
+      text-align: center;
+      margin: 30px 0 15px;
+      font-weight: bold;
+    }
+
+    .couple-names {
+      font-size: 32px;
+      color: #d63384;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .countdown {
+      font-size: 28px;
+      color: #d63384;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .section p {
+      margin: 10px 0;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .family-info {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .event-details {
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .player-score {
+      background: #d4edda;
+      color: #28a745;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .prize-announcement {
+      font-size: 20px;
+      color: #d63384;
+      font-weight: bold;
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .leaderboard {
+      margin: 20px 0;
+    }
+
+    .leaderboard-item {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .leaderboard-item.top3 {
+      background: #fff3cd;
+      font-weight: bold;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 16px 32px;
+      margin: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: #4CAF50;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .button:hover {
+      transform: scale(1.05);
+      background: rgba(76, 175, 80, 0.8);
+    }
+
+    .button:active {
+      transform: scale(0.95);
+    }
+
+    .button.secondary {
+      background: #6c757d;
+    }
+
+    .button.secondary:hover {
+      background: rgba(108, 117, 125, 0.8);
+    }
+
+    .buttons-container {
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .closing-text {
+      text-align: center;
+      font-size: 18px;
+      color: #666;
+      margin: 40px 0;
+      padding: 0 20px;
+    }
+
+    @media screen and (max-width: 768px) {
+      h1 {
+        font-size: 32px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+
+      h3 {
+        font-size: 20px;
+      }
+
+      .couple-names {
+        font-size: 24px;
+      }
+
+      .countdown {
+        font-size: 22px;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .section p, .event-details {
+        font-size: 16px;
+      }
+
+      .button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>THIỆP MỜI CƯỚI</h1>
+
+    <div class="couple-names">
+      Nguyễn Văn A ♥ Trần Thị D
+    </div>
+
+    <div class="countdown" id="countdown">
+      Còn 30 ngày nữa!
+    </div>
+
+    <div class="section">
+      <p><strong>Trân trọng kính mời</strong></p>
+    </div>
+
+    <h3>NHÀ TRAI</h3>
+    <div class="section family-info">
+      <p>Ông: Nguyễn Văn B<br>
+      Bà: Trần Thị C</p>
+      <p>Trân trọng kính mời<br>
+      đến dự tiệc cưới của con trai</p>
+      <p><strong>Nguyễn Văn A</strong></p>
+    </div>
+
+    <h3>NHÀ GÁI</h3>
+    <div class="section family-info">
+      <p>Ông: Trần Văn E<br>
+      Bà: Lê Thị F</p>
+      <p>Trân trọng kính mời<br>
+      đến dự tiệc cưới của con gái</p>
+      <p><strong>Trần Thị D</strong></p>
+    </div>
+
+    <h2>💒 LỄ THÀNH HÔN & TIỆC CƯỚI</h2>
+    <div class="section event-details">
+      <p>🗓️ <strong>Thời gian:</strong> 18:00 - 15/12/2024</p>
+      <p>📍 <strong>Địa điểm:</strong> Trung Tâm Tiệc Cưới ABC<br>
+      456 Đường DEF, Quận 3, TP.HCM</p>
+      <p>📞 <strong>Liên hệ:</strong><br>
+      Chú rể: 0901234567<br>
+      Cô dâu: 0907654321</p>
+    </div>
+
+    <div id="player-score-section"></div>
+
+    <div class="prize-announcement">
+      🏆 NGƯỜI CHƠI CAO ĐIỂM NHẤT SẼ NHẬN QUÀ ĐẶC BIỆT!
+    </div>
+
+    <h2>🏆 BẢNG XẾP HẠNG TOP 10</h2>
+    <div class="leaderboard" id="leaderboard">
+      <div class="leaderboard-item">Đang tải...</div>
+    </div>
+
+    <div class="closing-text">
+      Sự hiện diện của quý khách là niềm vinh hạnh cho gia đình chúng tôi. Trân trọng cảm ơn!
+    </div>
+
+    <div class="buttons-container">
+      <a href="game.html" class="button">🔄 CHƠI LẠI</a>
+      <a href="intro.html" class="button secondary">🏠 VỀ TRANG CHỦ</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getLeaderboard } from '/src/services/leaderboard.js';
+
+    // Get player score from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const playerScore = urlParams.get('score');
+    const playerName = urlParams.get('name');
+
+    // Display player score if available
+    if (playerScore && playerName) {
+      const scoreSection = document.getElementById('player-score-section');
+      scoreSection.innerHTML = `
+        <div class="player-score">
+          🎁 Bạn đã đạt ${playerScore} điểm!<br>
+          Chúc mừng ${playerName}!
+        </div>
+      `;
+    }
+
+    // Load leaderboard
+    async function loadLeaderboard() {
+      try {
+        const leaderboard = await getLeaderboard('all', 10);
+        const leaderboardEl = document.getElementById('leaderboard');
+
+        if (leaderboard.length === 0) {
+          leaderboardEl.innerHTML = '<div class="leaderboard-item">Chưa có người chơi nào</div>';
+          return;
+        }
+
+        leaderboardEl.innerHTML = '';
+        leaderboard.forEach((player, index) => {
+          const rank = index + 1;
+          const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+          const item = document.createElement('div');
+          item.className = rank <= 3 ? 'leaderboard-item top3' : 'leaderboard-item';
+          item.textContent = `${medal} ${player.name} - ${player.score} điểm (${player.time}s)`;
+          leaderboardEl.appendChild(item);
+        });
+      } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        document.getElementById('leaderboard').innerHTML =
+          '<div class="leaderboard-item">Không thể tải bảng xếp hạng</div>';
+      }
+    }
+
+    // Calculate countdown
+    function updateCountdown() {
+      const weddingDate = new Date('2024-12-15T18:00:00');
+      const now = new Date();
+      const diff = weddingDate - now;
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+      const countdownEl = document.getElementById('countdown');
+      if (days > 0) {
+        countdownEl.textContent = `Còn ${days} ngày nữa!`;
+      } else if (days === 0) {
+        countdownEl.textContent = 'Hôm nay là ngày trọng đại!';
+      } else {
+        countdownEl.textContent = 'Đám cưới đã diễn ra!';
+      }
+    }
+
+    // Initialize
+    updateCountdown();
+    loadLeaderboard();
+  </script>
+</body>
+</html>

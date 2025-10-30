@@ -996,25 +996,24 @@ export default class GameScene extends Phaser.Scene {
       if (nameInput) {
         submitScore(nameInput, finalScore, timeElapsed, this.itemsCollected, getDeviceType())
           .then(() => {
-            this.scene.start('WeddingInfoScene', {
-              score: finalScore,
-              playerName: nameInput,
-              isVictory: isVictory
-            });
+            // Redirect to wedding-info.html with score
+            window.location.href = `wedding-info.html?score=${finalScore}&name=${encodeURIComponent(nameInput)}`;
           })
           .catch(err => {
             console.error('Failed to submit score:', err);
-            this.scene.start('WeddingInfoScene');
+            // Redirect anyway
+            window.location.href = 'wedding-info.html';
           });
       } else {
-        this.scene.start('WeddingInfoScene');
+        // Skip to wedding info without score
+        window.location.href = 'wedding-info.html';
       }
     }, 500);
   }
 
   pauseGame() {
     if (confirm('Tạm dừng. Bạn có muốn xem thông tin đám cưới không?')) {
-      this.scene.start('WeddingInfoScene');
+      window.location.href = 'wedding-info.html';
     }
   }
 

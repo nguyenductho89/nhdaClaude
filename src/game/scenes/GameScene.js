@@ -1,7 +1,12 @@
 import Phaser from 'phaser';
 import { GAME_CONSTANTS } from '../../config/game.js';
 import { submitScore, getDeviceType } from '../../services/leaderboard.js';
-import { requireLandscapeOrientation, releaseLandscapeOrientation } from '../../services/orientation.js';
+import {
+  requireLandscapeOrientation,
+  releaseLandscapeOrientation,
+  refreshOrientationLayout,
+  getLandscapeViewportSize
+} from '../../services/orientation.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -52,9 +57,26 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
+    requireLandscapeOrientation();
+
+    const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
+
+    if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
+      this.scale.resize(desiredWidth, desiredHeight);
+    }
+
+    refreshOrientationLayout();
+
+    if (typeof this.scale.lockOrientation === 'function') {
+      try {
+        this.scale.lockOrientation('landscape');
+      } catch (error) {
+        // Orientation lock may fail on unsupported browsers; ignore gracefully.
+      }
+    }
+
     const { width, height } = this.scale;
 
-    requireLandscapeOrientation();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
     this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
 

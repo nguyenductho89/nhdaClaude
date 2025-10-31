@@ -3,6 +3,7 @@ import { gameConfig } from './config/game.js';
 import IntroScene from './game/scenes/IntroScene.js';
 import GameScene from './game/scenes/GameScene.js';
 import WeddingInfoScene from './game/scenes/WeddingInfoScene.js';
+import { getLandscapeViewportSize, refreshOrientationLayout } from './services/orientation.js';
 
 // Hide loading screen when game is ready
 window.addEventListener('load', () => {
@@ -34,9 +35,10 @@ const hideAddressBar = () => {
 
 // Handle window resize
 const handleResize = () => {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  const { width, height } = getLandscapeViewportSize();
   game.scale.resize(width, height);
+
+  refreshOrientationLayout();
 
   // Hide address bar after resize on mobile
   if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -67,6 +69,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     hideAddressBar();
   }, 500);
 }
+
+// Ensure initial sizing aligns with forced orientation
+handleResize();
 
 // Hide address bar on any user interaction (iOS Safari)
 if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {

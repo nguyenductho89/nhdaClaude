@@ -150,13 +150,12 @@
       50% { transform: rotate(90deg); }
     }
 
-    @media screen and (max-width: 768px) and (orientation: portrait) {
-      .landscape-warning {
-        display: flex;
-      }
-      #game-container {
-        display: none;
-      }
+    body.show-landscape-warning #game-container {
+      display: none;
+    }
+
+    body.show-landscape-warning .landscape-warning {
+      display: flex;
     }
 
     /* Loading screen */

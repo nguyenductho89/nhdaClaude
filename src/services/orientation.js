@@ -1,6 +1,7 @@
 let landscapeRequired = false;
 let containerOriginalStyle = null;
 let pendingResizeDispatch = null;
+let warningOverlay = null;
 
 const FORCE_CLASS = 'force-landscape';
 const PORTRAIT_CLASS = 'force-landscape-portrait';
@@ -43,6 +44,67 @@ const restoreContainerStyle = (resetCache = false) => {
   }
 };
 
+const createWarningOverlay = () => {
+  if (warningOverlay) return warningOverlay;
+
+  warningOverlay = document.createElement('div');
+  warningOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    padding: 20px;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  `;
+
+  warningOverlay.innerHTML = `
+    <div style="font-size: 64px; margin-bottom: 20px; animation: rotate-icon 2s infinite;">
+      📱↻
+    </div>
+    <h2 style="font-size: 24px; margin-bottom: 10px; font-weight: bold;">
+      Vui lòng xoay ngang màn hình
+    </h2>
+    <p style="font-size: 18px; color: rgba(255, 255, 255, 0.8);">
+      Trò chơi được thiết kế tốt nhất ở chế độ landscape
+    </p>
+  `;
+
+  // Add animation keyframes
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes rotate-icon {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(90deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  return warningOverlay;
+};
+
+const showWarningOverlay = () => {
+  const overlay = createWarningOverlay();
+  if (!overlay.parentElement) {
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+};
+
+const hideWarningOverlay = () => {
+  if (warningOverlay && warningOverlay.parentElement) {
+    warningOverlay.style.display = 'none';
+  }
+};
+
 const applyPortraitLayout = () => {
   const container = getGameContainer();
   if (!container) {
@@ -79,6 +141,7 @@ const updateOrientationState = () => {
     body.classList.remove(FORCE_CLASS);
     body.classList.remove(PORTRAIT_CLASS);
     restoreContainerStyle(true);
+    hideWarningOverlay();
     return;
   }
 
@@ -91,9 +154,11 @@ const updateOrientationState = () => {
   if (isLandscape()) {
     body.classList.remove(PORTRAIT_CLASS);
     restoreContainerStyle();
+    hideWarningOverlay();
   } else {
     body.classList.add(PORTRAIT_CLASS);
-    applyPortraitLayout();
+    // Show warning overlay instead of rotating
+    showWarningOverlay();
   }
 };
 
@@ -138,6 +203,12 @@ export const releaseLandscapeOrientation = () => {
   landscapeRequired = false;
   updateOrientationState();
   scheduleSyntheticResizeEvent();
+  
+  // Clean up warning overlay
+  if (warningOverlay && warningOverlay.parentElement) {
+    warningOverlay.parentElement.removeChild(warningOverlay);
+    warningOverlay = null;
+  }
 };
 
 export const refreshOrientationLayout = () => {

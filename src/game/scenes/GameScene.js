@@ -83,21 +83,34 @@ export default class GameScene extends Phaser.Scene {
               // RESTART the scene to properly initialize everything
               // This is necessary because create() returned early when in portrait
               console.log('Restarting scene for landscape initialization...');
-              
+
               // Resize BEFORE restarting
               const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
               console.log('Resizing to:', desiredWidth, 'x', desiredHeight);
               if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
                 this.scale.resize(desiredWidth, desiredHeight);
               }
-              
+
               // Force refresh orientation layout to ensure overlay is hidden
               refreshOrientationLayout();
-              
-              // Use requestAnimationFrame for smoother transition
+
+              // Use nested requestAnimationFrame to ensure canvas is properly rendered
+              // First frame: browser updates layout after resize
+              // Second frame: safe to restart scene
               requestAnimationFrame(() => {
-                // Restart the scene - this will call create() again
-                this.scene.restart();
+                requestAnimationFrame(() => {
+                  // Force canvas update and ensure visibility
+                  this.game.canvas.style.display = 'block';
+                  this.game.canvas.style.visibility = 'visible';
+
+                  // Force Phaser to update renderer
+                  if (this.game.renderer && this.game.renderer.resize) {
+                    this.game.renderer.resize(desiredWidth, desiredHeight);
+                  }
+
+                  // Restart the scene - this will call create() again
+                  this.scene.restart();
+                });
               });
             } else {
               // Resume the scene if already initialized and paused

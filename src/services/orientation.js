@@ -2,6 +2,10 @@ let landscapeRequired = false;
 let containerOriginalStyle = null;
 let pendingResizeDispatch = null;
 let warningOverlay = null;
+let orientationCallbacks = {
+  onLandscape: null,
+  onPortrait: null
+};
 
 const FORCE_CLASS = 'force-landscape';
 const PORTRAIT_CLASS = 'force-landscape-portrait';
@@ -97,11 +101,25 @@ const showWarningOverlay = () => {
     document.body.appendChild(overlay);
   }
   overlay.style.display = 'flex';
+  
+  // Hide game container
+  const container = getGameContainer();
+  if (container) {
+    container.style.visibility = 'hidden';
+    container.style.pointerEvents = 'none';
+  }
 };
 
 const hideWarningOverlay = () => {
   if (warningOverlay && warningOverlay.parentElement) {
     warningOverlay.style.display = 'none';
+  }
+  
+  // Show game container
+  const container = getGameContainer();
+  if (container) {
+    container.style.visibility = 'visible';
+    container.style.pointerEvents = 'auto';
   }
 };
 
@@ -155,10 +173,20 @@ const updateOrientationState = () => {
     body.classList.remove(PORTRAIT_CLASS);
     restoreContainerStyle();
     hideWarningOverlay();
+    
+    // Trigger landscape callback
+    if (orientationCallbacks.onLandscape) {
+      orientationCallbacks.onLandscape();
+    }
   } else {
     body.classList.add(PORTRAIT_CLASS);
     // Show warning overlay instead of rotating
     showWarningOverlay();
+    
+    // Trigger portrait callback
+    if (orientationCallbacks.onPortrait) {
+      orientationCallbacks.onPortrait();
+    }
   }
 };
 
@@ -193,14 +221,18 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export const requireLandscapeOrientation = () => {
+export const requireLandscapeOrientation = (callbacks = {}) => {
   landscapeRequired = true;
+  orientationCallbacks.onLandscape = callbacks.onLandscape || null;
+  orientationCallbacks.onPortrait = callbacks.onPortrait || null;
   updateOrientationState();
   scheduleSyntheticResizeEvent();
 };
 
 export const releaseLandscapeOrientation = () => {
   landscapeRequired = false;
+  orientationCallbacks.onLandscape = null;
+  orientationCallbacks.onPortrait = null;
   updateOrientationState();
   scheduleSyntheticResizeEvent();
   

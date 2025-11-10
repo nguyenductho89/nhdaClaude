@@ -19,6 +19,8 @@ export default class GameScene extends Phaser.Scene {
     this.isGameOver = false;
     this.isInvincible = false;
     this.hasCollision = false;
+    this.isWaitingForLandscape = false;
+    this.gameInitialized = false;
 
     // Scoring
     this.score = 0;
@@ -57,7 +59,47 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    requireLandscapeOrientation();
+    // Check if currently in landscape using window dimensions (not game scale)
+    const isCurrentlyLandscape = window.innerWidth >= window.innerHeight;
+    
+    // Setup orientation monitoring with callbacks FIRST
+    requireLandscapeOrientation({
+      onLandscape: () => {
+        // Initialize or resume game when rotated to landscape
+        if (this.isWaitingForLandscape) {
+          this.isWaitingForLandscape = false;
+          
+          // Resize scene to match landscape dimensions
+          const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
+          if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
+            this.scale.resize(desiredWidth, desiredHeight);
+          }
+          refreshOrientationLayout();
+          
+          // Initialize game if not yet initialized
+          if (!this.gameInitialized) {
+            this.initializeGame();
+          } else {
+            // Resume the scene if already initialized
+            this.scene.resume();
+          }
+        }
+      },
+      onPortrait: () => {
+        // Pause game when rotated to portrait
+        if (!this.isGameOver && !this.isWaitingForLandscape) {
+          this.isWaitingForLandscape = true;
+          this.scene.pause();
+        }
+      }
+    });
+    
+    // If not in landscape, wait for user to rotate
+    if (!isCurrentlyLandscape) {
+      this.isWaitingForLandscape = true;
+      // Don't create the game yet, just show warning
+      return;
+    }
 
     const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
 
@@ -75,10 +117,21 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    const { width, height } = this.scale;
-
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
     this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
+    
+    // Initialize the game
+    this.initializeGame();
+  }
+
+  initializeGame() {
+    // Prevent double initialization
+    if (this.gameInitialized) {
+      return;
+    }
+    this.gameInitialized = true;
+
+    const { width, height } = this.scale;
 
     // Safe area offset for mobile (avoid notch/status bar on iOS)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

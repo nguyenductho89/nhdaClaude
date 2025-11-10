@@ -63,64 +63,65 @@ export default class GameScene extends Phaser.Scene {
     // Setup cleanup handlers first
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
     this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
-    
+
     // Check if currently in landscape using window dimensions (not game scale)
     const isCurrentlyLandscape = window.innerWidth >= window.innerHeight;
-    
+
     // Setup orientation monitoring with callbacks ONLY ONCE
     if (!this.orientationCallbacksRegistered) {
       this.orientationCallbacksRegistered = true;
-      
+
       requireLandscapeOrientation({
         onLandscape: () => {
-          // Initialize or resume game when rotated to landscape
-          if (this.isWaitingForLandscape) {
-            console.log('Switching to landscape, game initialized:', this.gameInitialized);
-            this.isWaitingForLandscape = false;
-            
-            // Initialize game if not yet initialized
-            if (!this.gameInitialized) {
-              // RESTART the scene to properly initialize everything
-              // This is necessary because create() returned early when in portrait
-              console.log('Restarting scene for landscape initialization...');
+          console.log('Landscape detected, resuming game...');
+          this.isWaitingForLandscape = false;
 
-              // Resize BEFORE restarting
-              const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
-              console.log('Resizing to:', desiredWidth, 'x', desiredHeight);
-              if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
-                this.scale.resize(desiredWidth, desiredHeight);
-              }
-
-              // Force refresh orientation layout to ensure overlay is hidden
-              refreshOrientationLayout();
-
-              // Use nested requestAnimationFrame to ensure canvas is properly rendered
-              // First frame: browser updates layout after resize
-              // Second frame: safe to restart scene
+          // Resume the scene if paused
+          if (this.scene.isPaused()) {
+            // Wait a bit for orientation overlay to hide completely
+            setTimeout(() => {
               requestAnimationFrame(() => {
+                // Ensure canvas and container are visible
+                const container = document.getElementById('game-container');
+                if (container) {
+                  container.style.visibility = 'visible';
+                  container.style.opacity = '1';
+                  // Force repaint
+                  void container.offsetHeight;
+                }
+
+                this.game.canvas.style.display = 'block';
+                this.game.canvas.style.visibility = 'visible';
+                this.game.canvas.style.opacity = '1';
+                // Force repaint
+                void this.game.canvas.offsetHeight;
+
+                // Resize if needed
+                const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
+                if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
+                  this.scale.resize(desiredWidth, desiredHeight);
+                }
+
+                // Force renderer to update
+                if (this.game.renderer && this.game.renderer.resize) {
+                  this.game.renderer.resize(desiredWidth, desiredHeight);
+                }
+
+                // Resume scene - this will restart the game loop
+                this.scene.resume();
+
+                // Force a render immediately after resume
                 requestAnimationFrame(() => {
-                  // Force canvas update and ensure visibility
-                  this.game.canvas.style.display = 'block';
-                  this.game.canvas.style.visibility = 'visible';
-
-                  // Force Phaser to update renderer
-                  if (this.game.renderer && this.game.renderer.resize) {
-                    this.game.renderer.resize(desiredWidth, desiredHeight);
+                  if (this.sys && this.sys.renderer) {
+                    this.sys.renderer.render(this.sys.displayList, this.cameras.main);
                   }
-
-                  // Restart the scene - this will call create() again
-                  this.scene.restart();
                 });
               });
-            } else {
-              // Resume the scene if already initialized and paused
-              if (this.scene.isPaused()) {
-                this.scene.resume();
-              }
-            }
+            }, 150);
           }
         },
         onPortrait: () => {
+          console.log('Portrait detected, pausing game...');
           // Pause game when rotated to portrait (only if game is initialized and running)
           if (this.gameInitialized && !this.isGameOver && !this.isWaitingForLandscape) {
             this.isWaitingForLandscape = true;
@@ -129,16 +130,8 @@ export default class GameScene extends Phaser.Scene {
         }
       });
     }
-    
-    // If not in landscape, wait for user to rotate
-    if (!isCurrentlyLandscape) {
-      this.isWaitingForLandscape = true;
-      // Don't initialize the game yet, just show warning and wait
-      // Scene will be restarted when user rotates to landscape
-      return;
-    }
 
-    // Currently in landscape - proceed with initialization
+    // Always resize to proper dimensions
     const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
 
     if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
@@ -154,9 +147,20 @@ export default class GameScene extends Phaser.Scene {
         // Orientation lock may fail on unsupported browsers; ignore gracefully.
       }
     }
-    
-    // Initialize the game immediately since we're already in landscape
+
+    // ALWAYS initialize the game, regardless of orientation
+    // This ensures all game objects are created and canvas is rendered
     this.initializeGame();
+
+    // If not in landscape, pause immediately after initialization
+    if (!isCurrentlyLandscape) {
+      this.isWaitingForLandscape = true;
+      console.log('Starting in portrait mode - pausing after initialization');
+      // Use setTimeout to pause after Phaser finishes first render cycle
+      setTimeout(() => {
+        this.scene.pause();
+      }, 100);
+    }
   }
 
   initializeGame() {

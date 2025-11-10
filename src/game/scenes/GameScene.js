@@ -21,6 +21,7 @@ export default class GameScene extends Phaser.Scene {
     this.hasCollision = false;
     this.isWaitingForLandscape = false;
     this.gameInitialized = false;
+    this.orientationCallbacksRegistered = false;
 
     // Scoring
     this.score = 0;
@@ -66,48 +67,61 @@ export default class GameScene extends Phaser.Scene {
     // Check if currently in landscape using window dimensions (not game scale)
     const isCurrentlyLandscape = window.innerWidth >= window.innerHeight;
     
-    // Setup orientation monitoring with callbacks
-    requireLandscapeOrientation({
-      onLandscape: () => {
-        // Initialize or resume game when rotated to landscape
-        if (this.isWaitingForLandscape) {
-          this.isWaitingForLandscape = false;
-          
-          // Resize scene to match landscape dimensions
-          const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
-          if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
-            this.scale.resize(desiredWidth, desiredHeight);
+    // Setup orientation monitoring with callbacks ONLY ONCE
+    if (!this.orientationCallbacksRegistered) {
+      this.orientationCallbacksRegistered = true;
+      
+      requireLandscapeOrientation({
+        onLandscape: () => {
+          // Initialize or resume game when rotated to landscape
+          if (this.isWaitingForLandscape) {
+            console.log('Switching to landscape, game initialized:', this.gameInitialized);
+            this.isWaitingForLandscape = false;
+            
+            // Initialize game if not yet initialized
+            if (!this.gameInitialized) {
+              // RESTART the scene to properly initialize everything
+              // This is necessary because create() returned early when in portrait
+              console.log('Restarting scene for landscape initialization...');
+              
+              // Resize BEFORE restarting
+              const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
+              console.log('Resizing to:', desiredWidth, 'x', desiredHeight);
+              if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
+                this.scale.resize(desiredWidth, desiredHeight);
+              }
+              
+              // Force refresh orientation layout to ensure overlay is hidden
+              refreshOrientationLayout();
+              
+              // Use requestAnimationFrame for smoother transition
+              requestAnimationFrame(() => {
+                // Restart the scene - this will call create() again
+                this.scene.restart();
+              });
+            } else {
+              // Resume the scene if already initialized and paused
+              if (this.scene.isPaused()) {
+                this.scene.resume();
+              }
+            }
           }
-          refreshOrientationLayout();
-          
-          // Initialize game if not yet initialized
-          if (!this.gameInitialized) {
-            // Make sure scene is running before initializing
-            if (this.scene.isPaused()) {
-              this.scene.resume();
-            }
-            this.initializeGame();
-          } else {
-            // Resume the scene if already initialized and paused
-            if (this.scene.isPaused()) {
-              this.scene.resume();
-            }
+        },
+        onPortrait: () => {
+          // Pause game when rotated to portrait (only if game is initialized and running)
+          if (this.gameInitialized && !this.isGameOver && !this.isWaitingForLandscape) {
+            this.isWaitingForLandscape = true;
+            this.scene.pause();
           }
         }
-      },
-      onPortrait: () => {
-        // Pause game when rotated to portrait (only if game is initialized and running)
-        if (this.gameInitialized && !this.isGameOver && !this.isWaitingForLandscape) {
-          this.isWaitingForLandscape = true;
-          this.scene.pause();
-        }
-      }
-    });
+      });
+    }
     
     // If not in landscape, wait for user to rotate
     if (!isCurrentlyLandscape) {
       this.isWaitingForLandscape = true;
       // Don't initialize the game yet, just show warning and wait
+      // Scene will be restarted when user rotates to landscape
       return;
     }
 

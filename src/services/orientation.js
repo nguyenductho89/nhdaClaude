@@ -115,11 +115,15 @@ const hideWarningOverlay = () => {
     warningOverlay.style.display = 'none';
   }
   
-  // Show game container
+  // Show game container - ensure it's fully visible
   const container = getGameContainer();
   if (container) {
     container.style.visibility = 'visible';
     container.style.pointerEvents = 'auto';
+    container.style.opacity = '1';
+    
+    // Force a repaint to ensure visibility
+    container.offsetHeight;
   }
 };
 
@@ -173,6 +177,14 @@ const updateOrientationState = () => {
     body.classList.remove(PORTRAIT_CLASS);
     restoreContainerStyle();
     hideWarningOverlay();
+    
+    // Ensure canvas is visible when switching to landscape
+    const canvas = container.querySelector('canvas');
+    if (canvas) {
+      canvas.style.display = 'block';
+      canvas.style.visibility = 'visible';
+      canvas.style.opacity = '1';
+    }
     
     // Trigger landscape callback
     if (orientationCallbacks.onLandscape) {

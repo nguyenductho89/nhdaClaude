@@ -59,10 +59,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Setup cleanup handlers first
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
+    this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
+    
     // Check if currently in landscape using window dimensions (not game scale)
     const isCurrentlyLandscape = window.innerWidth >= window.innerHeight;
     
-    // Setup orientation monitoring with callbacks FIRST
+    // Setup orientation monitoring with callbacks
     requireLandscapeOrientation({
       onLandscape: () => {
         // Initialize or resume game when rotated to landscape
@@ -78,16 +82,22 @@ export default class GameScene extends Phaser.Scene {
           
           // Initialize game if not yet initialized
           if (!this.gameInitialized) {
+            // Make sure scene is running before initializing
+            if (this.scene.isPaused()) {
+              this.scene.resume();
+            }
             this.initializeGame();
           } else {
-            // Resume the scene if already initialized
-            this.scene.resume();
+            // Resume the scene if already initialized and paused
+            if (this.scene.isPaused()) {
+              this.scene.resume();
+            }
           }
         }
       },
       onPortrait: () => {
-        // Pause game when rotated to portrait
-        if (!this.isGameOver && !this.isWaitingForLandscape) {
+        // Pause game when rotated to portrait (only if game is initialized and running)
+        if (this.gameInitialized && !this.isGameOver && !this.isWaitingForLandscape) {
           this.isWaitingForLandscape = true;
           this.scene.pause();
         }
@@ -97,10 +107,11 @@ export default class GameScene extends Phaser.Scene {
     // If not in landscape, wait for user to rotate
     if (!isCurrentlyLandscape) {
       this.isWaitingForLandscape = true;
-      // Don't create the game yet, just show warning
+      // Don't initialize the game yet, just show warning and wait
       return;
     }
 
+    // Currently in landscape - proceed with initialization
     const { width: desiredWidth, height: desiredHeight } = getLandscapeViewportSize();
 
     if (desiredWidth !== this.scale.width || desiredHeight !== this.scale.height) {
@@ -116,11 +127,8 @@ export default class GameScene extends Phaser.Scene {
         // Orientation lock may fail on unsupported browsers; ignore gracefully.
       }
     }
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
-    this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
     
-    // Initialize the game
+    // Initialize the game immediately since we're already in landscape
     this.initializeGame();
   }
 

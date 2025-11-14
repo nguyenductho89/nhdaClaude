@@ -145,12 +145,12 @@ export default class UIManager {
     gameEvents.on(GAME_EVENTS.MULTIPLIER_ACTIVATED, onMultiplierActivated);
     this.eventListeners.push({ event: GAME_EVENTS.MULTIPLIER_ACTIVATED, fn: onMultiplierActivated });
 
-    // Scene change event
-    const onSceneChanged = (sceneType) => {
-      this.showSceneChangeNotification(sceneType);
-    };
-    gameEvents.on(GAME_EVENTS.SCENE_CHANGED, onSceneChanged);
-    this.eventListeners.push({ event: GAME_EVENTS.SCENE_CHANGED, fn: onSceneChanged });
+    // Scene change event - DISABLED (no notification)
+    // const onSceneChanged = (sceneType) => {
+    //   this.showSceneChangeNotification(sceneType);
+    // };
+    // gameEvents.on(GAME_EVENTS.SCENE_CHANGED, onSceneChanged);
+    // this.eventListeners.push({ event: GAME_EVENTS.SCENE_CHANGED, fn: onSceneChanged });
   }
 
   /**

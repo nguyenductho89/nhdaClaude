@@ -61,6 +61,11 @@ export default class GameScene extends Phaser.Scene {
     this.sceneChangeInterval = 19000; // 19 seconds per scene (switch before 20s to avoid conflicts)
     this.isSwitchingScene = false; // Prevent double switching
     this.lastSceneChangeTime = 0; // Track last scene change
+    
+    // Track which scenes have been visited to ensure all 3 scenes appear in one game
+    this.visitedScenes = new Set([this.sceneType]);
+    this.sceneQueue = []; // Queue to ensure all scenes are shown
+    
     console.log('Starting with scene:', this.sceneType);
   }
 
@@ -579,7 +584,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createBeachScene() {
-    const { width, height } = this.scale;
+    try {
+      const { width, height } = this.scale;
 
     // Sky layer - tropical blue gradient
     const skyGraphics = this.add.graphics();
@@ -658,81 +664,289 @@ export default class GameScene extends Phaser.Scene {
     this.farMountainsBg = this.add.image(0, height - 250, 'horizon').setOrigin(0);
     this.farMountainsBg2 = this.add.image(width * 2, height - 250, 'horizon').setOrigin(0);
 
-    // Sailing boats in the distance (thuyền buồm)
-    this.boatsLayer = this.add.group();
-    const boatBaseY = height - 180; // Position in middle of screen
-    console.log('🚢 Creating boats at Y:', boatBaseY, 'Screen height:', height, 'groundY:', this.groundY);
-
-    for (let i = 0; i < 5; i++) {
-      const boatX = i * 350 + 150 + Math.random() * 50;
-      const boatY = boatBaseY;
-
-      // Create boat graphics and convert to texture for better rendering
-      const boatGraphics = this.add.graphics();
-
-      // Boat hull (very bright white for max visibility)
-      boatGraphics.fillStyle(0xFFFFFF, 1);
-      boatGraphics.fillTriangle(0, 0, -30, 15, 30, 15);
-
-      // Red stripe on hull for visibility
-      boatGraphics.fillStyle(0xFF0000, 0.8);
-      boatGraphics.fillRect(-25, 10, 50, 3);
-
-      // Shadow under boat (dark blue)
-      boatGraphics.fillStyle(0x1E3A5F, 0.4);
-      boatGraphics.fillTriangle(0, 15, -28, 18, 28, 18);
-
-      // Large bright white sail
-      boatGraphics.fillStyle(0xFFFFFF, 1);
-      boatGraphics.fillTriangle(0, -50, -18, 0, 18, 0);
-
-      // Dark outline for sail visibility
-      boatGraphics.lineStyle(2, 0x000000, 0.5);
-      boatGraphics.strokeTriangle(0, -50, -18, 0, 18, 0);
-
-      // Sail shadow/highlight
-      boatGraphics.fillStyle(0xE0E0E0, 0.6);
-      boatGraphics.fillTriangle(0, -50, 0, 0, 18, 0);
-
-      // Thick mast (dark brown)
-      boatGraphics.lineStyle(4, 0x654321, 1);
-      boatGraphics.beginPath();
-      boatGraphics.moveTo(0, -50);
-      boatGraphics.lineTo(0, 0);
-      boatGraphics.strokePath();
-
-      // Generate texture from graphics
-      const boatTexture = boatGraphics.generateTexture('boat' + i, 60, 70);
-      boatGraphics.destroy();
-
-      // Create sprite from texture (much more reliable than graphics in container)
-      const boat = this.add.image(boatX, boatY, 'boat' + i);
+    // Helper function to create different boat types
+    const createBoatTexture = (type, index, isFar) => {
+      try {
+        const boatGraphics = this.add.graphics();
+        const scale = isFar ? 0.6 : 1.0; // Far boats are smaller
+        const alpha = isFar ? 0.7 : 1.0; // Far boats are more transparent
+        
+        let hullWidth, hullHeight, sailHeight, mastHeight;
+        
+        switch(type) {
+        case 'sailboat_small': // Thuyền buồm nhỏ
+          hullWidth = 25 * scale;
+          hullHeight = 12 * scale;
+          sailHeight = 35 * scale;
+          mastHeight = 35 * scale;
+          
+          // Small hull
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, 0, -hullWidth, hullHeight, hullWidth, hullHeight);
+          
+          // Small sail
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, -sailHeight, -12 * scale, 0, 12 * scale, 0);
+          boatGraphics.lineStyle(1.5, 0x000000, 0.5);
+          boatGraphics.strokeTriangle(0, -sailHeight, -12 * scale, 0, 12 * scale, 0);
+          
+          // Mast
+          boatGraphics.lineStyle(3, 0x654321, alpha);
+          boatGraphics.beginPath();
+          boatGraphics.moveTo(0, -mastHeight);
+          boatGraphics.lineTo(0, 0);
+          boatGraphics.strokePath();
+          break;
+          
+        case 'sailboat_large': // Thuyền buồm lớn
+          hullWidth = 35 * scale;
+          hullHeight = 15 * scale;
+          sailHeight = 55 * scale;
+          mastHeight = 55 * scale;
+          
+          // Large hull with red stripe
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, 0, -hullWidth, hullHeight, hullWidth, hullHeight);
+          boatGraphics.fillStyle(0xFF0000, alpha * 0.8);
+          boatGraphics.fillRect(-hullWidth + 5, hullHeight - 3, hullWidth * 2 - 10, 3 * scale);
+          
+          // Large sail
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, -sailHeight, -18 * scale, 0, 18 * scale, 0);
+          boatGraphics.lineStyle(2, 0x000000, 0.5);
+          boatGraphics.strokeTriangle(0, -sailHeight, -18 * scale, 0, 18 * scale, 0);
+          
+          // Sail highlight
+          boatGraphics.fillStyle(0xE0E0E0, alpha * 0.6);
+          boatGraphics.fillTriangle(0, -sailHeight, 0, 0, 18 * scale, 0);
+          
+          // Mast
+          boatGraphics.lineStyle(4, 0x654321, alpha);
+          boatGraphics.beginPath();
+          boatGraphics.moveTo(0, -mastHeight);
+          boatGraphics.lineTo(0, 0);
+          boatGraphics.strokePath();
+          break;
+          
+        case 'sailboat_double': // Thuyền 2 buồm
+          hullWidth = 30 * scale;
+          hullHeight = 14 * scale;
+          sailHeight = 40 * scale;
+          mastHeight = 45 * scale;
+          
+          // Hull
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, 0, -hullWidth, hullHeight, hullWidth, hullHeight);
+          
+          // Front sail (smaller)
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(-8 * scale, -sailHeight * 0.7, -15 * scale, -5 * scale, -5 * scale, -5 * scale);
+          
+          // Main sail (larger)
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(5 * scale, -sailHeight, -5 * scale, 0, 15 * scale, 0);
+          boatGraphics.lineStyle(1.5, 0x000000, 0.5);
+          boatGraphics.strokeTriangle(5 * scale, -sailHeight, -5 * scale, 0, 15 * scale, 0);
+          
+          // Two masts
+          boatGraphics.lineStyle(3, 0x654321, alpha);
+          boatGraphics.beginPath();
+          boatGraphics.moveTo(-8 * scale, -sailHeight * 0.7);
+          boatGraphics.lineTo(-8 * scale, 0);
+          boatGraphics.moveTo(5 * scale, -sailHeight);
+          boatGraphics.lineTo(5 * scale, 0);
+          boatGraphics.strokePath();
+          break;
+          
+        case 'yacht': // Du thuyền
+          hullWidth = 40 * scale;
+          hullHeight = 18 * scale;
+          sailHeight = 50 * scale;
+          mastHeight = 50 * scale;
+          
+          // Yacht hull (wider, more luxurious)
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, 0, -hullWidth, hullHeight, hullWidth, hullHeight);
+          
+          // Blue stripe
+          boatGraphics.fillStyle(0x4169E1, alpha * 0.8);
+          boatGraphics.fillRect(-hullWidth + 8, hullHeight - 5, hullWidth * 2 - 16, 4 * scale);
+          
+          // Large triangular sail
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, -sailHeight, -20 * scale, 0, 20 * scale, 0);
+          
+          // Sail pattern (stripes)
+          boatGraphics.lineStyle(1, 0x000000, 0.3);
+          for (let s = 0; s < 3; s++) {
+            const y = -sailHeight + (s + 1) * (sailHeight / 4);
+            boatGraphics.moveTo(-15 * scale, y);
+            boatGraphics.lineTo(15 * scale, y);
+            boatGraphics.strokePath();
+          }
+          
+          // Mast
+          boatGraphics.lineStyle(4, 0x654321, alpha);
+          boatGraphics.beginPath();
+          boatGraphics.moveTo(0, -mastHeight);
+          boatGraphics.lineTo(0, 0);
+          boatGraphics.strokePath();
+          
+          // Flag on top
+          boatGraphics.fillStyle(0xFF0000, alpha);
+          boatGraphics.fillRect(0, -mastHeight - 8, 8 * scale, 6 * scale);
+          break;
+          
+        default: // Default sailboat
+          hullWidth = 30 * scale;
+          hullHeight = 15 * scale;
+          sailHeight = 50 * scale;
+          mastHeight = 50 * scale;
+          
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, 0, -hullWidth, hullHeight, hullWidth, hullHeight);
+          boatGraphics.fillStyle(0xFFFFFF, alpha);
+          boatGraphics.fillTriangle(0, -sailHeight, -18 * scale, 0, 18 * scale, 0);
+          boatGraphics.lineStyle(2, 0x000000, 0.5);
+          boatGraphics.strokeTriangle(0, -sailHeight, -18 * scale, 0, 18 * scale, 0);
+          boatGraphics.lineStyle(4, 0x654321, alpha);
+          boatGraphics.beginPath();
+          boatGraphics.moveTo(0, -mastHeight);
+          boatGraphics.lineTo(0, 0);
+          boatGraphics.strokePath();
+      }
       
-      // IMPORTANT: Set depth very high to be visible
-      boat.setDepth(25); // Above background, below obstacles/player
+      // Shadow under boat
+      boatGraphics.fillStyle(0x1E3A5F, alpha * 0.4);
+      boatGraphics.fillTriangle(0, hullHeight, -hullWidth * 0.9, hullHeight + 3, hullWidth * 0.9, hullHeight + 3);
+      
+      const textureKey = `boat_${type}_${isFar ? 'far' : 'near'}_${index}`;
+      const textureWidth = Math.max(80, hullWidth * 2 + 10);
+      const textureHeight = Math.max(70, sailHeight + hullHeight + 10);
+      
+        // Remove texture if it already exists (to avoid conflicts)
+        if (this.textures.exists(textureKey)) {
+          this.textures.remove(textureKey);
+        }
+        
+        boatGraphics.generateTexture(textureKey, textureWidth, textureHeight);
+        boatGraphics.destroy();
+        
+        return textureKey;
+      } catch (error) {
+        console.error(`❌ Error creating boat texture ${type}_${index}_${isFar ? 'far' : 'near'}:`, error);
+        // Return a fallback texture key (will use default boat if exists)
+        return `boat_default_${index}`;
+      }
+    };
+
+    // FAR BOATS (thuyền xa) - scroll slower, smaller, more transparent
+    // Multiple layers for better depth effect
+    this.farBoatsLayer = this.add.group();
+    const farBoatTypes = ['sailboat_small', 'sailboat_large', 'sailboat_double'];
+    
+    // Very far boats (smallest, slowest)
+    for (let i = 0; i < 3; i++) {
+      const boatX = i * 500 + 150 + Math.random() * 150;
+      const boatY = height - 220 + Math.random() * 20; // Higher = further
+      const boatType = Phaser.Utils.Array.GetRandom(farBoatTypes);
+      
+      const textureKey = createBoatTexture(boatType, i + 10, true);
+      const boat = this.add.image(boatX, boatY, textureKey);
+      
+      boat.setDepth(18); // Furthest back
+      boat.setAlpha(0.5); // Very transparent
+      boat.setScale(0.4); // Very small
       boat.setData('baseX', boatX);
       boat.setData('baseY', boatY);
-      boat.setData('speed', 0.2 + Math.random() * 0.15);
-
-      // Mark as decoration (not obstacle)
+      boat.setData('speed', 0.1 + Math.random() * 0.05); // Very slow scroll
       boat.setData('isDecoration', true);
-
-      this.boatsLayer.add(boat);
-
-      console.log(`🚢 Boat ${i}: X=${boatX}, Y=${boatY}, depth=25, visible=${boat.visible}, texture=boat${i}`);
-
-      // Gentle bobbing animation
+      boat.setData('isFar', true);
+      boat.setData('parallaxSpeed', 0.2); // Slowest parallax
+      
+      this.farBoatsLayer.add(boat);
+      
+      // Very gentle bobbing
       this.tweens.add({
         targets: boat,
-        y: boatY - 10,
-        duration: 2500 + Math.random() * 1000,
+        y: boatY - 5,
+        duration: 4000 + Math.random() * 2000,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
       });
     }
-    console.log('✅ Total boats in layer:', this.boatsLayer.getLength());
-    console.log('✅ Boats layer depth:', this.boatsLayer.getChildren().map(b => b.depth));
+    
+    // Medium far boats (medium size, medium speed)
+    for (let i = 0; i < 4; i++) {
+      const boatX = i * 400 + 100 + Math.random() * 100;
+      const boatY = height - 200 + Math.random() * 30;
+      const boatType = Phaser.Utils.Array.GetRandom(farBoatTypes);
+      
+      const textureKey = createBoatTexture(boatType, i + 20, true);
+      const boat = this.add.image(boatX, boatY, textureKey);
+      
+      boat.setDepth(20); // Behind near boats
+      boat.setAlpha(0.7); // More transparent
+      boat.setScale(0.6); // Smaller
+      boat.setData('baseX', boatX);
+      boat.setData('baseY', boatY);
+      boat.setData('speed', 0.15 + Math.random() * 0.1); // Slower scroll
+      boat.setData('isDecoration', true);
+      boat.setData('isFar', true);
+      boat.setData('parallaxSpeed', 0.3); // Medium parallax
+      
+      this.farBoatsLayer.add(boat);
+      
+      // Gentle bobbing
+      this.tweens.add({
+        targets: boat,
+        y: boatY - 8,
+        duration: 3000 + Math.random() * 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // NEAR BOATS (thuyền gần) - scroll faster, larger, more visible
+    this.boatsLayer = this.add.group();
+    const nearBoatTypes = ['sailboat_large', 'sailboat_double', 'yacht'];
+    const nearBoatY = height - 160; // Lower = closer
+    
+    for (let i = 0; i < 3; i++) {
+      const boatX = i * 450 + 200 + Math.random() * 80;
+      const boatY = nearBoatY + Math.random() * 20;
+      const boatType = Phaser.Utils.Array.GetRandom(nearBoatTypes);
+      
+      const textureKey = createBoatTexture(boatType, i, false);
+      const boat = this.add.image(boatX, boatY, textureKey);
+      
+      boat.setDepth(25); // In front of far boats
+      boat.setAlpha(1.0); // Fully visible
+      boat.setScale(1.0); // Full size
+      boat.setData('baseX', boatX);
+      boat.setData('baseY', boatY);
+      boat.setData('speed', 0.3 + Math.random() * 0.2); // Faster scroll
+      boat.setData('isDecoration', true);
+      boat.setData('isFar', false);
+      boat.setData('parallaxSpeed', 0.6); // Fastest parallax
+      
+      this.boatsLayer.add(boat);
+      
+      // More pronounced bobbing for near boats
+      this.tweens.add({
+        targets: boat,
+        y: boatY - 12,
+        duration: 2000 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+    
+    console.log('✅ Far boats:', this.farBoatsLayer.getLength());
+    console.log('✅ Near boats:', this.boatsLayer.getLength());
 
     // Beautiful palm trees (cây dừa)
     const palmGraphics = this.add.graphics();
@@ -850,6 +1064,15 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
+    } catch (error) {
+      console.error('❌ Error creating beach scene:', error);
+      console.error('Error stack:', error.stack);
+      // Fallback: create a simple beach scene without boats
+      const { width, height } = this.scale;
+      const skyGraphics = this.add.graphics();
+      skyGraphics.fillGradientStyle(0x00BFFF, 0x00BFFF, 0x87CEEB, 0x87CEEB, 1);
+      skyGraphics.fillRect(0, 0, width, height);
+    }
   }
 
   clearScene() {
@@ -868,6 +1091,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.birdsLayer) {
       this.birdsLayer.clear(true, true);
       this.birdsLayer = null;
+    }
+    if (this.farBoatsLayer) {
+      this.farBoatsLayer.clear(true, true);
+      this.farBoatsLayer = null;
     }
     if (this.boatsLayer) {
       this.boatsLayer.clear(true, true);
@@ -921,11 +1148,18 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // Destroy dynamic textures (birds, waves, lights, boats)
+    const boatTypes = ['sailboat_small', 'sailboat_large', 'sailboat_double', 'yacht'];
     for (let i = 0; i < 20; i++) {
       const dynamicKeys = [
         `bird${i}`, `wave${i}`, `streetBird${i}`, `streetLight${i}`,
         `seagull${i}`, `beachWave${i}`, `boat${i}`
       ];
+      // Add all boat texture variations
+      boatTypes.forEach(type => {
+        dynamicKeys.push(`boat_${type}_far_${i}`);
+        dynamicKeys.push(`boat_${type}_near_${i}`);
+      });
+      
       dynamicKeys.forEach(key => {
         if (textureManager.exists(key)) {
           textureManager.remove(key);
@@ -987,13 +1221,41 @@ export default class GameScene extends Phaser.Scene {
       console.log('Step 1: Clearing scene...');
       this.clearScene();
 
-      // Move to next scene (randomly or in order)
+      // Move to next scene - ensure all 3 scenes appear in one game
       console.log('Step 2: Selecting next scene...');
-      const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
-      console.log('Available scenes:', availableScenes);
-      const nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
+      console.log('Visited scenes:', Array.from(this.visitedScenes));
+      console.log('Current scene index:', this.currentSceneIndex);
+      console.log('Current scene type:', this.sceneType);
+      
+      let nextSceneType;
+      
+      // If we haven't visited all scenes yet, prioritize unvisited scenes
+      const unvisitedScenes = this.sceneTypes.filter(scene => !this.visitedScenes.has(scene));
+      
+      if (unvisitedScenes.length > 0) {
+        // Pick from unvisited scenes to ensure all 3 appear
+        nextSceneType = Phaser.Utils.Array.GetRandom(unvisitedScenes);
+        console.log('🎯 Selecting unvisited scene:', nextSceneType);
+      } else {
+        // All scenes visited, now random but avoid immediate repeat
+        const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
+        if (availableScenes.length > 0) {
+          nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
+          console.log('🎲 All scenes visited, random selection:', nextSceneType);
+        } else {
+          // Fallback: cycle to next scene
+          nextSceneType = this.sceneTypes[(this.currentSceneIndex + 1) % this.sceneTypes.length];
+          console.log('🔄 Cycling to next scene:', nextSceneType);
+        }
+      }
+      
+      // Update scene tracking
       this.currentSceneIndex = this.sceneTypes.indexOf(nextSceneType);
       this.sceneType = nextSceneType;
+      this.visitedScenes.add(nextSceneType);
+      
+      console.log('Selected next scene:', nextSceneType, 'at index:', this.currentSceneIndex);
+      console.log('Total scenes visited:', this.visitedScenes.size, '/', this.sceneTypes.length);
 
       console.log('Step 3: Creating new scene:', this.sceneType, 'Index:', this.currentSceneIndex);
 
@@ -2042,12 +2304,37 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Boats floating (very slow, far away)
+    // Far boats (thuyền xa) - scroll very slowly like far mountains
+    // Multiple parallax layers for depth effect
+    if (this.farBoatsLayer) {
+      this.farBoatsLayer.getChildren().forEach(boat => {
+        const parallaxSpeed = boat.getData('parallaxSpeed') || 0.3;
+        const baseY = boat.getData('baseY');
+        const scale = boat.scaleX || 0.6;
+        
+        // Different parallax speeds based on distance (smaller = further = slower)
+        // Very small boats (0.4 scale) scroll at 0.2x, medium (0.6) at 0.3x
+        const effectiveParallax = scale < 0.5 ? 0.2 : parallaxSpeed;
+        boat.x -= scrollDistance * effectiveParallax;
+
+        if (boat.x < -150) {
+          boat.x = this.scale.width + 150;
+          // Reset Y to base when wrapping (tween will handle bobbing)
+          if (baseY) {
+            boat.y = baseY;
+          }
+        }
+      });
+    }
+
+    // Near boats (thuyền gần) - scroll faster, more visible
     if (this.boatsLayer) {
       this.boatsLayer.getChildren().forEach(boat => {
-        const speed = boat.getData('speed') || 0.3;
+        const parallaxSpeed = boat.getData('parallaxSpeed') || 0.6;
         const baseY = boat.getData('baseY');
-        boat.x -= scrollDistance * speed;
+        
+        // Near boats scroll faster - parallax effect for closer objects
+        boat.x -= scrollDistance * parallaxSpeed; // Faster than far boats
 
         if (boat.x < -100) {
           boat.x = this.scale.width + 100;

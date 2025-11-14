@@ -3,7 +3,7 @@ import { GAME_CONSTANTS } from '../../config/game.js';
 /**
  * SceneBackgroundManager
  * Handles scene background creation, parallax scrolling, and scene cleanup
- * Manages three different scenes: beach, mountain-river, and street
+ * Manages four different scenes: mountain-river, street, forest, and beach
  */
 export default class SceneBackgroundManager {
   constructor(scene) {
@@ -39,6 +39,8 @@ export default class SceneBackgroundManager {
     console.log('🎨 Creating background for scene:', sceneType);
     if (sceneType === 'street') {
       this.createStreetScene();
+    } else if (sceneType === 'forest') {
+      this.createForestScene();
     } else {
       this.createMountainRiverScene();
     }
@@ -387,6 +389,229 @@ export default class SceneBackgroundManager {
     }
   }
 
+  /**
+   * Create forest scene
+   */
+  createForestScene() {
+    const { width, height } = this.scene.scale;
+
+    console.log('🌲 Creating forest scene...');
+
+    // === MYSTICAL FOREST SCENE ===
+
+    // 1. SKY - Forest canopy light filtering through
+    const skyGraphics = this.scene.add.graphics();
+    // Top to mid - dark green to light green (filtered sunlight)
+    skyGraphics.fillGradientStyle(0x1B3A1B, 0x1B3A1B, 0x4A7C4A, 0x4A7C4A, 1);
+    skyGraphics.fillRect(0, 0, width, height * 0.6);
+    // Mid to bottom - lighter green
+    skyGraphics.fillGradientStyle(0x4A7C4A, 0x4A7C4A, 0x6B9B6B, 0x6B9B6B, 1);
+    skyGraphics.fillRect(0, height * 0.6, width, height * 0.4);
+
+    // 2. SUN RAYS - Filtered light through trees
+    const sunY = height * 0.2 + this.safeAreaTop;
+    const sunX = width * 0.7;
+    const sun = this.scene.add.circle(sunX, sunY, 45, 0xFFE87C, 0.6);
+    const sunGlow = this.scene.add.circle(sunX, sunY, 70, 0xFFE87C, 0.2);
+
+    // 3. LIGHT BEAMS - Mystical sun rays through canopy
+    const beamGraphics = this.scene.add.graphics();
+    beamGraphics.fillStyle(0xFFFFFF, 0.1);
+    for (let i = 0; i < 5; i++) {
+      const beamX = width * (0.3 + i * 0.15);
+      const beamWidth = 40 + Math.random() * 30;
+      const beamHeight = height * 0.6;
+      // Triangle beam
+      beamGraphics.fillTriangle(
+        beamX, this.safeAreaTop,
+        beamX - beamWidth / 2, beamHeight,
+        beamX + beamWidth / 2, beamHeight
+      );
+    }
+
+    // 4. CLOUDS/MIST - Misty forest atmosphere
+    this.cloudsLayer = this.scene.add.group();
+    for (let i = 0; i < 5; i++) {
+      const cloudX = i * 350 + Math.random() * 100;
+      const cloudY = this.safeAreaTop + 100 + Math.random() * 150;
+      const cloudContainer = this.scene.add.container(cloudX, cloudY);
+
+      const cloud1 = this.scene.add.ellipse(0, 0, 120, 60, 0xD3D3D3, 0.3);
+      const cloud2 = this.scene.add.ellipse(-40, -10, 80, 50, 0xD3D3D3, 0.25);
+      const cloud3 = this.scene.add.ellipse(40, -5, 90, 45, 0xD3D3D3, 0.25);
+
+      cloudContainer.add([cloud1, cloud2, cloud3]);
+      cloudContainer.setData('baseX', cloudX);
+      cloudContainer.setData('speed', 0.4 + Math.random() * 0.3);
+      this.cloudsLayer.add(cloudContainer);
+    }
+
+    // 5. BIRDS/BUTTERFLIES
+    this.birdsLayer = this.scene.add.group();
+    for (let i = 0; i < 6; i++) {
+      const butterflyX = Math.random() * width;
+      const butterflyY = this.safeAreaTop + 100 + Math.random() * 200;
+
+      const butterflyGraphics = this.scene.add.graphics();
+      // Simple butterfly (two ovals)
+      butterflyGraphics.fillStyle(0xFF69B4, 0.8);
+      butterflyGraphics.fillEllipse(-6, 0, 10, 14);
+      butterflyGraphics.fillEllipse(6, 0, 10, 14);
+      butterflyGraphics.fillStyle(0x000000, 1);
+      butterflyGraphics.fillRect(-1, -2, 2, 8); // Body
+
+      const butterflyTexture = butterflyGraphics.generateTexture('butterfly' + i, 16, 16);
+      butterflyGraphics.destroy();
+
+      const butterfly = this.scene.add.image(butterflyX, butterflyY, 'butterfly' + i);
+      butterfly.setData('baseX', butterflyX);
+      butterfly.setData('baseY', butterflyY);
+      butterfly.setData('speed', 0.8 + Math.random() * 0.6);
+      this.birdsLayer.add(butterfly);
+
+      // Fluttering animation
+      this.scene.tweens.add({
+        targets: butterfly,
+        scaleX: 0.7,
+        scaleY: 1.2,
+        duration: 200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // 6. FAR TREES - Dark silhouettes in distance
+    const farTreeGraphics = this.scene.add.graphics();
+    farTreeGraphics.fillStyle(0x1A2E1A, 0.7);
+    for (let i = 0; i < 8; i++) {
+      const x = i * 250;
+      const treeHeight = 180 + Math.random() * 80;
+      // Simple triangle tree
+      farTreeGraphics.fillTriangle(
+        x + 60, height - 200,
+        x + 100, height - 200 - treeHeight,
+        x + 140, height - 200
+      );
+      // Trunk
+      farTreeGraphics.fillStyle(0x3E2723, 0.8);
+      farTreeGraphics.fillRect(x + 90, height - 200, 20, 40);
+      farTreeGraphics.fillStyle(0x1A2E1A, 0.7);
+    }
+    const farTreeTexture = farTreeGraphics.generateTexture('farTrees', width * 2, height);
+    farTreeGraphics.destroy();
+
+    this.farMountainsBg = this.scene.add.image(0, 0, 'farTrees').setOrigin(0);
+    this.farMountainsBg2 = this.scene.add.image(width * 2, 0, 'farTrees').setOrigin(0);
+
+    // 7. NEAR TREES - More detailed trees
+    const treeGraphics = this.scene.add.graphics();
+    for (let i = 0; i < 6; i++) {
+      const x = i * 350;
+      const treeHeight = 200 + Math.random() * 80;
+      
+      // Calculate positions
+      const groundY = height - 100; // Where ground starts
+      const trunkBottom = groundY; // Trunk starts at ground
+      const trunkTop = groundY - treeHeight; // Top of trunk
+      const crownCenter = trunkTop - 20; // Crown center slightly above trunk top
+
+      // Tree trunk (vẽ trước để ở dưới tán)
+      treeGraphics.fillStyle(0x4E342E, 1);
+      treeGraphics.fillRect(x + 160, trunkTop, 30, treeHeight);
+
+      // Tree shadow on trunk
+      treeGraphics.fillStyle(0x3E2723, 0.4);
+      treeGraphics.fillRect(x + 175, trunkTop, 15, treeHeight);
+
+      // Tree crown (layered circles for foliage) - vẽ sau để ở trên thân
+      treeGraphics.fillStyle(0x2D5016, 0.85);
+      treeGraphics.fillCircle(x + 175, crownCenter, 85);
+      treeGraphics.fillStyle(0x3D6B1C, 0.8);
+      treeGraphics.fillCircle(x + 145, crownCenter + 15, 65);
+      treeGraphics.fillCircle(x + 205, crownCenter + 15, 65);
+      treeGraphics.fillCircle(x + 175, crownCenter + 30, 70);
+      
+      // Add lighter green highlights for depth
+      treeGraphics.fillStyle(0x4CAF50, 0.6);
+      treeGraphics.fillCircle(x + 165, crownCenter - 10, 40);
+      treeGraphics.fillCircle(x + 185, crownCenter + 5, 35);
+    }
+    const treeTexture = treeGraphics.generateTexture('nearTrees', width * 2, height);
+    treeGraphics.destroy();
+
+    this.mountainsBg = this.scene.add.image(0, 0, 'nearTrees').setOrigin(0);
+    this.mountainsBg2 = this.scene.add.image(width * 2, 0, 'nearTrees').setOrigin(0);
+
+    // 8. FOREST FLOOR - Grass and bushes
+    const floorGraphics = this.scene.add.graphics();
+
+    // Ground (dark dirt)
+    floorGraphics.fillStyle(0x3E2723, 1);
+    floorGraphics.fillRect(0, height - 100, width * 2, 70);
+
+    // Bushes and grass tufts
+    floorGraphics.fillStyle(0x2E7D32, 0.9);
+    for (let i = 0; i < 15; i++) {
+      const bushX = i * 200 + Math.random() * 100;
+      const bushY = height - 100;
+      // Simple bush (three overlapping circles)
+      floorGraphics.fillCircle(bushX, bushY, 25);
+      floorGraphics.fillCircle(bushX - 20, bushY + 10, 20);
+      floorGraphics.fillCircle(bushX + 20, bushY + 10, 20);
+    }
+
+    // Tall grass
+    floorGraphics.fillStyle(0x4CAF50, 0.7);
+    for (let i = 0; i < 30; i++) {
+      const grassX = i * 100 + Math.random() * 50;
+      const grassY = height - 100;
+      // Simple grass blades (thin ellipses)
+      for (let g = 0; g < 3; g++) {
+        floorGraphics.fillEllipse(grassX + g * 5, grassY - 15, 3, 30);
+      }
+    }
+
+    const floorTexture = floorGraphics.generateTexture('forestFloor', width * 2, 100);
+    floorGraphics.destroy();
+
+    this.riverBg = this.scene.add.image(0, height - 100, 'forestFloor').setOrigin(0);
+    this.riverBg2 = this.scene.add.image(width * 2, height - 100, 'forestFloor').setOrigin(0);
+
+    // 9. FIREFLIES/PARTICLES - Magical forest atmosphere
+    this.wavesLayer = this.scene.add.group();
+    for (let i = 0; i < 12; i++) {
+      const fireflyX = i * 150 + Math.random() * 100;
+      const fireflyY = height - 200 + Math.random() * 100;
+
+      const fireflyGraphics = this.scene.add.graphics();
+      fireflyGraphics.fillStyle(0xFFFF99, 1);
+      fireflyGraphics.fillCircle(0, 0, 3);
+      fireflyGraphics.fillStyle(0xFFFF99, 0.5);
+      fireflyGraphics.fillCircle(0, 0, 6);
+
+      const fireflyTexture = fireflyGraphics.generateTexture('firefly' + i, 14, 14);
+      fireflyGraphics.destroy();
+
+      const firefly = this.scene.add.image(fireflyX, fireflyY, 'firefly' + i);
+      firefly.setData('baseX', fireflyX);
+      firefly.setData('baseY', fireflyY);
+      this.wavesLayer.add(firefly);
+
+      // Floating and glowing animation
+      this.scene.tweens.add({
+        targets: firefly,
+        y: fireflyY - 30,
+        alpha: 0.3,
+        duration: 1500 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    console.log('✨ Mystical forest scene created!');
+  }
 
   /**
    * Clear all scene elements
@@ -437,7 +662,8 @@ export default class SceneBackgroundManager {
     const texturesToDestroy = [
       'farMountains', 'mountains', 'river',
       'farBuildings', 'buildings', 'street',
-      'beachIslands', 'tropicalBeach', 'tropicalOcean'
+      'beachIslands', 'tropicalBeach', 'tropicalOcean',
+      'farTrees', 'nearTrees', 'forestFloor'
     ];
 
     texturesToDestroy.forEach(key => {
@@ -450,7 +676,8 @@ export default class SceneBackgroundManager {
     for (let i = 0; i < 30; i++) {
       const dynamicKeys = [
         `bird${i}`, `wave${i}`, `streetBird${i}`, `streetLight${i}`,
-        `tropicalWave${i}`, `boat${i}`, `farBoat${i}`, `nearBoat${i}`
+        `tropicalWave${i}`, `boat${i}`, `farBoat${i}`, `nearBoat${i}`,
+        `butterfly${i}`, `firefly${i}`
       ];
 
       dynamicKeys.forEach(key => {

@@ -144,6 +144,13 @@ export default class UIManager {
     };
     gameEvents.on(GAME_EVENTS.MULTIPLIER_ACTIVATED, onMultiplierActivated);
     this.eventListeners.push({ event: GAME_EVENTS.MULTIPLIER_ACTIVATED, fn: onMultiplierActivated });
+
+    // Scene change event
+    const onSceneChanged = (sceneType) => {
+      this.showSceneChangeNotification(sceneType);
+    };
+    gameEvents.on(GAME_EVENTS.SCENE_CHANGED, onSceneChanged);
+    this.eventListeners.push({ event: GAME_EVENTS.SCENE_CHANGED, fn: onSceneChanged });
   }
 
   /**
@@ -409,6 +416,29 @@ export default class UIManager {
    */
   getEffectPool() {
     return this.effectPool;
+  }
+
+  /**
+   * Show scene change notification
+   */
+  showSceneChangeNotification(sceneType) {
+    let sceneText = '';
+    let sceneColor = '#FFD700';
+    
+    if (sceneType === 'mountain-river') {
+      sceneText = '🏔️ NÚI SÔNG';
+      sceneColor = '#87CEEB';
+    } else if (sceneType === 'street') {
+      sceneText = '🏙️ ĐƯỜNG PHỐ';
+      sceneColor = '#FF7F50';
+    } else if (sceneType === 'forest') {
+      sceneText = '🌲 KHU RỪNG';
+      sceneColor = '#4CAF50';
+    }
+
+    if (sceneText) {
+      this.effectPool.showNotification(sceneText, sceneColor, 2500);
+    }
   }
 
   /**

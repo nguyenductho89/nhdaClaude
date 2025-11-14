@@ -27,7 +27,7 @@ export default class GameStateManager {
     this.currentSpeedTier = 0;
 
     // Scene management
-    this.sceneTypes = ['mountain-river', 'street'];
+    this.sceneTypes = ['mountain-river', 'street', 'forest'];
     this.currentSceneIndex = Phaser.Math.Between(0, this.sceneTypes.length - 1);
     this.sceneType = this.sceneTypes[this.currentSceneIndex];
     this.sceneChangeInterval = 19000;

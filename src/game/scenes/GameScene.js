@@ -62,6 +62,103 @@ export default class GameScene extends Phaser.Scene {
     this.load.image('playerImage', '/player.png');
   }
 
+  /**
+   * Force fullscreen on mobile devices
+   * Continuously tries to maintain fullscreen mode
+   */
+  forceFullscreenOnMobile() {
+    console.log('🔒 Force fullscreen on mobile device');
+
+    const requestFullscreen = () => {
+      const element = document.documentElement;
+
+      // Try Phaser's built-in method first
+      this.scale.startFullscreen();
+
+      // Also try browser's native fullscreen API
+      if (element.requestFullscreen) {
+        element.requestFullscreen().catch(err => {
+          console.log('Fullscreen request failed:', err);
+        });
+      } else if (element.webkitRequestFullscreen) { // Safari
+        element.webkitRequestFullscreen();
+      } else if (element.mozRequestFullScreen) { // Firefox
+        element.mozRequestFullScreen();
+      } else if (element.msRequestFullscreen) { // IE/Edge
+        element.msRequestFullscreen();
+      }
+
+      // iOS specific: use minimal-ui
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui');
+      }
+    };
+
+    // Request fullscreen immediately
+    requestFullscreen();
+
+    // Monitor fullscreen state and re-request if user exits
+    const onFullscreenChange = () => {
+      const isFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+
+      const isGameOver = this.gameStateManager && this.gameStateManager.isOver();
+      if (!isFullscreen && !isGameOver) {
+        // User exited fullscreen during game - re-request after small delay
+        console.log('⚠️ Fullscreen exited, re-requesting...');
+        setTimeout(() => {
+          const stillPlaying = this.gameStateManager && !this.gameStateManager.isOver();
+          if (stillPlaying) {
+            requestFullscreen();
+          }
+        }, 500);
+      }
+    };
+
+    // Listen to fullscreen change events
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange);
+    document.addEventListener('msfullscreenchange', onFullscreenChange);
+
+    // Also listen to resize events (for iOS which doesn't support fullscreen API)
+    window.addEventListener('resize', () => {
+      const isGameOver = this.gameStateManager && this.gameStateManager.isOver();
+      if (!isGameOver) {
+        // Make sure canvas fills the entire screen
+        const container = document.getElementById('game-container');
+        if (container) {
+          container.style.position = 'fixed';
+          container.style.top = '0';
+          container.style.left = '0';
+          container.style.width = '100vw';
+          container.style.height = '100vh';
+          container.style.zIndex = '9999';
+        }
+      }
+    });
+
+    // Force game container to fill screen
+    const container = document.getElementById('game-container');
+    if (container) {
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '9999';
+      container.style.backgroundColor = '#000';
+    }
+
+    // Hide address bar on iOS by scrolling
+    window.scrollTo(0, 1);
+  }
+
   create() {
     // Setup cleanup handlers first
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
@@ -167,8 +264,13 @@ export default class GameScene extends Phaser.Scene {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.safeAreaTop = isMobile ? 50 : 0;
 
-    // Auto fullscreen
-    this.scale.startFullscreen();
+    // Force fullscreen on mobile devices
+    if (isMobile) {
+      this.forceFullscreenOnMobile();
+    } else {
+      // Desktop: just try normal fullscreen
+      this.scale.startFullscreen();
+    }
 
     // Initialize all managers
     this.gameStateManager = new GameStateManager(this);

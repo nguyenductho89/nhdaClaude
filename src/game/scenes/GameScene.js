@@ -201,6 +201,14 @@ export default class GameScene extends Phaser.Scene {
     this.collectibleManager.initialize();
     this.collectibleManager.setSafeAreaTop(this.safeAreaTop);
 
+    // ✅ Set manager references for scene switching
+    this.gameStateManager.setManagers(
+      this.backgroundManager,
+      this.playerManager,
+      this.obstacleManager,
+      this.collectibleManager
+    );
+
     // Setup collision detection
     this.obstacleManager.setupCollision(
       this.playerManager.getPlayer(),

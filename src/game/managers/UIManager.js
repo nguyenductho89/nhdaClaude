@@ -144,23 +144,6 @@ export default class UIManager {
     };
     gameEvents.on(GAME_EVENTS.MULTIPLIER_ACTIVATED, onMultiplierActivated);
     this.eventListeners.push({ event: GAME_EVENTS.MULTIPLIER_ACTIVATED, fn: onMultiplierActivated });
-
-    // Scene change event
-    const onSceneChanged = (sceneType) => {
-      let sceneText = '';
-      if (sceneType === 'mountain-river') {
-        sceneText = '🏔️ NÚI SÔNG';
-      } else if (sceneType === 'street') {
-        sceneText = '🏙️ ĐƯỜNG PHỐ';
-      } else if (sceneType === 'beach') {
-        sceneText = '🏖️ BÃI BIỂN';
-      }
-      if (sceneText) {
-        this.effectPool.showNotification(sceneText, '#FFD700', 2500);
-      }
-    };
-    gameEvents.on(GAME_EVENTS.SCENE_CHANGED, onSceneChanged);
-    this.eventListeners.push({ event: GAME_EVENTS.SCENE_CHANGED, fn: onSceneChanged });
   }
 
   /**

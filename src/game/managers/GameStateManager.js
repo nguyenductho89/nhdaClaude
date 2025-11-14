@@ -10,6 +10,12 @@ export default class GameStateManager {
   constructor(scene) {
     this.scene = scene;
 
+    // Manager references (set later)
+    this.backgroundManager = null;
+    this.playerManager = null;
+    this.obstacleManager = null;
+    this.collectibleManager = null;
+
     // Game state
     this.isGameOver = false;
     this.hasCollision = false;
@@ -21,7 +27,7 @@ export default class GameStateManager {
     this.currentSpeedTier = 0;
 
     // Scene management
-    this.sceneTypes = ['beach', 'mountain-river', 'street'];
+    this.sceneTypes = ['mountain-river', 'street'];
     this.currentSceneIndex = Phaser.Math.Between(0, this.sceneTypes.length - 1);
     this.sceneType = this.sceneTypes[this.currentSceneIndex];
     this.sceneChangeInterval = 19000;
@@ -47,6 +53,16 @@ export default class GameStateManager {
    */
   setSafeArea(safeAreaTop) {
     this.safeAreaTop = safeAreaTop;
+  }
+
+  /**
+   * Set manager references for scene switching
+   */
+  setManagers(backgroundManager, playerManager, obstacleManager, collectibleManager) {
+    this.backgroundManager = backgroundManager;
+    this.playerManager = playerManager;
+    this.obstacleManager = obstacleManager;
+    this.collectibleManager = collectibleManager;
   }
 
   /**
@@ -110,11 +126,11 @@ export default class GameStateManager {
     console.log('Setting up scene change timer with interval:', this.sceneChangeInterval, 'ms');
     this.sceneChangeTimer = this.scene.time.addEvent({
       delay: this.sceneChangeInterval,
-      callback: (onClearScene, onCreateBackground, onSetPlayerDepth) => {
+      callback: () => {
         console.log('⏰ Scene change timer fired!');
-        this.switchScene(onClearScene, onCreateBackground, onSetPlayerDepth);
+        this.switchScene();
       },
-      callbackScope: this.scene,
+      callbackScope: this,
       loop: true
     });
     console.log('Scene change timer created:', this.sceneChangeTimer);
@@ -143,7 +159,7 @@ export default class GameStateManager {
   /**
    * Switch to next scene
    */
-  switchScene(onClearScene, onCreateBackground, onSetPlayerDepth) {
+  switchScene() {
     const currentTime = Date.now();
     const timeSinceStart = currentTime - this.startTime;
 
@@ -173,8 +189,11 @@ export default class GameStateManager {
     try {
       // Clear current scene
       console.log('Step 1: Clearing scene...');
-      if (onClearScene) {
-        onClearScene();
+      if (this.backgroundManager) {
+        this.backgroundManager.clearScene(
+          this.obstacleManager?.getObstacles(),
+          this.collectibleManager?.getCollectibles()
+        );
       }
 
       // Move to next scene - ensure all 3 scenes appear in one game
@@ -216,14 +235,17 @@ export default class GameStateManager {
       console.log('Step 3: Creating new scene:', this.sceneType, 'Index:', this.currentSceneIndex);
 
       // Create new scene
-      if (onCreateBackground) {
-        onCreateBackground();
+      if (this.backgroundManager) {
+        this.backgroundManager.createParallaxBackground(this.sceneType);
       }
 
       // Ensure player is on top of new background
-      if (onSetPlayerDepth) {
-        onSetPlayerDepth();
-        console.log('Player depth set to 50 (on top)');
+      if (this.playerManager) {
+        const player = this.playerManager.getPlayer();
+        if (player) {
+          player.setDepth(50);
+          console.log('Player depth set to 50 (on top)');
+        }
       }
 
       console.log('Scene switch completed successfully');
@@ -242,55 +264,9 @@ export default class GameStateManager {
   }
 
   /**
-   * Show scene change notification
+   * Note: Scene change notification is now handled by UIManager
+   * listening to SCENE_CHANGED event (event-based architecture)
    */
-  showSceneChangeNotification() {
-    const { width, height } = this.scene.scale;
-
-    let sceneText = '';
-    if (this.sceneType === 'mountain-river') {
-      sceneText = '🏔️ NÚI SÔNG';
-    } else if (this.sceneType === 'street') {
-      sceneText = '🏙️ ĐƯỜNG PHỐ';
-    } else if (this.sceneType === 'beach') {
-      sceneText = '🏖️ BÃI BIỂN';
-    }
-
-    const notification = this.scene.add.text(width / 2, height / 2, sceneText, {
-      fontSize: '64px',
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 8,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      padding: { x: 30, y: 15 }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(250).setAlpha(0).setScale(0.5);
-
-    // Animate in
-    this.scene.tweens.add({
-      targets: notification,
-      alpha: 1,
-      scale: 1.2,
-      duration: 500,
-      ease: 'Back.easeOut',
-      onComplete: () => {
-        // Hold for 1.5 seconds
-        this.scene.time.delayedCall(1500, () => {
-          // Fade out
-          this.scene.tweens.add({
-            targets: notification,
-            alpha: 0,
-            scale: 0.8,
-            y: notification.y - 100,
-            duration: 500,
-            ease: 'Back.easeIn',
-            onComplete: () => notification.destroy()
-          });
-        });
-      }
-    });
-  }
 
   /**
    * Handle game over

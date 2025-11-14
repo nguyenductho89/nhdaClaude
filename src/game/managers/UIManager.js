@@ -1,24 +1,39 @@
+import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
+import { UIEffectPool } from '../utils/UIEffectPool.js';
+
 /**
- * UIManager
- * Handles all UI elements, controls, and display updates
+ * UIManager (Refactored with Phaser Best Practices)
+ * ✅ Thuần Phaser GameObjects (không DOM)
+ * ✅ Container cho UI groups
+ * ✅ Text objects (BitmapText compatible)
+ * ✅ Event-based updates (không update frame-by-frame)
+ * ✅ Object Pooling cho effects
+ * ✅ RenderTexture cho static UI
  */
 export default class UIManager {
   constructor(scene) {
     this.scene = scene;
 
-    // UI elements
+    // UI Containers
+    this.hudContainer = null;
+    this.scoreContainer = null;
+    this.timerContainer = null;
+    this.comboContainer = null;
+    this.pauseContainer = null;
+    this.jumpButtonContainer = null;
+
+    // Text references
     this.scoreText = null;
     this.distanceText = null;
     this.timerText = null;
-    this.pauseButton = null;
     this.comboText = null;
     this.multiplierText = null;
 
-    // Mobile controls
-    this.jumpButton = null;
-    this.jumpButtonBg = null;
-    this.jumpButtonIcon = null;
-    this.jumpButtonBorder = null;
+    // RenderTexture for static UI elements
+    this.staticUITexture = null;
+
+    // Effect pool
+    this.effectPool = null;
 
     // Input
     this.spaceKey = null;
@@ -30,6 +45,9 @@ export default class UIManager {
 
     // Safe area
     this.safeAreaTop = 0;
+
+    // Event listeners (stored for cleanup)
+    this.eventListeners = [];
   }
 
   /**
@@ -48,149 +66,265 @@ export default class UIManager {
   }
 
   /**
-   * Create all UI elements
+   * Initialize UI system
    */
-  createUI() {
-    const { width, height } = this.scene.scale;
-    const isMobile = this.isMobileDevice();
+  initialize() {
+    // Create effect pool
+    this.effectPool = new UIEffectPool(this.scene, 30);
 
-    // Compact font sizes for mobile
-    const baseFontSize = isMobile ? 16 : 24;
-    const smallFontSize = isMobile ? 12 : 18;
+    // Setup event listeners (event-based updates)
+    this.setupEventListeners();
 
-    // Absolute minimal margins (with safe area offset for mobile)
-    const topMargin = isMobile ? (5 + this.safeAreaTop) : 60;
-    const leftMargin = isMobile ? 5 : 20;
-    const rightMargin = isMobile ? 5 : 20;
-    const padding = isMobile ? 4 : 8;
-
-    // Line spacing for mobile
-    const lineSpacing = isMobile ? 22 : 35;
-
-    // LEFT COLUMN - Score and Distance
-    this.scoreText = this.scene.add.text(leftMargin, topMargin, 'Điểm: 0', {
-      fontSize: `${baseFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: { x: padding, y: padding / 2 }
-    }).setScrollFactor(0).setDepth(100);
-
-    this.distanceText = this.scene.add.text(leftMargin, topMargin + lineSpacing, '0m', {
-      fontSize: `${smallFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: { x: padding, y: padding / 2 }
-    }).setScrollFactor(0).setDepth(100);
-
-    // RIGHT COLUMN - Timer on top
-    this.timerText = this.scene.add.text(width - rightMargin, topMargin, '0:00', {
-      fontSize: `${baseFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: { x: padding, y: padding / 2 }
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
-
-    // Pause button below timer (right side)
-    const pauseText = isMobile ? '⏸' : '⏸';
-    this.pauseButton = this.scene.add.text(width - rightMargin, topMargin + lineSpacing, pauseText, {
-      fontSize: `${baseFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#000000',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: { x: padding, y: padding / 2 }
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(100)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.pauseGame());
-
-    // CENTER - Combo and Multiplier (only show when active)
-    const centerY = isMobile ? 60 : 100;
-
-    this.comboText = this.scene.add.text(width / 2, centerY, '', {
-      fontSize: `${baseFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      padding: { x: padding + 2, y: padding }
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
-
-    this.multiplierText = this.scene.add.text(width / 2, centerY + 25, '', {
-      fontSize: `${smallFontSize}px`,
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      padding: { x: padding, y: padding / 2 }
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(100).setVisible(false);
-
-    // Mobile jump button
-    if (isMobile) {
-      this.createMobileJumpButton();
-    }
+    // Create UI
+    this.createUI();
 
     // Start timer
     this.startTime = Date.now();
   }
 
   /**
-   * Create mobile jump button
+   * Setup event-based listeners (NO frame-by-frame updates!)
+   */
+  setupEventListeners() {
+    // Score events
+    const onScoreChanged = (score, distance) => {
+      this.updateScoreDisplay(score, distance);
+    };
+    gameEvents.on(GAME_EVENTS.SCORE_CHANGED, onScoreChanged);
+    this.eventListeners.push({ event: GAME_EVENTS.SCORE_CHANGED, fn: onScoreChanged });
+
+    // Timer events
+    const onTimerUpdate = () => {
+      this.updateGameTimer();
+    };
+    gameEvents.on(GAME_EVENTS.TIMER_UPDATED, onTimerUpdate);
+    this.eventListeners.push({ event: GAME_EVENTS.TIMER_UPDATED, fn: onTimerUpdate });
+
+    // Combo events
+    const onComboChanged = (comboCount, active) => {
+      if (active && comboCount > 0) {
+        this.comboText.setText(`🔥 COMBO x${comboCount}`);
+        this.comboContainer.setVisible(true);
+      } else {
+        this.comboContainer.setVisible(false);
+      }
+    };
+    gameEvents.on(GAME_EVENTS.COMBO_CHANGED, onComboChanged);
+    this.eventListeners.push({ event: GAME_EVENTS.COMBO_CHANGED, fn: onComboChanged });
+
+    // Multiplier events
+    const onMultiplierChanged = (multiplier) => {
+      if (multiplier > 1) {
+        this.multiplierText.setText(`⭐ x${multiplier}`);
+        this.multiplierContainer.setVisible(true);
+      } else {
+        this.multiplierContainer.setVisible(false);
+      }
+    };
+    gameEvents.on(GAME_EVENTS.MULTIPLIER_CHANGED, onMultiplierChanged);
+    this.eventListeners.push({ event: GAME_EVENTS.MULTIPLIER_CHANGED, fn: onMultiplierChanged });
+
+    // Item collection event
+    const onItemCollected = (x, y, itemType, points) => {
+      this.effectPool.playCollectEffect(x, y);
+      this.effectPool.playFloatingText(x, y, `+${points}`, '#FFD700');
+    };
+    gameEvents.on(GAME_EVENTS.ITEM_COLLECTED, onItemCollected);
+    this.eventListeners.push({ event: GAME_EVENTS.ITEM_COLLECTED, fn: onItemCollected });
+
+    // Power-up events
+    const onInvincibilityActivated = () => {
+      this.effectPool.showNotification('🚗 BẤT TỬ 5S!', '#00FFFF', 5000);
+    };
+    gameEvents.on(GAME_EVENTS.INVINCIBILITY_ACTIVATED, onInvincibilityActivated);
+    this.eventListeners.push({ event: GAME_EVENTS.INVINCIBILITY_ACTIVATED, fn: onInvincibilityActivated });
+
+    const onMultiplierActivated = () => {
+      this.effectPool.showNotification('💍 ĐIỂM x2 - 10S!', '#FFD700', 10000);
+    };
+    gameEvents.on(GAME_EVENTS.MULTIPLIER_ACTIVATED, onMultiplierActivated);
+    this.eventListeners.push({ event: GAME_EVENTS.MULTIPLIER_ACTIVATED, fn: onMultiplierActivated });
+
+    // Scene change event
+    const onSceneChanged = (sceneType) => {
+      let sceneText = '';
+      if (sceneType === 'mountain-river') {
+        sceneText = '🏔️ NÚI SÔNG';
+      } else if (sceneType === 'street') {
+        sceneText = '🏙️ ĐƯỜNG PHỐ';
+      } else if (sceneType === 'beach') {
+        sceneText = '🏖️ BÃI BIỂN';
+      }
+      if (sceneText) {
+        this.effectPool.showNotification(sceneText, '#FFD700', 2500);
+      }
+    };
+    gameEvents.on(GAME_EVENTS.SCENE_CHANGED, onSceneChanged);
+    this.eventListeners.push({ event: GAME_EVENTS.SCENE_CHANGED, fn: onSceneChanged });
+  }
+
+  /**
+   * Create all UI elements using Containers
+   */
+  createUI() {
+    const { width, height } = this.scene.scale;
+    const isMobile = this.isMobileDevice();
+
+    // Font sizes
+    const baseFontSize = isMobile ? 16 : 24;
+    const smallFontSize = isMobile ? 12 : 18;
+
+    // Margins
+    const topMargin = isMobile ? (5 + this.safeAreaTop) : 60;
+    const leftMargin = isMobile ? 5 : 20;
+    const rightMargin = isMobile ? 5 : 20;
+    const padding = isMobile ? 4 : 8;
+    const lineSpacing = isMobile ? 22 : 35;
+
+    // === LEFT COLUMN CONTAINER - Score and Distance ===
+    this.scoreContainer = this.scene.add.container(leftMargin, topMargin);
+    this.scoreContainer.setScrollFactor(0);
+    this.scoreContainer.setDepth(100);
+
+    this.scoreText = this.scene.add.text(0, 0, 'Điểm: 0', {
+      fontSize: `${baseFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: { x: padding, y: padding / 2 }
+    });
+
+    this.distanceText = this.scene.add.text(0, lineSpacing, '0m', {
+      fontSize: `${smallFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: { x: padding, y: padding / 2 }
+    });
+
+    this.scoreContainer.add([this.scoreText, this.distanceText]);
+
+    // === RIGHT COLUMN CONTAINER - Timer and Pause ===
+    this.timerContainer = this.scene.add.container(width - rightMargin, topMargin);
+    this.timerContainer.setScrollFactor(0);
+    this.timerContainer.setDepth(100);
+
+    this.timerText = this.scene.add.text(0, 0, '0:00', {
+      fontSize: `${baseFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: { x: padding, y: padding / 2 }
+    }).setOrigin(1, 0);
+
+    const pauseButton = this.scene.add.text(0, lineSpacing, '⏸', {
+      fontSize: `${baseFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: { x: padding, y: padding / 2 }
+    }).setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.pauseGame());
+
+    this.timerContainer.add([this.timerText, pauseButton]);
+
+    // === CENTER CONTAINER - Combo and Multiplier ===
+    const centerY = isMobile ? 60 : 100;
+
+    this.comboContainer = this.scene.add.container(width / 2, centerY);
+    this.comboContainer.setScrollFactor(0);
+    this.comboContainer.setDepth(100);
+    this.comboContainer.setVisible(false);
+
+    this.comboText = this.scene.add.text(0, 0, '', {
+      fontSize: `${baseFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: padding + 2, y: padding }
+    }).setOrigin(0.5, 0);
+
+    this.comboContainer.add(this.comboText);
+
+    this.multiplierContainer = this.scene.add.container(width / 2, centerY + 25);
+    this.multiplierContainer.setScrollFactor(0);
+    this.multiplierContainer.setDepth(100);
+    this.multiplierContainer.setVisible(false);
+
+    this.multiplierText = this.scene.add.text(0, 0, '', {
+      fontSize: `${smallFontSize}px`,
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: padding, y: padding / 2 }
+    }).setOrigin(0.5, 0);
+
+    this.multiplierContainer.add(this.multiplierText);
+
+    // === MOBILE JUMP BUTTON CONTAINER ===
+    if (isMobile) {
+      this.createMobileJumpButton();
+    }
+  }
+
+  /**
+   * Create mobile jump button using Container
    */
   createMobileJumpButton() {
     const { width, height } = this.scene.scale;
 
-    // Large button, positioned at absolute corner
     const buttonSize = 100;
-    const margin = 10; // Ultra minimal margin
-
+    const margin = 10;
     const buttonX = width - buttonSize / 2 - margin;
     const buttonY = height - buttonSize / 2 - margin;
 
-    // Button background circle with better contrast
-    this.jumpButtonBg = this.scene.add.circle(buttonX, buttonY, buttonSize / 2, 0xFFFFFF, 0.4)
-      .setScrollFactor(0)
-      .setDepth(100);
+    // Create container for jump button
+    this.jumpButtonContainer = this.scene.add.container(buttonX, buttonY);
+    this.jumpButtonContainer.setScrollFactor(0);
+    this.jumpButtonContainer.setDepth(100);
 
-    // Add border for better visibility
-    const buttonBorder = this.scene.add.circle(buttonX, buttonY, buttonSize / 2 + 4, 0xFFFFFF, 0.2)
-      .setScrollFactor(0)
-      .setDepth(99);
+    // Button background circle
+    const bg = this.scene.add.circle(0, 0, buttonSize / 2, 0xFFFFFF, 0.4);
 
-    // Button icon - large and clear
-    this.jumpButtonIcon = this.scene.add.text(buttonX, buttonY, '⬆', {
+    // Button border
+    const border = this.scene.add.circle(0, 0, buttonSize / 2 + 4, 0xFFFFFF, 0.2);
+
+    // Button icon
+    const icon = this.scene.add.text(0, 0, '⬆', {
       fontSize: '56px',
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
       strokeThickness: 3
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+    }).setOrigin(0.5);
 
-    // Button interactive area (larger for easier tapping)
-    const hitAreaSize = buttonSize + 25;
-    this.jumpButton = this.scene.add.rectangle(buttonX, buttonY, hitAreaSize, hitAreaSize, 0x000000, 0)
-      .setScrollFactor(0)
-      .setDepth(102)
+    // Hit area (larger for easier tapping)
+    const hitArea = this.scene.add.rectangle(0, 0, buttonSize + 25, buttonSize + 25, 0x000000, 0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         this.onJumpButtonDown();
-        // Enhanced visual feedback
-        this.jumpButtonBg.setAlpha(0.7);
-        this.jumpButtonIcon.setScale(1.2);
-        buttonBorder.setAlpha(0.5);
+        bg.setAlpha(0.7);
+        icon.setScale(1.2);
+        border.setAlpha(0.5);
       })
       .on('pointerup', () => {
-        this.jumpButtonBg.setAlpha(0.4);
-        this.jumpButtonIcon.setScale(1);
-        buttonBorder.setAlpha(0.2);
+        bg.setAlpha(0.4);
+        icon.setScale(1);
+        border.setAlpha(0.2);
       })
       .on('pointerout', () => {
-        this.jumpButtonBg.setAlpha(0.4);
-        this.jumpButtonIcon.setScale(1);
-        buttonBorder.setAlpha(0.2);
+        bg.setAlpha(0.4);
+        icon.setScale(1);
+        border.setAlpha(0.2);
       });
 
-    // Store border reference for cleanup
-    this.jumpButtonBorder = buttonBorder;
+    this.jumpButtonContainer.add([border, bg, icon, hitArea]);
+
+    // Store references
+    this.jumpButtonContainer.bg = bg;
+    this.jumpButtonContainer.icon = icon;
+    this.jumpButtonContainer.border = border;
   }
 
   /**
@@ -213,7 +347,6 @@ export default class UIManager {
         }
       });
     }
-    // Mobile uses dedicated jump button created in createMobileJumpButton()
   }
 
   /**
@@ -233,7 +366,7 @@ export default class UIManager {
   }
 
   /**
-   * Update game timer display
+   * Update game timer display (event-driven)
    */
   updateGameTimer() {
     this.gameTime = Math.floor((Date.now() - this.startTime) / 1000);
@@ -243,7 +376,7 @@ export default class UIManager {
   }
 
   /**
-   * Update score and distance display
+   * Update score and distance display (event-driven)
    */
   updateScoreDisplay(score, distance) {
     const isMobile = this.isMobileDevice();
@@ -262,6 +395,7 @@ export default class UIManager {
    * Pause game and redirect
    */
   pauseGame() {
+    gameEvents.emitEvent(GAME_EVENTS.GAME_PAUSED);
     if (confirm('Tạm dừng. Bạn có muốn xem thông tin đám cưới không?')) {
       window.location.href = 'wedding-info.html';
     }
@@ -275,7 +409,6 @@ export default class UIManager {
       scoreText: this.scoreText,
       distanceText: this.distanceText,
       timerText: this.timerText,
-      pauseButton: this.pauseButton,
       comboText: this.comboText,
       multiplierText: this.multiplierText
     };
@@ -289,18 +422,33 @@ export default class UIManager {
   }
 
   /**
-   * Destroy UI elements
+   * Get effect pool
+   */
+  getEffectPool() {
+    return this.effectPool;
+  }
+
+  /**
+   * Destroy UI elements and cleanup event listeners
    */
   destroy() {
-    if (this.scoreText) this.scoreText.destroy();
-    if (this.distanceText) this.distanceText.destroy();
-    if (this.timerText) this.timerText.destroy();
-    if (this.pauseButton) this.pauseButton.destroy();
-    if (this.comboText) this.comboText.destroy();
-    if (this.multiplierText) this.multiplierText.destroy();
-    if (this.jumpButton) this.jumpButton.destroy();
-    if (this.jumpButtonBg) this.jumpButtonBg.destroy();
-    if (this.jumpButtonIcon) this.jumpButtonIcon.destroy();
-    if (this.jumpButtonBorder) this.jumpButtonBorder.destroy();
+    // Remove all event listeners
+    this.eventListeners.forEach(({ event, fn }) => {
+      gameEvents.off(event, fn);
+    });
+    this.eventListeners = [];
+
+    // Destroy containers (will destroy children too)
+    if (this.scoreContainer) this.scoreContainer.destroy();
+    if (this.timerContainer) this.timerContainer.destroy();
+    if (this.comboContainer) this.comboContainer.destroy();
+    if (this.multiplierContainer) this.multiplierContainer.destroy();
+    if (this.jumpButtonContainer) this.jumpButtonContainer.destroy();
+
+    // Destroy effect pool
+    if (this.effectPool) this.effectPool.destroy();
+
+    // Destroy static UI texture
+    if (this.staticUITexture) this.staticUITexture.destroy();
   }
 }

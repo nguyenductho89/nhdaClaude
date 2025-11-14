@@ -1,8 +1,9 @@
 import { GAME_CONSTANTS } from '../../config/game.js';
 import { submitScore, getDeviceType } from '../../services/leaderboard.js';
+import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
 
 /**
- * GameStateManager
+ * GameStateManager (Refactored with Event Emissions)
  * Handles game lifecycle, state transitions, scene switching, and timers
  */
 export default class GameStateManager {
@@ -60,15 +61,17 @@ export default class GameStateManager {
   }
 
   /**
-   * Setup all game timers
+   * Setup all game timers (event-based)
    */
-  setupGameTimers(onUpdateTimer, onIncreaseSpeed, onCompleteGame) {
+  setupGameTimers(onCompleteGame) {
     console.log('Setting up game timers...');
 
-    // Update game timer every second
+    // Update game timer every second - emit event instead of callback
     this.scene.time.addEvent({
       delay: 1000,
-      callback: onUpdateTimer,
+      callback: () => {
+        gameEvents.emitEvent(GAME_EVENTS.TIMER_UPDATED);
+      },
       callbackScope: this.scene,
       loop: true
     });
@@ -78,7 +81,7 @@ export default class GameStateManager {
       delay: GAME_CONSTANTS.SPEED_INCREMENT_INTERVAL,
       callback: () => {
         this.increaseSpeed();
-        if (onIncreaseSpeed) onIncreaseSpeed();
+        gameEvents.emitEvent(GAME_EVENTS.SPEED_INCREASED, this.scrollSpeed, this.currentSpeedTier);
       },
       callbackScope: this.scene,
       loop: true
@@ -233,6 +236,9 @@ export default class GameStateManager {
     this.isSwitchingScene = false;
     console.log('Scene switch lock released immediately');
     console.log('=== SWITCH SCENE DONE ===\n');
+
+    // ✅ Emit scene changed event for UI notification
+    gameEvents.emitEvent(GAME_EVENTS.SCENE_CHANGED, this.sceneType);
   }
 
   /**

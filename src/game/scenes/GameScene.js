@@ -17,6 +17,9 @@ import CollectibleManager from '../managers/CollectibleManager.js';
 import GameStateManager from '../managers/GameStateManager.js';
 import SceneBackgroundManager from '../managers/SceneBackgroundManager.js';
 
+// Import event system
+import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
+
 /**
  * GameScene - Main game scene orchestrating all managers
  * Refactored from 2,196 lines to ~350 lines by extracting modules
@@ -185,14 +188,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoringSystem = new ScoringSystem(this);
 
+    // ✅ Initialize UI Manager with event-based system
     this.uiManager = new UIManager(this);
     this.uiManager.setSafeArea(this.safeAreaTop);
-    this.uiManager.createUI();
+    this.uiManager.initialize(); // Changed from createUI() - sets up events too
     this.uiManager.setupControls(() => this.jump());
-
-    // Set UI references for scoring system
-    const uiRefs = this.uiManager.getUIReferences();
-    this.scoringSystem.setUIReferences(uiRefs.multiplierText, uiRefs.comboText);
 
     this.obstacleManager = new ObstacleManager(this);
     this.obstacleManager.initialize();
@@ -209,10 +209,10 @@ export default class GameScene extends Phaser.Scene {
       () => this.handleGameOver()
     );
 
+    // ✅ Event-based collision - no updateScoreDisplay callback needed
     this.collectibleManager.setupCollision(
       this.playerManager.getPlayer(),
-      this.scoringSystem,
-      () => this.updateScoreDisplay()
+      this.scoringSystem
     );
 
     // Create debug graphics
@@ -222,10 +222,8 @@ export default class GameScene extends Phaser.Scene {
     this.obstacleManager.setDebugGraphics(this.debugGraphics);
     this.collectibleManager.setDebugGraphics(this.debugGraphics);
 
-    // Setup game timers
+    // ✅ Setup game timers (event-based - no timer callback needed)
     this.gameStateManager.setupGameTimers(
-      () => this.uiManager.updateGameTimer(),
-      null,
       () => this.handleCompleteGame()
     );
 
@@ -254,13 +252,6 @@ export default class GameScene extends Phaser.Scene {
     );
   }
 
-  updateScoreDisplay() {
-    this.uiManager.updateScoreDisplay(
-      this.scoringSystem.getScore(),
-      this.gameStateManager.distanceTraveled
-    );
-  }
-
   update(time, delta) {
     if (this.gameStateManager.isOver()) return;
 
@@ -281,7 +272,12 @@ export default class GameScene extends Phaser.Scene {
       this.scoringSystem.score += count * GAME_CONSTANTS.ITEM_SCORES[itemType];
     }
 
-    this.updateScoreDisplay();
+    // ✅ Emit event instead of direct UI update
+    gameEvents.emitEvent(
+      GAME_EVENTS.SCORE_CHANGED,
+      this.scoringSystem.score,
+      this.gameStateManager.distanceTraveled
+    );
 
     // Update parallax backgrounds
     this.backgroundManager.updateParallax(

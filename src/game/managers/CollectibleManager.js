@@ -1,8 +1,11 @@
 import { GAME_CONSTANTS } from '../../config/game.js';
+import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
 
 /**
- * CollectibleManager
- * Handles collectible item spawning, updates, and collection
+ * CollectibleManager (Refactored with Containers & Events)
+ * ✅ Container cho mỗi collectible
+ * ✅ Event-based effects
+ * ✅ No manual UI updates
  */
 export default class CollectibleManager {
   constructor(scene) {
@@ -46,7 +49,7 @@ export default class CollectibleManager {
   }
 
   /**
-   * Spawn a collectible item
+   * Spawn a collectible item using Container
    */
   spawnCollectible(isSwitchingScene, groundY, safeAreaTop) {
     // Don't spawn if switching scenes
@@ -73,13 +76,11 @@ export default class CollectibleManager {
     const config = this.itemConfig[itemType];
 
     // Items float in the AIR above ground - player must JUMP to collect
-    // Small items at various heights (easier to collect with large player hitbox)
-    // Limit max height to avoid safe area (notch/status bar on mobile)
     const maxHeightAboveGround = Math.min(200, groundY - safeAreaTop - 100);
     const heightAboveGround = Phaser.Math.Between(50, maxHeightAboveGround);
     const y = groundY - heightAboveGround;
 
-    // Container for emoji + value text
+    // ✅ Container for emoji + value text
     const container = this.scene.add.container(width + 50, y);
 
     // Create emoji (centered)
@@ -123,9 +124,9 @@ export default class CollectibleManager {
   }
 
   /**
-   * Handle item collection
+   * Handle item collection (event-based)
    */
-  collectItem(player, item, scoringSystem, onUpdateScoreDisplay) {
+  collectItem(player, item, scoringSystem) {
     const itemType = item.getData('itemType');
     const itemScore = item.getData('score');
 
@@ -143,36 +144,18 @@ export default class CollectibleManager {
       scoringSystem.comboCount++;
     }
 
-    // Special item effects
+    // Special item effects (event-based)
     if (itemType === 'xe') {
-      scoringSystem.activateInvincibility(player, this.safeAreaTop || 0);
+      scoringSystem.activateInvincibility(player);
     } else if (itemType === 'vang') {
-      scoringSystem.activateMultiplier(this.safeAreaTop || 0);
+      scoringSystem.activateMultiplier();
     }
 
-    // Visual feedback
-    this.createCollectEffect(item.x, item.y);
+    // ✅ Emit event for UI to show collect effect and floating text
+    gameEvents.emitEvent(GAME_EVENTS.ITEM_COLLECTED, item.x, item.y, itemType, itemScore);
 
+    // Destroy item
     item.destroy();
-
-    // Update UI
-    if (onUpdateScoreDisplay) {
-      onUpdateScoreDisplay();
-    }
-  }
-
-  /**
-   * Create visual effect on collection
-   */
-  createCollectEffect(x, y) {
-    const circle = this.scene.add.circle(x, y, 20, 0xFFFFFF, 0.8);
-    this.scene.tweens.add({
-      targets: circle,
-      alpha: 0,
-      scale: 2,
-      duration: 300,
-      onComplete: () => circle.destroy()
-    });
   }
 
   /**
@@ -196,12 +179,12 @@ export default class CollectibleManager {
   /**
    * Setup collision detection with player
    */
-  setupCollision(player, scoringSystem, onUpdateScoreDisplay) {
+  setupCollision(player, scoringSystem) {
     this.scene.physics.add.overlap(
       player,
       this.collectibles,
       (p, item) => {
-        this.collectItem(p, item, scoringSystem, onUpdateScoreDisplay);
+        this.collectItem(p, item, scoringSystem);
       },
       null,
       this.scene
@@ -209,7 +192,7 @@ export default class CollectibleManager {
   }
 
   /**
-   * Set safe area top (needed for power-up notifications)
+   * Set safe area top (needed for spawn calculation)
    */
   setSafeAreaTop(safeAreaTop) {
     this.safeAreaTop = safeAreaTop;

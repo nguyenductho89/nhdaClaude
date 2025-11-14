@@ -1,8 +1,10 @@
 import { GAME_CONSTANTS } from '../../config/game.js';
+import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
 
 /**
- * ScoringSystem
- * Handles score calculation, combos, multipliers, and power-up effects
+ * ScoringSystem (Refactored with Event-Based Updates)
+ * ✅ Event-based updates (emit events thay vì gọi UI trực tiếp)
+ * ✅ Không cần UI references
  */
 export default class ScoringSystem {
   constructor(scene) {
@@ -18,24 +20,16 @@ export default class ScoringSystem {
     // Power-up states
     this.isInvincible = false;
 
-    // UI references (will be set by UIManager)
-    this.multiplierText = null;
-    this.comboText = null;
+    // Timers
+    this.comboTimer = null;
   }
 
   /**
-   * Set UI text references
-   */
-  setUIReferences(multiplierText, comboText) {
-    this.multiplierText = multiplierText;
-    this.comboText = comboText;
-  }
-
-  /**
-   * Add score with multiplier
+   * Add score with multiplier and emit event
    */
   addScore(points) {
     this.score += points * this.scoreMultiplier;
+    // Event will be emitted by GameScene when score changes
   }
 
   /**
@@ -67,140 +61,54 @@ export default class ScoringSystem {
   }
 
   /**
-   * Activate invincibility power-up
+   * Activate invincibility power-up (event-based)
    */
-  activateInvincibility(player, safeAreaTop) {
+  activateInvincibility(player) {
     this.isInvincible = true;
     player.setTint(0x00FFFF); // Cyan tint
 
-    // Create animated notification
-    const { width, height } = this.scene.scale;
-    const notificationY = height / 2 - 150 + safeAreaTop;
-    const notification = this.scene.add.text(width / 2, notificationY, '🚗 BẤT TỬ 5S!', {
-      fontSize: '48px',
-      fontFamily: 'Arial',
-      color: '#00FFFF',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 6,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      padding: { x: 20, y: 10 }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0).setScale(0.5);
-
-    // Animate in
-    this.scene.tweens.add({
-      targets: notification,
-      alpha: 1,
-      scale: 1.2,
-      duration: 300,
-      ease: 'Back.easeOut',
-      onComplete: () => {
-        // Pulse animation
-        this.scene.tweens.add({
-          targets: notification,
-          scale: 1.3,
-          duration: 500,
-          yoyo: true,
-          repeat: 8, // 5 seconds / 0.5s per pulse
-          ease: 'Sine.easeInOut'
-        });
-        // Fade out after 4.5 seconds
-        this.scene.time.delayedCall(4500, () => {
-          this.scene.tweens.add({
-            targets: notification,
-            alpha: 0,
-            y: notification.y - 50,
-            duration: 500,
-            onComplete: () => notification.destroy()
-          });
-        });
-      }
-    });
+    // Emit event for UI to show notification
+    gameEvents.emitEvent(GAME_EVENTS.INVINCIBILITY_ACTIVATED);
 
     this.scene.time.addEvent({
       delay: GAME_CONSTANTS.INVINCIBILITY_DURATION,
       callback: () => {
         this.isInvincible = false;
         player.clearTint();
+        gameEvents.emitEvent(GAME_EVENTS.INVINCIBILITY_ENDED);
       }
     });
   }
 
   /**
-   * Activate score multiplier power-up
+   * Activate score multiplier power-up (event-based)
    */
-  activateMultiplier(safeAreaTop) {
+  activateMultiplier() {
     this.scoreMultiplier = GAME_CONSTANTS.MULTIPLIER_GOLD;
-    if (this.multiplierText) {
-      this.multiplierText.setText(`⭐ x${this.scoreMultiplier}`).setVisible(true);
-    }
 
-    // Create animated notification
-    const { width, height } = this.scene.scale;
-    const notificationY = height / 2 - 150 + safeAreaTop;
-    const notification = this.scene.add.text(width / 2, notificationY, '💍 ĐIỂM x2 - 10S!', {
-      fontSize: '48px',
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      fontStyle: 'bold',
-      stroke: '#FF8C00',
-      strokeThickness: 6,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      padding: { x: 20, y: 10 }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(150).setAlpha(0).setScale(0.5);
-
-    // Animate in with bounce
-    this.scene.tweens.add({
-      targets: notification,
-      alpha: 1,
-      scale: 1.2,
-      duration: 400,
-      ease: 'Back.easeOut',
-      onComplete: () => {
-        // Sparkle/pulse animation
-        this.scene.tweens.add({
-          targets: notification,
-          scale: 1.3,
-          duration: 600,
-          yoyo: true,
-          repeat: 15, // 10 seconds / 0.6s per pulse
-          ease: 'Sine.easeInOut'
-        });
-        // Fade out after 9.5 seconds
-        this.scene.time.delayedCall(9500, () => {
-          this.scene.tweens.add({
-            targets: notification,
-            alpha: 0,
-            y: notification.y - 50,
-            scale: 0.8,
-            duration: 500,
-            onComplete: () => notification.destroy()
-          });
-        });
-      }
-    });
+    // Emit event for UI
+    gameEvents.emitEvent(GAME_EVENTS.MULTIPLIER_ACTIVATED);
+    gameEvents.emitEvent(GAME_EVENTS.MULTIPLIER_CHANGED, this.scoreMultiplier);
 
     this.scene.time.addEvent({
       delay: GAME_CONSTANTS.MULTIPLIER_DURATION,
       callback: () => {
         this.scoreMultiplier = 1;
-        if (this.multiplierText) {
-          this.multiplierText.setVisible(false);
-        }
+        gameEvents.emitEvent(GAME_EVENTS.MULTIPLIER_ENDED);
+        gameEvents.emitEvent(GAME_EVENTS.MULTIPLIER_CHANGED, this.scoreMultiplier);
       }
     });
   }
 
   /**
-   * Update combo system
+   * Update combo system (event-based)
    */
   updateCombo() {
     this.comboCount++;
     this.comboActive = true;
 
-    if (this.comboText) {
-      this.comboText.setText(`🔥 COMBO x${this.comboCount}`).setVisible(true);
-    }
+    // Emit combo changed event
+    gameEvents.emitEvent(GAME_EVENTS.COMBO_CHANGED, this.comboCount, this.comboActive);
 
     // Reset combo after 2 seconds of no collection
     if (this.comboTimer) {
@@ -212,9 +120,7 @@ export default class ScoringSystem {
       callback: () => {
         this.comboCount = 0;
         this.comboActive = false;
-        if (this.comboText) {
-          this.comboText.setVisible(false);
-        }
+        gameEvents.emitEvent(GAME_EVENTS.COMBO_CHANGED, this.comboCount, this.comboActive);
       }
     });
   }
@@ -233,6 +139,11 @@ export default class ScoringSystem {
     if (this.comboTimer) {
       this.comboTimer.remove();
     }
+
+    // Emit reset events
+    gameEvents.emitEvent(GAME_EVENTS.SCORE_CHANGED, 0, 0);
+    gameEvents.emitEvent(GAME_EVENTS.COMBO_CHANGED, 0, false);
+    gameEvents.emitEvent(GAME_EVENTS.MULTIPLIER_CHANGED, 1);
   }
 
   /**

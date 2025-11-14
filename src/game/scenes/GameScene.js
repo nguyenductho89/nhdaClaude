@@ -52,6 +52,13 @@ export default class GameScene extends Phaser.Scene {
     this.lastCollectibleTime = 0;
     this.nextObstacleDelay = 0;
     this.isInSafePeriod = false;
+
+    // Scene management - scenes will rotate during gameplay
+    this.sceneTypes = ['mountain-river', 'street', 'beach'];
+    this.currentSceneIndex = 0;
+    this.sceneType = this.sceneTypes[0]; // Start with first scene
+    this.sceneChangeInterval = 40000; // 40 seconds per scene (120s total / 3 scenes)
+    console.log('Starting with scene:', this.sceneType);
   }
 
   preload() {
@@ -215,6 +222,17 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createParallaxBackground() {
+    // Create scene based on selected type
+    if (this.sceneType === 'street') {
+      this.createStreetScene();
+    } else if (this.sceneType === 'beach') {
+      this.createBeachScene();
+    } else {
+      this.createMountainRiverScene();
+    }
+  }
+
+  createMountainRiverScene() {
     const { width, height } = this.scale;
 
     // Sky layer with beautiful gradient (top to bottom: dark blue to light blue)
@@ -379,6 +397,545 @@ export default class GameScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
       });
     }
+  }
+
+  createStreetScene() {
+    const { width, height } = this.scale;
+
+    // Sky layer - urban evening gradient (orange/purple sunset)
+    const skyGraphics = this.add.graphics();
+    skyGraphics.fillGradientStyle(0xFF7F50, 0xFF7F50, 0x9370DB, 0x9370DB, 1);
+    skyGraphics.fillRect(0, 0, width, height * 0.5);
+    skyGraphics.fillGradientStyle(0x9370DB, 0x9370DB, 0x4B0082, 0x4B0082, 1);
+    skyGraphics.fillRect(0, height * 0.5, width, height * 0.5);
+
+    // Sun/Moon (setting sun)
+    const sunY = height * 0.2 + this.safeAreaTop;
+    const sun = this.add.circle(width * 0.15, sunY, 50, 0xFF6347, 1);
+    sun.setAlpha(0.8);
+    const sunGlow = this.add.circle(width * 0.15, sunY, 70, 0xFF6347, 0.3);
+
+    // Clouds layer
+    this.cloudsLayer = this.add.group();
+    for (let i = 0; i < 6; i++) {
+      const cloudX = i * 300 + Math.random() * 150;
+      const cloudY = this.safeAreaTop + 50 + Math.random() * 100;
+
+      const cloudContainer = this.add.container(cloudX, cloudY);
+      const cloud1 = this.add.ellipse(0, 0, 100, 50, 0xFFB6C1, 0.7);
+      const cloud2 = this.add.ellipse(-30, -10, 70, 45, 0xFFB6C1, 0.65);
+      const cloud3 = this.add.ellipse(30, -5, 80, 40, 0xFFB6C1, 0.65);
+
+      cloudContainer.add([cloud1, cloud2, cloud3]);
+      cloudContainer.setData('baseX', cloudX);
+      cloudContainer.setData('speed', 0.5 + Math.random() * 0.3);
+      this.cloudsLayer.add(cloudContainer);
+    }
+
+    // Birds flying
+    this.birdsLayer = this.add.group();
+    for (let i = 0; i < 4; i++) {
+      const birdX = Math.random() * width;
+      const birdY = this.safeAreaTop + 80 + Math.random() * 120;
+
+      const birdGraphics = this.add.graphics();
+      birdGraphics.lineStyle(2, 0x2C3E50, 1);
+      birdGraphics.beginPath();
+      birdGraphics.moveTo(-8, 0);
+      birdGraphics.lineTo(0, -5);
+      birdGraphics.lineTo(8, 0);
+      birdGraphics.strokePath();
+
+      const birdTexture = birdGraphics.generateTexture('streetBird' + i, 16, 10);
+      birdGraphics.destroy();
+
+      const bird = this.add.image(birdX, birdY, 'streetBird' + i);
+      bird.setData('baseX', birdX);
+      bird.setData('baseY', birdY);
+      bird.setData('speed', 1.2 + Math.random() * 0.8);
+      this.birdsLayer.add(bird);
+
+      this.tweens.add({
+        targets: bird,
+        scaleY: 0.8,
+        duration: 300,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Far buildings (skyscrapers in distance)
+    const farBuildingGraphics = this.add.graphics();
+    farBuildingGraphics.fillStyle(0x2F4F4F, 0.6);
+    for (let i = 0; i < 8; i++) {
+      const x = i * 200;
+      const buildingHeight = 150 + Math.random() * 100;
+      farBuildingGraphics.fillRect(x, height - buildingHeight - 120, 150, buildingHeight);
+      // Windows
+      farBuildingGraphics.fillStyle(0xFFD700, 0.4);
+      for (let w = 0; w < 3; w++) {
+        for (let h = 0; h < Math.floor(buildingHeight / 20); h++) {
+          if (Math.random() > 0.3) {
+            farBuildingGraphics.fillRect(x + 20 + w * 40, height - buildingHeight - 120 + h * 20 + 10, 25, 15);
+          }
+        }
+      }
+      farBuildingGraphics.fillStyle(0x2F4F4F, 0.6);
+    }
+    const farBuildingTexture = farBuildingGraphics.generateTexture('farBuildings', width * 2, height);
+    farBuildingGraphics.destroy();
+
+    this.farMountainsBg = this.add.image(0, 0, 'farBuildings').setOrigin(0);
+    this.farMountainsBg2 = this.add.image(width * 2, 0, 'farBuildings').setOrigin(0);
+
+    // Near buildings (closer, taller)
+    const buildingGraphics = this.add.graphics();
+    for (let i = 0; i < 6; i++) {
+      const x = i * 300;
+      const buildingHeight = 200 + Math.random() * 150;
+      const buildingWidth = 200;
+
+      // Building body
+      buildingGraphics.fillStyle(0x696969, 0.8);
+      buildingGraphics.fillRect(x, height - buildingHeight - 100, buildingWidth, buildingHeight);
+
+      // Windows (lit up)
+      buildingGraphics.fillStyle(0xFFFF00, 0.7);
+      for (let w = 0; w < 4; w++) {
+        for (let h = 0; h < Math.floor(buildingHeight / 25); h++) {
+          if (Math.random() > 0.4) {
+            buildingGraphics.fillRect(x + 25 + w * 40, height - buildingHeight - 100 + h * 25 + 12, 30, 18);
+          }
+        }
+      }
+
+      // Roof
+      buildingGraphics.fillStyle(0x4B4B4B, 1);
+      buildingGraphics.fillRect(x, height - buildingHeight - 120, buildingWidth, 20);
+    }
+    const buildingTexture = buildingGraphics.generateTexture('buildings', width * 2, height);
+    buildingGraphics.destroy();
+
+    this.mountainsBg = this.add.image(0, 0, 'buildings').setOrigin(0);
+    this.mountainsBg2 = this.add.image(width * 2, 0, 'buildings').setOrigin(0);
+
+    // Street/road (asphalt)
+    const streetGraphics = this.add.graphics();
+    streetGraphics.fillStyle(0x36454F, 1);
+    streetGraphics.fillRect(0, height - 100, width * 2, 70);
+    // Road markings
+    streetGraphics.fillStyle(0xFFFFFF, 0.8);
+    for (let i = 0; i < 20; i++) {
+      streetGraphics.fillRect(i * 150 + 50, height - 65, 80, 5);
+    }
+    const streetTexture = streetGraphics.generateTexture('street', width * 2, 100);
+    streetGraphics.destroy();
+
+    this.riverBg = this.add.image(0, height - 100, 'street').setOrigin(0);
+    this.riverBg2 = this.add.image(width * 2, height - 100, 'street').setOrigin(0);
+
+    // Street lights
+    this.wavesLayer = this.add.group();
+    for (let i = 0; i < 8; i++) {
+      const lightX = i * 250 + 100;
+      const lightY = height - 120;
+
+      const lightGraphics = this.add.graphics();
+      // Pole
+      lightGraphics.fillStyle(0x4B4B4B, 1);
+      lightGraphics.fillRect(-5, 0, 10, 100);
+      // Light
+      lightGraphics.fillStyle(0xFFD700, 1);
+      lightGraphics.fillCircle(0, 0, 12);
+      lightGraphics.fillStyle(0xFFFF00, 0.3);
+      lightGraphics.fillCircle(0, 0, 25);
+
+      const lightTexture = lightGraphics.generateTexture('streetLight' + i, 60, 120);
+      lightGraphics.destroy();
+
+      const light = this.add.image(lightX, lightY, 'streetLight' + i);
+      light.setData('baseX', lightX);
+      this.wavesLayer.add(light);
+
+      // Flickering animation
+      this.tweens.add({
+        targets: light,
+        alpha: 0.7,
+        duration: 2000 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Cars (moving in opposite direction for parallax effect)
+    this.carsLayer = this.add.group();
+    for (let i = 0; i < 3; i++) {
+      const carX = Math.random() * width;
+      const carY = height - 70;
+
+      const carGraphics = this.add.graphics();
+      // Car body
+      carGraphics.fillStyle(Phaser.Display.Color.RandomRGB().color, 1);
+      carGraphics.fillRect(0, 10, 60, 20);
+      carGraphics.fillRect(10, 0, 40, 12);
+      // Wheels
+      carGraphics.fillStyle(0x000000, 1);
+      carGraphics.fillCircle(15, 30, 6);
+      carGraphics.fillCircle(45, 30, 6);
+      // Headlights
+      carGraphics.fillStyle(0xFFFFFF, 1);
+      carGraphics.fillRect(0, 15, 3, 8);
+
+      const carTexture = carGraphics.generateTexture('streetCar' + i, 70, 40);
+      carGraphics.destroy();
+
+      const car = this.add.image(carX, carY, 'streetCar' + i);
+      car.setData('baseX', carX);
+      car.setData('speed', 2 + Math.random() * 1.5);
+      this.carsLayer.add(car);
+    }
+  }
+
+  createBeachScene() {
+    const { width, height } = this.scale;
+
+    // Sky layer - tropical blue gradient
+    const skyGraphics = this.add.graphics();
+    skyGraphics.fillGradientStyle(0x00BFFF, 0x00BFFF, 0x87CEEB, 0x87CEEB, 1);
+    skyGraphics.fillRect(0, 0, width, height * 0.6);
+    skyGraphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xADD8E6, 0xADD8E6, 1);
+    skyGraphics.fillRect(0, height * 0.6, width, height * 0.4);
+
+    // Sun (bright tropical sun)
+    const sunY = height * 0.12 + this.safeAreaTop;
+    const sun = this.add.circle(width * 0.8, sunY, 45, 0xFFD700, 1);
+    sun.setAlpha(1);
+    const sunGlow = this.add.circle(width * 0.8, sunY, 60, 0xFFD700, 0.4);
+    const sunGlow2 = this.add.circle(width * 0.8, sunY, 80, 0xFFFF00, 0.2);
+
+    // Fluffy white clouds
+    this.cloudsLayer = this.add.group();
+    for (let i = 0; i < 7; i++) {
+      const cloudX = i * 280 + Math.random() * 150;
+      const cloudY = this.safeAreaTop + 40 + Math.random() * 100;
+
+      const cloudContainer = this.add.container(cloudX, cloudY);
+      const cloud1 = this.add.ellipse(0, 0, 110, 55, 0xFFFFFF, 0.95);
+      const cloud2 = this.add.ellipse(-35, -12, 75, 48, 0xFFFFFF, 0.9);
+      const cloud3 = this.add.ellipse(35, -8, 85, 42, 0xFFFFFF, 0.9);
+      const cloud4 = this.add.ellipse(0, 12, 65, 38, 0xFFFFFF, 0.85);
+
+      cloudContainer.add([cloud1, cloud2, cloud3, cloud4]);
+      cloudContainer.setData('baseX', cloudX);
+      cloudContainer.setData('speed', 0.6 + Math.random() * 0.4);
+      this.cloudsLayer.add(cloudContainer);
+    }
+
+    // Seagulls (hải âu)
+    this.birdsLayer = this.add.group();
+    for (let i = 0; i < 6; i++) {
+      const birdX = Math.random() * width;
+      const birdY = this.safeAreaTop + 70 + Math.random() * 140;
+
+      const birdGraphics = this.add.graphics();
+      birdGraphics.lineStyle(2.5, 0xFFFFFF, 1);
+      birdGraphics.beginPath();
+      birdGraphics.moveTo(-10, 0);
+      birdGraphics.lineTo(0, -6);
+      birdGraphics.lineTo(10, 0);
+      birdGraphics.strokePath();
+
+      const birdTexture = birdGraphics.generateTexture('seagull' + i, 20, 12);
+      birdGraphics.destroy();
+
+      const bird = this.add.image(birdX, birdY, 'seagull' + i);
+      bird.setData('baseX', birdX);
+      bird.setData('baseY', birdY);
+      bird.setData('speed', 1.3 + Math.random() * 1);
+      this.birdsLayer.add(bird);
+
+      this.tweens.add({
+        targets: bird,
+        scaleY: 0.75,
+        duration: 250,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Distant ocean horizon
+    const horizonGraphics = this.add.graphics();
+    horizonGraphics.fillGradientStyle(0x4682B4, 0x4682B4, 0x5F9EA0, 0x5F9EA0, 1);
+    horizonGraphics.fillRect(0, height - 250, width * 2, 100);
+    const horizonTexture = horizonGraphics.generateTexture('horizon', width * 2, 100);
+    horizonGraphics.destroy();
+
+    this.farMountainsBg = this.add.image(0, height - 250, 'horizon').setOrigin(0);
+    this.farMountainsBg2 = this.add.image(width * 2, height - 250, 'horizon').setOrigin(0);
+
+    // Palm trees (cây dừa)
+    const palmGraphics = this.add.graphics();
+    for (let i = 0; i < 5; i++) {
+      const x = i * 400 + 100;
+      const y = height - 220;
+
+      // Trunk
+      palmGraphics.fillStyle(0x8B4513, 1);
+      palmGraphics.fillRect(x, y, 15, 80);
+
+      // Leaves
+      palmGraphics.fillStyle(0x228B22, 1);
+      for (let j = 0; j < 6; j++) {
+        const angle = (j * 60) * Math.PI / 180;
+        palmGraphics.fillEllipse(
+          x + 7 + Math.cos(angle) * 30,
+          y - 10 + Math.sin(angle) * 30,
+          40,
+          15,
+          angle
+        );
+      }
+    }
+    const palmTexture = palmGraphics.generateTexture('palms', width * 2, height);
+    palmGraphics.destroy();
+
+    this.mountainsBg = this.add.image(0, 0, 'palms').setOrigin(0);
+    this.mountainsBg2 = this.add.image(width * 2, 0, 'palms').setOrigin(0);
+
+    // Ocean waves (animated water)
+    const oceanGraphics = this.add.graphics();
+    oceanGraphics.fillGradientStyle(0x1E90FF, 0x1E90FF, 0x4169E1, 0x4169E1, 1);
+    oceanGraphics.fillRect(0, height - 150, width * 2, 50);
+    const oceanTexture = oceanGraphics.generateTexture('ocean', width * 2, 100);
+    oceanGraphics.destroy();
+
+    this.riverBg = this.add.image(0, height - 150, 'ocean').setOrigin(0);
+    this.riverBg2 = this.add.image(width * 2, height - 150, 'ocean').setOrigin(0);
+
+    // Beach waves (white foam)
+    this.wavesLayer = this.add.group();
+    for (let i = 0; i < 12; i++) {
+      const waveX = i * 180;
+      const waveY = height - 105;
+
+      const waveGraphics = this.add.graphics();
+      waveGraphics.lineStyle(4, 0xFFFFFF, 0.7);
+      waveGraphics.beginPath();
+      for (let x = 0; x < 120; x += 8) {
+        const y = Math.sin(x * 0.12) * 8;
+        if (x === 0) {
+          waveGraphics.moveTo(x, y);
+        } else {
+          waveGraphics.lineTo(x, y);
+        }
+      }
+      waveGraphics.strokePath();
+
+      const waveTexture = waveGraphics.generateTexture('beachWave' + i, 120, 25);
+      waveGraphics.destroy();
+
+      const wave = this.add.image(waveX, waveY, 'beachWave' + i);
+      wave.setData('baseX', waveX);
+      wave.setData('phase', i * 0.6);
+      this.wavesLayer.add(wave);
+
+      this.tweens.add({
+        targets: wave,
+        y: waveY - 5,
+        duration: 1500 + Math.random() * 700,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Beach balls (optional decorative elements)
+    this.beachBallsLayer = this.add.group();
+    for (let i = 0; i < 2; i++) {
+      const ballX = Math.random() * width;
+      const ballY = height - 120;
+
+      const ballGraphics = this.add.graphics();
+      ballGraphics.fillStyle(0xFF0000, 1);
+      ballGraphics.fillCircle(0, 0, 15);
+      ballGraphics.fillStyle(0xFFFFFF, 1);
+      ballGraphics.fillCircle(-5, -5, 6);
+      ballGraphics.fillStyle(0x0000FF, 1);
+      ballGraphics.fillCircle(5, 5, 6);
+
+      const ballTexture = ballGraphics.generateTexture('beachBall' + i, 32, 32);
+      ballGraphics.destroy();
+
+      const ball = this.add.image(ballX, ballY, 'beachBall' + i);
+      ball.setData('baseX', ballX);
+      ball.setData('speed', 1.8 + Math.random() * 1);
+      this.beachBallsLayer.add(ball);
+
+      // Bouncing animation
+      this.tweens.add({
+        targets: ball,
+        y: ballY - 15,
+        duration: 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Quad.easeInOut'
+      });
+    }
+  }
+
+  clearScene() {
+    // Clear all scene-specific layers (Phaser will auto-stop tweens when objects are destroyed)
+    if (this.cloudsLayer) {
+      this.cloudsLayer.clear(true, true);
+      this.cloudsLayer = null;
+    }
+    if (this.birdsLayer) {
+      this.birdsLayer.clear(true, true);
+      this.birdsLayer = null;
+    }
+    if (this.farMountainsBg) {
+      this.farMountainsBg.destroy();
+      this.farMountainsBg = null;
+    }
+    if (this.farMountainsBg2) {
+      this.farMountainsBg2.destroy();
+      this.farMountainsBg2 = null;
+    }
+    if (this.mountainsBg) {
+      this.mountainsBg.destroy();
+      this.mountainsBg = null;
+    }
+    if (this.mountainsBg2) {
+      this.mountainsBg2.destroy();
+      this.mountainsBg2 = null;
+    }
+    if (this.riverBg) {
+      this.riverBg.destroy();
+      this.riverBg = null;
+    }
+    if (this.riverBg2) {
+      this.riverBg2.destroy();
+      this.riverBg2 = null;
+    }
+    if (this.wavesLayer) {
+      this.wavesLayer.clear(true, true);
+      this.wavesLayer = null;
+    }
+    if (this.carsLayer) {
+      this.carsLayer.clear(true, true);
+      this.carsLayer = null;
+    }
+    if (this.beachBallsLayer) {
+      this.beachBallsLayer.clear(true, true);
+      this.beachBallsLayer = null;
+    }
+
+    // Clear all graphics and objects that are not in groups
+    this.children.list.forEach(child => {
+      // Don't destroy player, UI, ground, or obstacles/collectibles
+      if (child !== this.player &&
+          child !== this.ground &&
+          child !== this.ground1 &&
+          child !== this.ground2 &&
+          child !== this.scoreText &&
+          child !== this.distanceText &&
+          child !== this.timerText &&
+          child !== this.pauseButton &&
+          child !== this.comboText &&
+          child !== this.multiplierText &&
+          child !== this.jumpButton &&
+          child !== this.jumpButtonBg &&
+          child !== this.jumpButtonIcon &&
+          child !== this.jumpButtonBorder &&
+          child !== this.playerHitboxGraphics &&
+          child !== this.playerBorderGraphics &&
+          !this.obstacles.contains(child) &&
+          !this.collectibles.contains(child)) {
+
+        // Check if it's a scene background element (circle, graphics, image)
+        if ((child instanceof Phaser.GameObjects.Circle && child.y < this.groundY) ||
+            (child instanceof Phaser.GameObjects.Image && child.y < this.groundY && child.texture.key.includes('Bird') === false && child.texture.key.includes('wave') === false && child.texture.key.includes('light') === false && child.texture.key.includes('Car') === false && child.texture.key.includes('Ball') === false) ||
+            (child instanceof Phaser.GameObjects.Graphics && child !== this.playerHitboxGraphics && child !== this.playerBorderGraphics)) {
+          try {
+            child.destroy();
+          } catch (e) {
+            // Ignore errors
+          }
+        }
+      }
+    });
+  }
+
+  switchScene() {
+    console.log('Switching scene...');
+
+    // Clear current scene
+    this.clearScene();
+
+    // Move to next scene (randomly or in order)
+    const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
+    const nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
+    this.currentSceneIndex = this.sceneTypes.indexOf(nextSceneType);
+    this.sceneType = nextSceneType;
+
+    console.log('New scene:', this.sceneType);
+
+    // Create new scene
+    this.createParallaxBackground();
+
+    // Show transition notification
+    this.showSceneChangeNotification();
+  }
+
+  showSceneChangeNotification() {
+    const { width, height } = this.scale;
+
+    let sceneText = '';
+    if (this.sceneType === 'mountain-river') {
+      sceneText = '🏔️ NÚI SÔNG';
+    } else if (this.sceneType === 'street') {
+      sceneText = '🏙️ ĐƯỜNG PHỐ';
+    } else if (this.sceneType === 'beach') {
+      sceneText = '🏖️ BÃI BIỂN';
+    }
+
+    const notification = this.add.text(width / 2, height / 2, sceneText, {
+      fontSize: '64px',
+      fontFamily: 'Arial',
+      color: '#FFD700',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 8,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: 30, y: 15 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(250).setAlpha(0).setScale(0.5);
+
+    // Animate in
+    this.tweens.add({
+      targets: notification,
+      alpha: 1,
+      scale: 1.2,
+      duration: 500,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        // Hold for 1.5 seconds
+        this.time.delayedCall(1500, () => {
+          // Fade out
+          this.tweens.add({
+            targets: notification,
+            alpha: 0,
+            scale: 0.8,
+            y: notification.y - 100,
+            duration: 500,
+            ease: 'Back.easeIn',
+            onComplete: () => notification.destroy()
+          });
+        });
+      }
+    });
   }
 
   createGround() {
@@ -664,6 +1221,14 @@ export default class GameScene extends Phaser.Scene {
       callback: () => { this.isInSafePeriod = false; },
       callbackScope: this,
       loop: false
+    });
+
+    // Scene change timer - switch scenes every 40 seconds
+    this.time.addEvent({
+      delay: this.sceneChangeInterval,
+      callback: this.switchScene,
+      callbackScope: this,
+      loop: true
     });
   }
 
@@ -1348,6 +1913,29 @@ export default class GameScene extends Phaser.Scene {
         wave.x -= scrollDistance * 0.9;
         if (wave.x < -100) {
           wave.x = this.scale.width + 100;
+        }
+      });
+    }
+
+    // Cars (for street scene - moving in opposite direction)
+    if (this.carsLayer) {
+      this.carsLayer.getChildren().forEach(car => {
+        const speed = car.getData('speed') || 2;
+        // Cars move in opposite direction for parallax effect
+        car.x -= scrollDistance * speed;
+        if (car.x < -100) {
+          car.x = this.scale.width + 100;
+        }
+      });
+    }
+
+    // Beach balls (for beach scene)
+    if (this.beachBallsLayer) {
+      this.beachBallsLayer.getChildren().forEach(ball => {
+        const speed = ball.getData('speed') || 1.5;
+        ball.x -= scrollDistance * speed;
+        if (ball.x < -50) {
+          ball.x = this.scale.width + 50;
         }
       });
     }

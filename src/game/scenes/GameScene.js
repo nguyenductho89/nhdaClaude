@@ -765,7 +765,12 @@ export default class GameScene extends Phaser.Scene {
   clearScene() {
     console.log('Clearing scene...');
 
-    // Clear all scene-specific layers
+    // Store player state before clearing
+    const playerX = this.player ? this.player.x : null;
+    const playerY = this.player ? this.player.y : null;
+    const playerVelocityY = this.player && this.player.body ? this.player.body.velocity.y : 0;
+
+    // Clear all scene-specific layers (make sure they don't contain player!)
     if (this.cloudsLayer) {
       this.cloudsLayer.clear(true, true);
       this.cloudsLayer = null;
@@ -838,7 +843,26 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    console.log('Scene cleared successfully');
+    // Check if player still exists and restore if needed
+    if (!this.player || !this.player.active) {
+      console.warn('⚠️ Player was destroyed! Restoring player...');
+      if (playerX && playerY) {
+        // Recreate player at same position
+        this.createPlayer();
+        this.player.x = playerX;
+        this.player.y = playerY;
+        if (this.player.body) {
+          this.player.body.velocity.y = playerVelocityY;
+        }
+
+        // Restore collision detection
+        this.physics.add.overlap(this.player, this.obstacles, this.hitObstacle, null, this);
+        this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
+        console.log('✅ Player restored with collisions');
+      }
+    }
+
+    console.log('Scene cleared successfully, player status:', this.player ? 'OK' : 'MISSING');
   }
 
   switchScene() {
@@ -885,6 +909,12 @@ export default class GameScene extends Phaser.Scene {
 
       // Create new scene
       this.createParallaxBackground();
+
+      // Ensure player is on top of new background
+      if (this.player) {
+        this.player.setDepth(50);
+        console.log('Player depth set to 50 (on top)');
+      }
 
       // Show transition notification
       console.log('Step 4: Showing notification...');
@@ -1010,6 +1040,9 @@ export default class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(playerX, playerY, 'playerImage');
     this.player.setCollideWorldBounds(false);
     // Use default origin (0.5, 0.5) - center of sprite
+
+    // Set depth to ensure player is always on top of background
+    this.player.setDepth(50);
 
     // Stretch image to fit the exact size
     this.player.setDisplaySize(playerWidth, playerHeight);

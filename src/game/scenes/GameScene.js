@@ -54,10 +54,13 @@ export default class GameScene extends Phaser.Scene {
     this.isInSafePeriod = false;
 
     // Scene management - scenes will rotate during gameplay
-    this.sceneTypes = ['mountain-river', 'street', 'beach'];
-    this.currentSceneIndex = 0;
-    this.sceneType = this.sceneTypes[0]; // Start with first scene
-    this.sceneChangeInterval = 40000; // 40 seconds per scene (120s total / 3 scenes)
+    this.sceneTypes = ['beach', 'mountain-river', 'street'];
+    // Start with random scene instead of first one
+    this.currentSceneIndex = Phaser.Math.Between(0, this.sceneTypes.length - 1);
+    this.sceneType = this.sceneTypes[this.currentSceneIndex];
+    this.sceneChangeInterval = 19000; // 19 seconds per scene (switch before 20s to avoid conflicts)
+    this.isSwitchingScene = false; // Prevent double switching
+    this.lastSceneChangeTime = 0; // Track last scene change
     console.log('Starting with scene:', this.sceneType);
   }
 
@@ -569,33 +572,7 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Cars (moving in opposite direction for parallax effect)
-    this.carsLayer = this.add.group();
-    for (let i = 0; i < 3; i++) {
-      const carX = Math.random() * width;
-      const carY = height - 70;
-
-      const carGraphics = this.add.graphics();
-      // Car body
-      carGraphics.fillStyle(Phaser.Display.Color.RandomRGB().color, 1);
-      carGraphics.fillRect(0, 10, 60, 20);
-      carGraphics.fillRect(10, 0, 40, 12);
-      // Wheels
-      carGraphics.fillStyle(0x000000, 1);
-      carGraphics.fillCircle(15, 30, 6);
-      carGraphics.fillCircle(45, 30, 6);
-      // Headlights
-      carGraphics.fillStyle(0xFFFFFF, 1);
-      carGraphics.fillRect(0, 15, 3, 8);
-
-      const carTexture = carGraphics.generateTexture('streetCar' + i, 70, 40);
-      carGraphics.destroy();
-
-      const car = this.add.image(carX, carY, 'streetCar' + i);
-      car.setData('baseX', carX);
-      car.setData('speed', 2 + Math.random() * 1.5);
-      this.carsLayer.add(car);
-    }
+    // Note: Fast cars removed from street scene as they were too fast
   }
 
   createBeachScene() {
@@ -686,18 +663,17 @@ export default class GameScene extends Phaser.Scene {
       palmGraphics.fillStyle(0x8B4513, 1);
       palmGraphics.fillRect(x, y, 15, 80);
 
-      // Leaves
+      // Leaves - use circles instead of ellipses
       palmGraphics.fillStyle(0x228B22, 1);
       for (let j = 0; j < 6; j++) {
         const angle = (j * 60) * Math.PI / 180;
-        palmGraphics.fillEllipse(
-          x + 7 + Math.cos(angle) * 30,
-          y - 10 + Math.sin(angle) * 30,
-          40,
-          15,
-          angle
-        );
+        const leafX = x + 7 + Math.cos(angle) * 35;
+        const leafY = y - 10 + Math.sin(angle) * 35;
+        // Draw leaf as circle
+        palmGraphics.fillCircle(leafX, leafY, 20);
       }
+      // Add center circle for fuller look
+      palmGraphics.fillCircle(x + 7, y - 10, 15);
     }
     const palmTexture = palmGraphics.generateTexture('palms', width * 2, height);
     palmGraphics.destroy();
@@ -787,7 +763,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   clearScene() {
-    // Clear all scene-specific layers (Phaser will auto-stop tweens when objects are destroyed)
+    console.log('Clearing scene...');
+
+    // Clear all scene-specific layers
     if (this.cloudsLayer) {
       this.cloudsLayer.clear(true, true);
       this.cloudsLayer = null;
@@ -824,70 +802,104 @@ export default class GameScene extends Phaser.Scene {
       this.wavesLayer.clear(true, true);
       this.wavesLayer = null;
     }
-    if (this.carsLayer) {
-      this.carsLayer.clear(true, true);
-      this.carsLayer = null;
-    }
     if (this.beachBallsLayer) {
       this.beachBallsLayer.clear(true, true);
       this.beachBallsLayer = null;
     }
 
-    // Clear all graphics and objects that are not in groups
-    this.children.list.forEach(child => {
-      // Don't destroy player, UI, ground, or obstacles/collectibles
-      if (child !== this.player &&
-          child !== this.ground &&
-          child !== this.ground1 &&
-          child !== this.ground2 &&
-          child !== this.scoreText &&
-          child !== this.distanceText &&
-          child !== this.timerText &&
-          child !== this.pauseButton &&
-          child !== this.comboText &&
-          child !== this.multiplierText &&
-          child !== this.jumpButton &&
-          child !== this.jumpButtonBg &&
-          child !== this.jumpButtonIcon &&
-          child !== this.jumpButtonBorder &&
-          child !== this.playerHitboxGraphics &&
-          child !== this.playerBorderGraphics &&
-          !this.obstacles.contains(child) &&
-          !this.collectibles.contains(child)) {
+    // Destroy all scene-specific textures to prevent conflicts
+    const textureManager = this.textures;
+    const texturesToDestroy = [
+      // Mountain-river scene
+      'farMountains', 'mountains', 'river',
+      // Street scene
+      'farBuildings', 'buildings', 'street',
+      // Beach scene
+      'horizon', 'palms', 'ocean'
+    ];
 
-        // Check if it's a scene background element (circle, graphics, image)
-        if ((child instanceof Phaser.GameObjects.Circle && child.y < this.groundY) ||
-            (child instanceof Phaser.GameObjects.Image && child.y < this.groundY && child.texture.key.includes('Bird') === false && child.texture.key.includes('wave') === false && child.texture.key.includes('light') === false && child.texture.key.includes('Car') === false && child.texture.key.includes('Ball') === false) ||
-            (child instanceof Phaser.GameObjects.Graphics && child !== this.playerHitboxGraphics && child !== this.playerBorderGraphics)) {
-          try {
-            child.destroy();
-          } catch (e) {
-            // Ignore errors
-          }
-        }
+    // Destroy base textures
+    texturesToDestroy.forEach(key => {
+      if (textureManager.exists(key)) {
+        textureManager.remove(key);
       }
     });
+
+    // Destroy dynamic textures (birds, waves, lights, balls)
+    for (let i = 0; i < 20; i++) {
+      const dynamicKeys = [
+        `bird${i}`, `wave${i}`, `streetBird${i}`, `streetLight${i}`,
+        `seagull${i}`, `beachWave${i}`, `beachBall${i}`
+      ];
+      dynamicKeys.forEach(key => {
+        if (textureManager.exists(key)) {
+          textureManager.remove(key);
+        }
+      });
+    }
+
+    console.log('Scene cleared successfully');
   }
 
   switchScene() {
-    console.log('Switching scene...');
+    const currentTime = Date.now();
+    const timeSinceStart = currentTime - this.startTime;
 
-    // Clear current scene
-    this.clearScene();
+    console.log('=== SWITCH SCENE CALLED ===');
+    console.log('Time since start:', timeSinceStart, 'ms');
+    console.log('isSwitchingScene:', this.isSwitchingScene);
+    console.log('isGameOver:', this.isGameOver);
 
-    // Move to next scene (randomly or in order)
-    const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
-    const nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
-    this.currentSceneIndex = this.sceneTypes.indexOf(nextSceneType);
-    this.sceneType = nextSceneType;
+    // Prevent concurrent scene switches
+    if (this.isSwitchingScene) {
+      console.log('❌ Scene switch blocked: already in progress');
+      return;
+    }
 
-    console.log('New scene:', this.sceneType);
+    if (this.isGameOver) {
+      console.log('❌ Scene switch blocked: game over');
+      return;
+    }
 
-    // Create new scene
-    this.createParallaxBackground();
+    console.log('✅ Starting scene switch...');
+    console.log('Current scene:', this.sceneType, 'Index:', this.currentSceneIndex);
+    this.isSwitchingScene = true;
 
-    // Show transition notification
-    this.showSceneChangeNotification();
+    // Update last scene change time
+    this.lastSceneChangeTime = currentTime;
+
+    try {
+      // Clear current scene
+      console.log('Step 1: Clearing scene...');
+      this.clearScene();
+
+      // Move to next scene (randomly or in order)
+      console.log('Step 2: Selecting next scene...');
+      const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
+      console.log('Available scenes:', availableScenes);
+      const nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
+      this.currentSceneIndex = this.sceneTypes.indexOf(nextSceneType);
+      this.sceneType = nextSceneType;
+
+      console.log('Step 3: Creating new scene:', this.sceneType, 'Index:', this.currentSceneIndex);
+
+      // Create new scene
+      this.createParallaxBackground();
+
+      // Show transition notification
+      console.log('Step 4: Showing notification...');
+      this.showSceneChangeNotification();
+
+      console.log('✅ Scene switch completed successfully');
+    } catch (error) {
+      console.error('❌ Error switching scene:', error);
+      console.error('Error stack:', error.stack);
+    }
+
+    // Reset flag immediately after scene creation (don't wait)
+    this.isSwitchingScene = false;
+    console.log('Scene switch lock released immediately');
+    console.log('=== SWITCH SCENE DONE ===\n');
   }
 
   showSceneChangeNotification() {
@@ -1191,6 +1203,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   setupGameTimers() {
+    console.log('Setting up game timers...');
+
     // Update game timer every second
     this.time.addEvent({
       delay: 1000,
@@ -1218,18 +1232,26 @@ export default class GameScene extends Phaser.Scene {
     // Safe period end (first 5 seconds)
     this.time.addEvent({
       delay: GAME_CONSTANTS.SAFE_PERIOD_START,
-      callback: () => { this.isInSafePeriod = false; },
+      callback: () => {
+        console.log('Safe period ended');
+        this.isInSafePeriod = false;
+      },
       callbackScope: this,
       loop: false
     });
 
-    // Scene change timer - switch scenes every 40 seconds
-    this.time.addEvent({
+    // Scene change timer - switch scenes every 19 seconds
+    console.log('Setting up scene change timer with interval:', this.sceneChangeInterval, 'ms');
+    this.sceneChangeTimer = this.time.addEvent({
       delay: this.sceneChangeInterval,
-      callback: this.switchScene,
+      callback: () => {
+        console.log('⏰ Scene change timer fired!');
+        this.switchScene();
+      },
       callbackScope: this,
       loop: true
     });
+    console.log('Scene change timer created:', this.sceneChangeTimer);
   }
 
   jump() {
@@ -1252,7 +1274,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnObstacle() {
-    if (this.isInSafePeriod || this.isGameOver) return;
+    // Don't spawn if in safe period, game over, or switching scenes
+    if (this.isInSafePeriod || this.isGameOver || this.isSwitchingScene) return;
 
     const { width } = this.scale;
 
@@ -1310,7 +1333,8 @@ export default class GameScene extends Phaser.Scene {
 
 
   spawnCollectible() {
-    if (this.isGameOver) return;
+    // Don't spawn if game over or switching scenes
+    if (this.isGameOver || this.isSwitchingScene) return;
 
     const { width } = this.scale;
 
@@ -1846,13 +1870,15 @@ export default class GameScene extends Phaser.Scene {
     const scrollDistance = this.scrollSpeed * deltaInSeconds;
 
     // Clouds (slow)
-    this.cloudsLayer.getChildren().forEach(cloud => {
-      const speed = cloud.getData('speed') || 1;
-      cloud.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
-      if (cloud.x < -150) {
-        cloud.x = this.scale.width + 150;
-      }
-    });
+    if (this.cloudsLayer) {
+      this.cloudsLayer.getChildren().forEach(cloud => {
+        const speed = cloud.getData('speed') || 1;
+        cloud.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
+        if (cloud.x < -150) {
+          cloud.x = this.scale.width + 150;
+        }
+      });
+    }
 
     // Birds flying (very slow, natural movement)
     if (this.birdsLayer) {
@@ -1884,14 +1910,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Near mountains (medium)
-    this.mountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
-    this.mountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
+    if (this.mountainsBg && this.mountainsBg2) {
+      this.mountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
+      this.mountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
 
-    if (this.mountainsBg.x + this.mountainsBg.width < 0) {
-      this.mountainsBg.x = this.mountainsBg2.x + this.mountainsBg2.width;
-    }
-    if (this.mountainsBg2.x + this.mountainsBg2.width < 0) {
-      this.mountainsBg2.x = this.mountainsBg.x + this.mountainsBg.width;
+      if (this.mountainsBg.x + this.mountainsBg.width < 0) {
+        this.mountainsBg.x = this.mountainsBg2.x + this.mountainsBg2.width;
+      }
+      if (this.mountainsBg2.x + this.mountainsBg2.width < 0) {
+        this.mountainsBg2.x = this.mountainsBg.x + this.mountainsBg.width;
+      }
     }
 
     // River (fast, like ground)
@@ -1917,17 +1945,7 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Cars (for street scene - moving in opposite direction)
-    if (this.carsLayer) {
-      this.carsLayer.getChildren().forEach(car => {
-        const speed = car.getData('speed') || 2;
-        // Cars move in opposite direction for parallax effect
-        car.x -= scrollDistance * speed;
-        if (car.x < -100) {
-          car.x = this.scale.width + 100;
-        }
-      });
-    }
+    // Cars layer removed from street scene
 
     // Beach balls (for beach scene)
     if (this.beachBallsLayer) {

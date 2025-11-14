@@ -226,10 +226,13 @@ export default class GameScene extends Phaser.Scene {
 
   createParallaxBackground() {
     // Create scene based on selected type
+    console.log('🎨 Creating background for scene:', this.sceneType);
     if (this.sceneType === 'street') {
       this.createStreetScene();
     } else if (this.sceneType === 'beach') {
+      console.log('🏖️ Calling createBeachScene()...');
       this.createBeachScene();
+      console.log('🏖️ createBeachScene() completed');
     } else {
       this.createMountainRiverScene();
     }
@@ -610,27 +613,29 @@ export default class GameScene extends Phaser.Scene {
       this.cloudsLayer.add(cloudContainer);
     }
 
-    // Seagulls (hải âu)
+    // Seagulls (hải âu) - larger and more visible
     this.birdsLayer = this.add.group();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       const birdX = Math.random() * width;
       const birdY = this.safeAreaTop + 70 + Math.random() * 140;
 
       const birdGraphics = this.add.graphics();
-      birdGraphics.lineStyle(2.5, 0xFFFFFF, 1);
+      // Thicker white outline for better visibility
+      birdGraphics.lineStyle(4, 0xFFFFFF, 1);
       birdGraphics.beginPath();
-      birdGraphics.moveTo(-10, 0);
-      birdGraphics.lineTo(0, -6);
-      birdGraphics.lineTo(10, 0);
+      birdGraphics.moveTo(-15, 0);
+      birdGraphics.lineTo(0, -8);
+      birdGraphics.lineTo(15, 0);
       birdGraphics.strokePath();
 
-      const birdTexture = birdGraphics.generateTexture('seagull' + i, 20, 12);
+      const birdTexture = birdGraphics.generateTexture('seagull' + i, 32, 16);
       birdGraphics.destroy();
 
       const bird = this.add.image(birdX, birdY, 'seagull' + i);
       bird.setData('baseX', birdX);
       bird.setData('baseY', birdY);
       bird.setData('speed', 1.3 + Math.random() * 1);
+      bird.setDepth(5); // Above background
       this.birdsLayer.add(bird);
 
       this.tweens.add({
@@ -653,33 +658,150 @@ export default class GameScene extends Phaser.Scene {
     this.farMountainsBg = this.add.image(0, height - 250, 'horizon').setOrigin(0);
     this.farMountainsBg2 = this.add.image(width * 2, height - 250, 'horizon').setOrigin(0);
 
-    // Palm trees (cây dừa)
+    // Sailing boats in the distance (thuyền buồm)
+    this.boatsLayer = this.add.group();
+    const boatBaseY = height - 180; // Position in middle of screen
+    console.log('🚢 Creating boats at Y:', boatBaseY, 'Screen height:', height, 'groundY:', this.groundY);
+
+    for (let i = 0; i < 5; i++) {
+      const boatX = i * 350 + 150 + Math.random() * 50;
+      const boatY = boatBaseY;
+
+      // Create boat graphics and convert to texture for better rendering
+      const boatGraphics = this.add.graphics();
+
+      // Boat hull (very bright white for max visibility)
+      boatGraphics.fillStyle(0xFFFFFF, 1);
+      boatGraphics.fillTriangle(0, 0, -30, 15, 30, 15);
+
+      // Red stripe on hull for visibility
+      boatGraphics.fillStyle(0xFF0000, 0.8);
+      boatGraphics.fillRect(-25, 10, 50, 3);
+
+      // Shadow under boat (dark blue)
+      boatGraphics.fillStyle(0x1E3A5F, 0.4);
+      boatGraphics.fillTriangle(0, 15, -28, 18, 28, 18);
+
+      // Large bright white sail
+      boatGraphics.fillStyle(0xFFFFFF, 1);
+      boatGraphics.fillTriangle(0, -50, -18, 0, 18, 0);
+
+      // Dark outline for sail visibility
+      boatGraphics.lineStyle(2, 0x000000, 0.5);
+      boatGraphics.strokeTriangle(0, -50, -18, 0, 18, 0);
+
+      // Sail shadow/highlight
+      boatGraphics.fillStyle(0xE0E0E0, 0.6);
+      boatGraphics.fillTriangle(0, -50, 0, 0, 18, 0);
+
+      // Thick mast (dark brown)
+      boatGraphics.lineStyle(4, 0x654321, 1);
+      boatGraphics.beginPath();
+      boatGraphics.moveTo(0, -50);
+      boatGraphics.lineTo(0, 0);
+      boatGraphics.strokePath();
+
+      // Generate texture from graphics
+      const boatTexture = boatGraphics.generateTexture('boat' + i, 60, 70);
+      boatGraphics.destroy();
+
+      // Create sprite from texture (much more reliable than graphics in container)
+      const boat = this.add.image(boatX, boatY, 'boat' + i);
+      
+      // IMPORTANT: Set depth very high to be visible
+      boat.setDepth(25); // Above background, below obstacles/player
+      boat.setData('baseX', boatX);
+      boat.setData('baseY', boatY);
+      boat.setData('speed', 0.2 + Math.random() * 0.15);
+
+      // Mark as decoration (not obstacle)
+      boat.setData('isDecoration', true);
+
+      this.boatsLayer.add(boat);
+
+      console.log(`🚢 Boat ${i}: X=${boatX}, Y=${boatY}, depth=25, visible=${boat.visible}, texture=boat${i}`);
+
+      // Gentle bobbing animation
+      this.tweens.add({
+        targets: boat,
+        y: boatY - 10,
+        duration: 2500 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+    console.log('✅ Total boats in layer:', this.boatsLayer.getLength());
+    console.log('✅ Boats layer depth:', this.boatsLayer.getChildren().map(b => b.depth));
+
+    // Beautiful palm trees (cây dừa)
     const palmGraphics = this.add.graphics();
     for (let i = 0; i < 5; i++) {
       const x = i * 400 + 100;
       const y = height - 220;
 
-      // Trunk
-      palmGraphics.fillStyle(0x8B4513, 1);
-      palmGraphics.fillRect(x, y, 15, 80);
-
-      // Leaves - use circles instead of ellipses
-      palmGraphics.fillStyle(0x228B22, 1);
-      for (let j = 0; j < 6; j++) {
-        const angle = (j * 60) * Math.PI / 180;
-        const leafX = x + 7 + Math.cos(angle) * 35;
-        const leafY = y - 10 + Math.sin(angle) * 35;
-        // Draw leaf as circle
-        palmGraphics.fillCircle(leafX, leafY, 20);
+      // Curved trunk (more realistic)
+      palmGraphics.fillStyle(0x8B6914, 1);
+      // Draw trunk segments for curved effect
+      for (let seg = 0; seg < 10; seg++) {
+        const segY = y + seg * 10;
+        const curve = Math.sin(seg * 0.3) * 3; // Subtle curve
+        palmGraphics.fillRect(x + curve, segY, 12, 11);
+        // Add texture lines
+        palmGraphics.fillStyle(0x6B5010, 0.3);
+        palmGraphics.fillRect(x + curve, segY + 8, 12, 2);
+        palmGraphics.fillStyle(0x8B6914, 1);
       }
-      // Add center circle for fuller look
-      palmGraphics.fillCircle(x + 7, y - 10, 15);
+
+      // Coconuts at top
+      palmGraphics.fillStyle(0x8B4513, 1);
+      for (let c = 0; c < 3; c++) {
+        const coconutAngle = (c * 120) * Math.PI / 180;
+        const coconutX = x + 6 + Math.cos(coconutAngle) * 12;
+        const coconutY = y - 5 + Math.sin(coconutAngle) * 12;
+        palmGraphics.fillCircle(coconutX, coconutY, 6);
+      }
+
+      // Palm leaves (fronds) - more realistic
+      palmGraphics.lineStyle(0);
+      for (let j = 0; j < 8; j++) {
+        const angle = (j * 45) * Math.PI / 180;
+
+        // Dark green base
+        palmGraphics.fillStyle(0x228B22, 1);
+
+        // Draw each frond as a series of connected shapes
+        for (let k = 0; k < 5; k++) {
+          const dist = 15 + k * 10;
+          const leafX = x + 6 + Math.cos(angle) * dist;
+          const leafY = y - 15 + Math.sin(angle) * dist;
+          const leafSize = 12 - k * 2;
+
+          // Main leaf segment
+          palmGraphics.fillCircle(leafX, leafY, leafSize);
+
+          // Add lighter green highlight
+          if (k < 3) {
+            palmGraphics.fillStyle(0x32CD32, 0.6);
+            palmGraphics.fillCircle(leafX - 3, leafY - 3, leafSize * 0.5);
+            palmGraphics.fillStyle(0x228B22, 1);
+          }
+        }
+      }
+
+      // Center cluster for fuller look
+      palmGraphics.fillStyle(0x228B22, 1);
+      palmGraphics.fillCircle(x + 6, y - 15, 18);
+      palmGraphics.fillStyle(0x32CD32, 0.7);
+      palmGraphics.fillCircle(x + 6, y - 15, 12);
     }
     const palmTexture = palmGraphics.generateTexture('palms', width * 2, height);
     palmGraphics.destroy();
 
-    this.mountainsBg = this.add.image(0, 0, 'palms').setOrigin(0);
-    this.mountainsBg2 = this.add.image(width * 2, 0, 'palms').setOrigin(0);
+    // Palm trees layer - behind boats
+    this.mountainsBg = this.add.image(0, 0, 'palms').setOrigin(0).setDepth(5);
+    this.mountainsBg2 = this.add.image(width * 2, 0, 'palms').setOrigin(0).setDepth(5);
+    console.log('🌴 Palm trees created with depth 5');
 
     // Ocean waves (animated water)
     const oceanGraphics = this.add.graphics();
@@ -728,47 +850,15 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Beach balls (optional decorative elements)
-    this.beachBallsLayer = this.add.group();
-    for (let i = 0; i < 2; i++) {
-      const ballX = Math.random() * width;
-      const ballY = height - 120;
-
-      const ballGraphics = this.add.graphics();
-      ballGraphics.fillStyle(0xFF0000, 1);
-      ballGraphics.fillCircle(0, 0, 15);
-      ballGraphics.fillStyle(0xFFFFFF, 1);
-      ballGraphics.fillCircle(-5, -5, 6);
-      ballGraphics.fillStyle(0x0000FF, 1);
-      ballGraphics.fillCircle(5, 5, 6);
-
-      const ballTexture = ballGraphics.generateTexture('beachBall' + i, 32, 32);
-      ballGraphics.destroy();
-
-      const ball = this.add.image(ballX, ballY, 'beachBall' + i);
-      ball.setData('baseX', ballX);
-      ball.setData('speed', 1.8 + Math.random() * 1);
-      this.beachBallsLayer.add(ball);
-
-      // Bouncing animation
-      this.tweens.add({
-        targets: ball,
-        y: ballY - 15,
-        duration: 800,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Quad.easeInOut'
-      });
-    }
   }
 
   clearScene() {
     console.log('Clearing scene...');
 
-    // Store player state before clearing
-    const playerX = this.player ? this.player.x : null;
-    const playerY = this.player ? this.player.y : null;
-    const playerVelocityY = this.player && this.player.body ? this.player.body.velocity.y : 0;
+    // IMPORTANT: Don't touch player, obstacles, or collectibles!
+    // Only clear background elements to keep gameplay continuous
+    console.log('Obstacles before clear:', this.obstacles ? this.obstacles.getLength() : 0);
+    console.log('Collectibles before clear:', this.collectibles ? this.collectibles.getLength() : 0);
 
     // Clear all scene-specific layers (make sure they don't contain player!)
     if (this.cloudsLayer) {
@@ -778,6 +868,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.birdsLayer) {
       this.birdsLayer.clear(true, true);
       this.birdsLayer = null;
+    }
+    if (this.boatsLayer) {
+      this.boatsLayer.clear(true, true);
+      this.boatsLayer = null;
     }
     if (this.farMountainsBg) {
       this.farMountainsBg.destroy();
@@ -807,10 +901,6 @@ export default class GameScene extends Phaser.Scene {
       this.wavesLayer.clear(true, true);
       this.wavesLayer = null;
     }
-    if (this.beachBallsLayer) {
-      this.beachBallsLayer.clear(true, true);
-      this.beachBallsLayer = null;
-    }
 
     // Destroy all scene-specific textures to prevent conflicts
     const textureManager = this.textures;
@@ -830,11 +920,11 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    // Destroy dynamic textures (birds, waves, lights, balls)
+    // Destroy dynamic textures (birds, waves, lights, boats)
     for (let i = 0; i < 20; i++) {
       const dynamicKeys = [
         `bird${i}`, `wave${i}`, `streetBird${i}`, `streetLight${i}`,
-        `seagull${i}`, `beachWave${i}`, `beachBall${i}`
+        `seagull${i}`, `beachWave${i}`, `boat${i}`
       ];
       dynamicKeys.forEach(key => {
         if (textureManager.exists(key)) {
@@ -843,26 +933,26 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Check if player still exists and restore if needed
-    if (!this.player || !this.player.active) {
-      console.warn('⚠️ Player was destroyed! Restoring player...');
-      if (playerX && playerY) {
-        // Recreate player at same position
-        this.createPlayer();
-        this.player.x = playerX;
-        this.player.y = playerY;
-        if (this.player.body) {
-          this.player.body.velocity.y = playerVelocityY;
+    // Ensure obstacles and collectibles stay on top of new background
+    if (this.obstacles) {
+      this.obstacles.getChildren().forEach(obstacle => {
+        if (obstacle && obstacle.setDepth) {
+          obstacle.setDepth(30); // Above background, below player
         }
-
-        // Restore collision detection
-        this.physics.add.overlap(this.player, this.obstacles, this.hitObstacle, null, this);
-        this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
-        console.log('✅ Player restored with collisions');
-      }
+      });
+      console.log('✅ Obstacles kept:', this.obstacles.getLength());
     }
 
-    console.log('Scene cleared successfully, player status:', this.player ? 'OK' : 'MISSING');
+    if (this.collectibles) {
+      this.collectibles.getChildren().forEach(item => {
+        if (item && item.setDepth) {
+          item.setDepth(30); // Above background, below player
+        }
+      });
+      console.log('✅ Collectibles kept:', this.collectibles.getLength());
+    }
+
+    console.log('Scene cleared successfully');
   }
 
   switchScene() {
@@ -915,10 +1005,6 @@ export default class GameScene extends Phaser.Scene {
         this.player.setDepth(50);
         console.log('Player depth set to 50 (on top)');
       }
-
-      // Show transition notification
-      console.log('Step 4: Showing notification...');
-      this.showSceneChangeNotification();
 
       console.log('✅ Scene switch completed successfully');
     } catch (error) {
@@ -1361,6 +1447,9 @@ export default class GameScene extends Phaser.Scene {
     container.setData('type', type.key);
     container.setData('isFlying', false);
 
+    // Set depth to appear above background
+    container.setDepth(30);
+
     this.obstacles.add(container);
   }
 
@@ -1433,6 +1522,9 @@ export default class GameScene extends Phaser.Scene {
     container.body.setOffset(-config.hitbox / 2, -config.hitbox / 2);
     container.setData('itemType', itemType);
     container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+
+    // Set depth to appear above background
+    container.setDepth(30);
 
     this.collectibles.add(container);
 
@@ -1608,7 +1700,28 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitObstacle(player, obstacle) {
-    if (this.isInvincible || this.isGameOver) return;
+    if (this.isInvincible || this.isGameOver || this.isSwitchingScene) return;
+
+    // Verify this is actually an obstacle (not background element)
+    if (!obstacle || !this.obstacles.contains(obstacle)) {
+      console.warn('⚠️ False collision detected with:', obstacle);
+      return;
+    }
+
+    // Double-check obstacle is valid and has type data
+    const obstacleType = obstacle.getData('type');
+    if (!obstacleType) {
+      console.warn('⚠️ Obstacle missing type data:', obstacle);
+      return;
+    }
+
+    // Check if it's marked as decoration (should not collide)
+    if (obstacle.getData('isDecoration')) {
+      console.warn('⚠️ Collision with decoration element ignored:', obstacle);
+      return;
+    }
+
+    console.log('💥 Hit obstacle:', obstacleType);
 
     // Game over on collision
     this.hasCollision = true;
@@ -1929,6 +2042,23 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
+    // Boats floating (very slow, far away)
+    if (this.boatsLayer) {
+      this.boatsLayer.getChildren().forEach(boat => {
+        const speed = boat.getData('speed') || 0.3;
+        const baseY = boat.getData('baseY');
+        boat.x -= scrollDistance * speed;
+
+        if (boat.x < -100) {
+          boat.x = this.scale.width + 100;
+          // Reset Y to base when wrapping (tween will handle bobbing)
+          if (baseY) {
+            boat.y = baseY;
+          }
+        }
+      });
+    }
+
     // Far mountains (slower than near mountains)
     if (this.farMountainsBg && this.farMountainsBg2) {
       this.farMountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS * 0.5;
@@ -1979,17 +2109,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Cars layer removed from street scene
-
-    // Beach balls (for beach scene)
-    if (this.beachBallsLayer) {
-      this.beachBallsLayer.getChildren().forEach(ball => {
-        const speed = ball.getData('speed') || 1.5;
-        ball.x -= scrollDistance * speed;
-        if (ball.x < -50) {
-          ball.x = this.scale.width + 50;
-        }
-      });
-    }
   }
 
   updateGround(deltaInSeconds) {

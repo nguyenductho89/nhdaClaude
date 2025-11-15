@@ -227,25 +227,14 @@ export class UIEffectPool {
     // Check if iPhone (has safe area insets)
     const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // Position notification dynamically based on device and orientation
+    // Position notification at same Y as combo text
     let notificationY;
     if (isMobile && isLandscape) {
-      // Landscape mode: position lower to avoid top UI and leave space for jump button
-      // For iPhone, account for safe area and button at bottom (button is ~80px + margin ~34px = ~114px from bottom)
-      if (isIPhone) {
-        // Position at upper portion, well above jump button area
-        // Button is at bottom (~height - 114px), so notification should be above center
-        notificationY = height * 0.3; // 30% from top - well above button
-      } else {
-        // Other mobile devices: position above center to avoid button
-        notificationY = height * 0.35; // 35% from top
-      }
+      notificationY = 35; // Same as combo text in landscape
     } else if (isMobile) {
-      // Portrait mobile: position below top UI elements
-      notificationY = Math.min(120, height * 0.25);
+      notificationY = 60; // Same as combo text in portrait mobile
     } else {
-      // Desktop: position in upper-middle area
-      notificationY = height / 2 - 150;
+      notificationY = 100; // Same as combo text in desktop
     }
 
     notification.setPosition(width / 2, notificationY);

@@ -328,15 +328,16 @@ export default class UIManager {
 
     const buttonSize = isLandscape ? 80 : 100; // Smaller in landscape
     let margin = 10;
-    
+    let rightMargin = 30; // Increased right margin to avoid being covered
+
     // Increase bottom margin for iPhone to avoid safe area (home indicator)
     if (isIPhone) {
       // Get safe area insets if available
       const safeAreaBottom = this.getSafeAreaBottom();
       margin = Math.max(20, safeAreaBottom + 10); // At least 20px, or safe area + 10px
     }
-    
-    const buttonX = width - buttonSize / 2 - margin;
+
+    const buttonX = width - buttonSize / 2 - rightMargin;
     const buttonY = height - buttonSize / 2 - margin;
 
     // Create container for jump button

@@ -127,30 +127,6 @@ const hideWarningOverlay = () => {
   }
 };
 
-const applyPortraitLayout = () => {
-  const container = getGameContainer();
-  if (!container) {
-    return;
-  }
-
-  storeOriginalContainerStyle(container);
-
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const style = container.style;
-  style.position = 'absolute';
-  style.top = '50%';
-  style.left = '50%';
-  style.width = `${vh}px`;
-  style.height = `${vw}px`;
-  style.transformOrigin = 'center center';
-  style.transform = 'translate(-50%, -50%) rotate(90deg)';
-  style.maxWidth = 'none';
-  style.maxHeight = 'none';
-  style.overflow = 'visible';
-};
-
 const updateOrientationState = () => {
   const body = getBody();
   if (!body) {

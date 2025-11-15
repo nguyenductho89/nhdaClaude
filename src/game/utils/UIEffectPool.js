@@ -223,12 +223,23 @@ export class UIEffectPool {
 
     // Check if landscape mode (width > height)
     const isLandscape = width > height;
+    
+    // Check if iPhone (has safe area insets)
+    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     // Position notification dynamically based on device and orientation
     let notificationY;
     if (isMobile && isLandscape) {
-      // Landscape mode: center vertically with slight offset to avoid UI overlap
-      notificationY = height / 2;
+      // Landscape mode: position lower to avoid top UI and leave space for jump button
+      // For iPhone, account for safe area and button at bottom (button is ~80px + margin ~34px = ~114px from bottom)
+      if (isIPhone) {
+        // Position at upper portion, well above jump button area
+        // Button is at bottom (~height - 114px), so notification should be above center
+        notificationY = height * 0.3; // 30% from top - well above button
+      } else {
+        // Other mobile devices: position above center to avoid button
+        notificationY = height * 0.35; // 35% from top
+      }
     } else if (isMobile) {
       // Portrait mobile: position below top UI elements
       notificationY = Math.min(120, height * 0.25);

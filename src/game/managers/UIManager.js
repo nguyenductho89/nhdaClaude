@@ -66,6 +66,34 @@ export default class UIManager {
   }
 
   /**
+   * Get safe area bottom inset (for iPhone home indicator)
+   */
+  getSafeAreaBottom() {
+    // Try to get safe area insets from CSS environment variables
+    if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('padding-bottom: env(safe-area-inset-bottom)')) {
+      // Create a temporary element to measure safe area
+      const temp = document.createElement('div');
+      temp.style.paddingBottom = 'env(safe-area-inset-bottom)';
+      temp.style.position = 'absolute';
+      temp.style.visibility = 'hidden';
+      document.body.appendChild(temp);
+      const computedStyle = window.getComputedStyle(temp);
+      const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+      document.body.removeChild(temp);
+      return paddingBottom;
+    }
+    
+    // Fallback: return typical iPhone safe area bottom (usually 20-34px)
+    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isIPhone) {
+      // iPhone X and later have home indicator (~34px), older iPhones have less
+      return 34;
+    }
+    
+    return 0;
+  }
+
+  /**
    * Initialize UI system
    */
   initialize() {
@@ -295,9 +323,19 @@ export default class UIManager {
    */
   createMobileJumpButton() {
     const { width, height } = this.scene.scale;
+    const isLandscape = width > height;
+    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    const buttonSize = 100;
-    const margin = 10;
+    const buttonSize = isLandscape ? 80 : 100; // Smaller in landscape
+    let margin = 10;
+    
+    // Increase bottom margin for iPhone to avoid safe area (home indicator)
+    if (isIPhone) {
+      // Get safe area insets if available
+      const safeAreaBottom = this.getSafeAreaBottom();
+      margin = Math.max(20, safeAreaBottom + 10); // At least 20px, or safe area + 10px
+    }
+    
     const buttonX = width - buttonSize / 2 - margin;
     const buttonY = height - buttonSize / 2 - margin;
 
@@ -312,17 +350,19 @@ export default class UIManager {
     // Button border
     const border = this.scene.add.circle(0, 0, buttonSize / 2 + 4, 0xFFFFFF, 0.2);
 
-    // Button icon
+    // Button icon - adjust size based on button size
+    const iconSize = isLandscape ? '44px' : '56px';
     const icon = this.scene.add.text(0, 0, '⬆', {
-      fontSize: '56px',
+      fontSize: iconSize,
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
-      strokeThickness: 3
+      strokeThickness: isLandscape ? 2 : 3
     }).setOrigin(0.5);
 
     // Hit area (larger for easier tapping)
-    const hitArea = this.scene.add.rectangle(0, 0, buttonSize + 25, buttonSize + 25, 0x000000, 0)
+    const hitAreaSize = isLandscape ? buttonSize + 15 : buttonSize + 25;
+    const hitArea = this.scene.add.rectangle(0, 0, hitAreaSize, hitAreaSize, 0x000000, 0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         this.onJumpButtonDown();

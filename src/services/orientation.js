@@ -12,7 +12,29 @@ const PORTRAIT_CLASS = 'force-landscape-portrait';
 
 const getBody = () => document.body || document.documentElement;
 const getGameContainer = () => document.getElementById('game-container');
-const isLandscape = () => window.innerWidth >= window.innerHeight;
+
+// More accurate landscape detection using screen orientation API
+const isLandscape = () => {
+  // Try using Screen Orientation API first (most accurate)
+  if (window.screen && window.screen.orientation && window.screen.orientation.type) {
+    const type = window.screen.orientation.type;
+    return type.includes('landscape');
+  }
+
+  // Fallback to window.orientation for older browsers
+  if (typeof window.orientation !== 'undefined') {
+    // window.orientation: 0 = portrait, 90/-90 = landscape, 180 = portrait upside down
+    return Math.abs(window.orientation) === 90;
+  }
+
+  // Final fallback: compare dimensions using screen (not window to avoid browser UI issues)
+  if (window.screen && window.screen.width && window.screen.height) {
+    return window.screen.width > window.screen.height;
+  }
+
+  // Last resort: compare window dimensions
+  return window.innerWidth > window.innerHeight;
+};
 
 const storeOriginalContainerStyle = (container) => {
   if (!container) {
@@ -101,7 +123,14 @@ const showWarningOverlay = () => {
     document.body.appendChild(overlay);
   }
   overlay.style.display = 'flex';
-  
+  overlay.style.zIndex = '999999'; // Ensure it's always on top
+
+  // Hide loading screen if present
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.style.display = 'none';
+  }
+
   // Hide game container
   const container = getGameContainer();
   if (container) {

@@ -4,13 +4,19 @@ import GameScene from './game/scenes/GameScene.js';
 import { getLandscapeViewportSize, refreshOrientationLayout, requireLandscapeOrientation, isLandscapeOrientation } from './services/orientation.js';
 
 let game = null;
-let gameInitialized = false;
+
+// Destroy and reset game
+const destroyGame = () => {
+  if (game) {
+    game.destroy(true); // Remove canvas and clean up
+    game = null;
+  }
+};
 
 // Initialize game only when in landscape mode
 const initializeGame = () => {
-  if (gameInitialized) return;
-
-  gameInitialized = true;
+  // Don't initialize if already exists
+  if (game) return;
 
   // Hide loading screen
   const loading = document.getElementById('loading');
@@ -34,17 +40,21 @@ const initializeGame = () => {
 
 // Check orientation and initialize game when ready
 const checkOrientationAndInit = () => {
+  // Always require landscape orientation and setup callbacks
+  requireLandscapeOrientation({
+    onLandscape: () => {
+      // User rotated to landscape - initialize game
+      initializeGame();
+    },
+    onPortrait: () => {
+      // User rotated to portrait - destroy game completely
+      destroyGame();
+    }
+  });
+
+  // If already in landscape, initialize immediately
   if (isLandscapeOrientation()) {
-    // In landscape mode - initialize game
     initializeGame();
-  } else {
-    // In portrait mode - show warning and wait for landscape
-    requireLandscapeOrientation({
-      onLandscape: () => {
-        // User rotated to landscape - initialize game
-        initializeGame();
-      }
-    });
   }
 };
 

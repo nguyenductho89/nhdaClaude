@@ -116,8 +116,21 @@ export class UIEffectPool {
         // Check if mobile for font size
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
           || (window.innerWidth < 768);
-        const fontSize = isMobile ? '24px' : '48px';
-        const strokeThickness = isMobile ? 3 : 6;
+        const { width, height } = this.scene.scale;
+        const isLandscape = width > height;
+        
+        // Adjust font size based on device and orientation
+        let fontSize, strokeThickness;
+        if (isMobile && isLandscape) {
+          fontSize = '18px'; // Smaller for landscape to fit better
+          strokeThickness = 2;
+        } else if (isMobile) {
+          fontSize = '24px';
+          strokeThickness = 3;
+        } else {
+          fontSize = '48px';
+          strokeThickness = 6;
+        }
 
         // Text
         const text = this.scene.add.text(0, 0, '', {
@@ -208,8 +221,21 @@ export class UIEffectPool {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       || (window.innerWidth < 768);
 
-    // Position notification lower on mobile (near timer position) to avoid being cut off
-    const notificationY = isMobile ? 80 : (height / 2 - 150);
+    // Check if landscape mode (width > height)
+    const isLandscape = width > height;
+
+    // Position notification dynamically based on device and orientation
+    let notificationY;
+    if (isMobile && isLandscape) {
+      // Landscape mode: center vertically with slight offset to avoid UI overlap
+      notificationY = height / 2;
+    } else if (isMobile) {
+      // Portrait mobile: position below top UI elements
+      notificationY = Math.min(120, height * 0.25);
+    } else {
+      // Desktop: position in upper-middle area
+      notificationY = height / 2 - 150;
+    }
 
     notification.setPosition(width / 2, notificationY);
     notification.textObj.setText(text);

@@ -159,17 +159,42 @@ export default class UIManager {
   createUI() {
     const { width, height } = this.scene.scale;
     const isMobile = this.isMobileDevice();
+    const isLandscape = width > height;
 
-    // Font sizes
-    const baseFontSize = isMobile ? 16 : 24;
-    const smallFontSize = isMobile ? 12 : 18;
+    // Font sizes - smaller for landscape
+    let baseFontSize, smallFontSize;
+    if (isMobile && isLandscape) {
+      baseFontSize = 14;
+      smallFontSize = 11;
+    } else if (isMobile) {
+      baseFontSize = 16;
+      smallFontSize = 12;
+    } else {
+      baseFontSize = 24;
+      smallFontSize = 18;
+    }
 
-    // Margins
-    const topMargin = isMobile ? (5 + this.safeAreaTop) : 60;
-    const leftMargin = isMobile ? 5 : 20;
-    const rightMargin = isMobile ? 5 : 20;
-    const padding = isMobile ? 4 : 8;
-    const lineSpacing = isMobile ? 22 : 35;
+    // Margins - reduced for landscape
+    let topMargin, leftMargin, rightMargin, padding, lineSpacing;
+    if (isMobile && isLandscape) {
+      topMargin = 3 + this.safeAreaTop;
+      leftMargin = 3;
+      rightMargin = 3;
+      padding = 3;
+      lineSpacing = 18;
+    } else if (isMobile) {
+      topMargin = 5 + this.safeAreaTop;
+      leftMargin = 5;
+      rightMargin = 5;
+      padding = 4;
+      lineSpacing = 22;
+    } else {
+      topMargin = 60;
+      leftMargin = 20;
+      rightMargin = 20;
+      padding = 8;
+      lineSpacing = 35;
+    }
 
     // === LEFT COLUMN CONTAINER - Score and Distance ===
     this.scoreContainer = this.scene.add.container(leftMargin, topMargin);
@@ -220,7 +245,14 @@ export default class UIManager {
     this.timerContainer.add([this.timerText, pauseButton]);
 
     // === CENTER CONTAINER - Combo and Multiplier ===
-    const centerY = isMobile ? 60 : 100;
+    let centerY;
+    if (isMobile && isLandscape) {
+      centerY = 35; // Higher position for landscape to save vertical space
+    } else if (isMobile) {
+      centerY = 60;
+    } else {
+      centerY = 100;
+    }
 
     this.comboContainer = this.scene.add.container(width / 2, centerY);
     this.comboContainer.setScrollFactor(0);

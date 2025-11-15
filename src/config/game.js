@@ -17,8 +17,8 @@ export const gameConfig = {
     }
   },
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: isMobile ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
+    autoCenter: isMobile ? Phaser.Scale.NO_CENTER : Phaser.Scale.CENTER_BOTH,
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',

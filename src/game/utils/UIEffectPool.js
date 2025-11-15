@@ -113,14 +113,20 @@ export class UIEffectPool {
         const bg = this.scene.add.rectangle(0, 0, 400, 100, 0x000000, 0.8);
         bg.setOrigin(0.5);
 
+        // Check if mobile for font size
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+          || (window.innerWidth < 768);
+        const fontSize = isMobile ? '24px' : '48px';
+        const strokeThickness = isMobile ? 3 : 6;
+
         // Text
         const text = this.scene.add.text(0, 0, '', {
-          fontSize: '48px',
+          fontSize: fontSize,
           fontFamily: 'Arial',
           color: '#FFD700',
           fontStyle: 'bold',
           stroke: '#000000',
-          strokeThickness: 6
+          strokeThickness: strokeThickness
         }).setOrigin(0.5);
 
         container.add([bg, text]);
@@ -198,7 +204,14 @@ export class UIEffectPool {
     const notification = this.getNotification();
     const { width, height } = this.scene.scale;
 
-    notification.setPosition(width / 2, height / 2 - 150);
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (window.innerWidth < 768);
+
+    // Position notification lower on mobile (near timer position) to avoid being cut off
+    const notificationY = isMobile ? 80 : (height / 2 - 150);
+
+    notification.setPosition(width / 2, notificationY);
     notification.textObj.setText(text);
     notification.textObj.setColor(color);
 

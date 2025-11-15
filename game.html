@@ -90,33 +90,59 @@
       }
     }
 
-    /* Mobile fullscreen */
+    /* Mobile fullscreen - remove all padding and safe areas */
     @media screen and (max-width: 768px) {
       html, body {
         height: 100vh;
         height: -webkit-fill-available;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       #app, #game-container {
         height: 100vh;
         height: -webkit-fill-available;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       body {
         background: #87CEEB; /* Match game background */
+        /* Remove safe area insets on iOS */
+        padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0) !important;
+        padding: 0 !important;
       }
 
       canvas {
         width: 100vw !important;
         height: 100vh !important;
         height: -webkit-fill-available !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
     }
 
-    /* Mobile landscape - absolute fullscreen */
+    /* Mobile landscape - absolute fullscreen with no padding */
     @media screen and (max-width: 768px) and (orientation: landscape) {
+      html, body, #app, #game-container {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
       body {
         background: #87CEEB;
+        /* Force fullscreen, ignore safe areas */
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: -webkit-fill-available !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
       }
     }
 

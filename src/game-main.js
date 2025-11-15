@@ -1,27 +1,59 @@
 import Phaser from 'phaser';
 import { gameConfig } from './config/game.js';
 import GameScene from './game/scenes/GameScene.js';
-import { getLandscapeViewportSize, refreshOrientationLayout } from './services/orientation.js';
+import { getLandscapeViewportSize, refreshOrientationLayout, requireLandscapeOrientation, isLandscapeOrientation } from './services/orientation.js';
 
-// Hide loading screen when game is ready
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const loading = document.getElementById('loading');
-    if (loading) {
-      loading.classList.add('hidden');
-    }
-  }, 500);
-});
+let game = null;
+let gameInitialized = false;
 
-// Initialize game configuration - ONLY GameScene
-const config = {
-  ...gameConfig,
-  scene: [GameScene], // Only load GameScene
-  parent: 'game-container'
+// Initialize game only when in landscape mode
+const initializeGame = () => {
+  if (gameInitialized) return;
+
+  gameInitialized = true;
+
+  // Hide loading screen
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.classList.add('hidden');
+  }
+
+  // Initialize game configuration - ONLY GameScene
+  const config = {
+    ...gameConfig,
+    scene: [GameScene], // Only load GameScene
+    parent: 'game-container'
+  };
+
+  // Create game instance
+  game = new Phaser.Game(config);
+
+  // Initial resize
+  handleResize();
 };
 
-// Create game instance
-const game = new Phaser.Game(config);
+// Check orientation and initialize game when ready
+const checkOrientationAndInit = () => {
+  if (isLandscapeOrientation()) {
+    // In landscape mode - initialize game
+    initializeGame();
+  } else {
+    // In portrait mode - show warning and wait for landscape
+    requireLandscapeOrientation({
+      onLandscape: () => {
+        // User rotated to landscape - initialize game
+        initializeGame();
+      }
+    });
+  }
+};
+
+// Start the orientation check when page loads
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    checkOrientationAndInit();
+  }, 500);
+});
 
 // Hide address bar function for iOS Safari
 const hideAddressBar = () => {
@@ -33,6 +65,8 @@ const hideAddressBar = () => {
 
 // Handle window resize
 const handleResize = () => {
+  if (!game) return; // Don't resize if game is not initialized
+
   const { width, height } = getLandscapeViewportSize();
   game.scale.resize(width, height);
 
@@ -67,9 +101,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     hideAddressBar();
   }, 500);
 }
-
-// Ensure initial sizing aligns with forced orientation
-handleResize();
 
 // Hide address bar on any user interaction (iOS Safari)
 if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {

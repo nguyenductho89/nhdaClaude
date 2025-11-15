@@ -6,6 +6,7 @@ import {
   refreshOrientationLayout,
   getLandscapeViewportSize
 } from '../../services/orientation.js';
+import { getSafeAreaInsets, logSafeAreaInfo } from '../../services/safeArea.js';
 
 // Import managers
 import GroundManager from '../managers/GroundManager.js';
@@ -260,9 +261,23 @@ export default class GameScene extends Phaser.Scene {
     if (this.gameInitialized) return;
     this.gameInitialized = true;
 
-    // Safe area offset for mobile
+    // Safe area offset for mobile - detect from CSS env() instead of hardcoded
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    this.safeAreaTop = isMobile ? 50 : 0;
+
+    if (isMobile) {
+      const insets = getSafeAreaInsets();
+      this.safeAreaTop = Math.max(insets.top, 10);
+      this.safeAreaBottom = Math.max(insets.bottom, 10);
+      this.safeAreaLeft = Math.max(insets.left, 10);
+      this.safeAreaRight = Math.max(insets.right, 10);
+
+      console.log('[GameScene] Safe area insets:', insets);
+    } else {
+      this.safeAreaTop = 0;
+      this.safeAreaBottom = 0;
+      this.safeAreaLeft = 0;
+      this.safeAreaRight = 0;
+    }
 
     // Force fullscreen on mobile devices
     if (isMobile) {

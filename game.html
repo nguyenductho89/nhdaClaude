@@ -108,9 +108,9 @@
 
       body {
         background: #87CEEB; /* Match game background */
-        /* Remove safe area insets on iOS */
-        padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0) !important;
+        /* Canvas uses full viewport - safe area handled by JavaScript */
         padding: 0 !important;
+        margin: 0 !important;
       }
 
       canvas {
@@ -131,7 +131,7 @@
 
       body {
         background: #87CEEB;
-        /* Force fullscreen, ignore safe areas */
+        /* Canvas uses full viewport - safe area handled by JavaScript via getSafeAreaInsets() */
         padding: 0 !important;
         margin: 0 !important;
       }

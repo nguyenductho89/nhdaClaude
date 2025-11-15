@@ -1,5 +1,6 @@
 import { GAME_EVENTS, gameEvents } from '../utils/GameEvents.js';
 import { UIEffectPool } from '../utils/UIEffectPool.js';
+import { getSafeAreaInsets, getSafeMargins, logSafeAreaInfo } from '../../services/safeArea.js';
 
 /**
  * UIManager (Refactored with Phaser Best Practices)
@@ -45,6 +46,8 @@ export default class UIManager {
 
     // Safe area
     this.safeAreaTop = 0;
+    this.safeAreaInsets = null;
+    this.safeMargins = null;
 
     // Event listeners (stored for cleanup)
     this.eventListeners = [];
@@ -62,7 +65,17 @@ export default class UIManager {
    * Set safe area for mobile devices
    */
   setSafeArea(safeAreaTop) {
-    this.safeAreaTop = safeAreaTop;
+    // Get all safe area insets from CSS env()
+    this.safeAreaInsets = getSafeAreaInsets();
+    this.safeMargins = getSafeMargins();
+
+    // Keep backward compatibility
+    this.safeAreaTop = Math.max(safeAreaTop || 0, this.safeAreaInsets.top);
+
+    // Log for debugging
+    if (this.isMobileDevice()) {
+      logSafeAreaInfo();
+    }
   }
 
   /**
@@ -202,20 +215,28 @@ export default class UIManager {
       smallFontSize = 18;
     }
 
-    // Margins - reduced for landscape
+    // Margins - use safe area margins to avoid notch/cutout
     let topMargin, leftMargin, rightMargin, padding, lineSpacing;
+
     if (isMobile && isLandscape) {
-      topMargin = 3 + this.safeAreaTop;
-      leftMargin = 3;
-      rightMargin = 3;
-      padding = 3;
-      lineSpacing = 18;
-    } else if (isMobile) {
-      topMargin = 5 + this.safeAreaTop;
-      leftMargin = 5;
-      rightMargin = 5;
+      const margins = this.safeMargins || getSafeMargins();
+
+      // Use safe margins to avoid notch (iPhone has notch on sides in landscape)
+      topMargin = Math.max(10, margins.top);
+      leftMargin = Math.max(12, margins.left);   // Extra space for notch
+      rightMargin = Math.max(12, margins.right); // Extra space for notch
       padding = 4;
-      lineSpacing = 22;
+      lineSpacing = 20;
+
+      console.log('[UIManager] Landscape margins:', { topMargin, leftMargin, rightMargin, safeMargins: margins });
+    } else if (isMobile) {
+      const margins = this.safeMargins || getSafeMargins();
+
+      topMargin = Math.max(10, margins.top);
+      leftMargin = Math.max(10, margins.left);
+      rightMargin = Math.max(10, margins.right);
+      padding = 5;
+      lineSpacing = 24;
     } else {
       topMargin = 60;
       leftMargin = 20;
@@ -324,21 +345,27 @@ export default class UIManager {
   createMobileJumpButton() {
     const { width, height } = this.scene.scale;
     const isLandscape = width > height;
-    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const margins = this.safeMargins || getSafeMargins();
 
     const buttonSize = isLandscape ? 80 : 100; // Smaller in landscape
-    let margin = 10;
-    let rightMargin = 30; // Increased right margin to avoid being covered
 
-    // Increase bottom margin for iPhone to avoid safe area (home indicator)
-    if (isIPhone) {
-      // Get safe area insets if available
-      const safeAreaBottom = this.getSafeAreaBottom();
-      margin = Math.max(20, safeAreaBottom + 10); // At least 20px, or safe area + 10px
-    }
+    // Use safe margins to avoid notch and home indicator
+    // Add extra buffer for touch target (at least 20px from safe edge)
+    const bottomMargin = Math.max(25, margins.bottom + 15);
+    const rightMargin = Math.max(45, margins.right + 25); // Extra for notch/Dynamic Island
 
     const buttonX = width - buttonSize / 2 - rightMargin;
-    const buttonY = height - buttonSize / 2 - margin;
+    const buttonY = height - buttonSize / 2 - bottomMargin;
+
+    console.log('[UIManager] Jump button position:', {
+      x: buttonX,
+      y: buttonY,
+      rightMargin,
+      bottomMargin,
+      safeAreaRight: margins.right,
+      safeAreaBottom: margins.bottom,
+      buttonSize
+    });
 
     // Create container for jump button
     this.jumpButtonContainer = this.scene.add.container(buttonX, buttonY);

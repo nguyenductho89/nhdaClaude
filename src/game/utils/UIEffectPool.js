@@ -1,3 +1,5 @@
+import { getSafeMargins } from '../../services/safeArea.js';
+
 /**
  * UIEffectPool
  * Object pooling for UI effects (collect animations, notifications, etc.)
@@ -227,15 +229,26 @@ export class UIEffectPool {
     // Check if iPhone (has safe area insets)
     const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // Position notification at same Y as combo text
+    // Position notification using safe margins
+    const margins = getSafeMargins();
     let notificationY;
+
     if (isMobile && isLandscape) {
-      notificationY = 35; // Same as combo text in landscape
+      // Landscape: position below top safe area, aligned with combo text
+      notificationY = Math.max(35, margins.top + 25);
     } else if (isMobile) {
-      notificationY = 60; // Same as combo text in portrait mobile
+      // Portrait: position below top safe area, aligned with combo text
+      notificationY = Math.max(60, margins.top + 50);
     } else {
-      notificationY = 100; // Same as combo text in desktop
+      // Desktop: standard position
+      notificationY = 100;
     }
+
+    console.log('[UIEffectPool] Notification position:', {
+      y: notificationY,
+      safeAreaTop: margins.top,
+      mode: isMobile && isLandscape ? 'landscape' : (isMobile ? 'portrait' : 'desktop')
+    });
 
     notification.setPosition(width / 2, notificationY);
     notification.textObj.setText(text);

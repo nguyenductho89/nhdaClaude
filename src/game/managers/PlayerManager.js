@@ -83,9 +83,17 @@ export default class PlayerManager {
     // Stretch image to fit the exact size
     this.player.setDisplaySize(this.playerWidth, this.playerHeight);
 
-    // Set hitbox - full height, 85% width (to avoid dress edges)
-    const hitboxWidth = 3.0 * this.playerWidth;
-    const hitboxHeight = 3.5 * this.playerHeight;
+    // Set hitbox - different values for desktop vs mobile
+    let hitboxWidth, hitboxHeight;
+    if (this.deviceConfig && this.deviceConfig.deviceType === 'Desktop') {
+      // Desktop hitbox - larger multipliers for desktop
+      hitboxWidth = 2.5 * this.playerWidth;
+      hitboxHeight = 3.8 * this.playerHeight;
+    } else {
+      // Mobile hitbox - original values
+      hitboxWidth = 4 * this.playerWidth;
+      hitboxHeight = 6.0 * this.playerHeight;
+    }
     this.player.body.setSize(hitboxWidth, hitboxHeight);
 
     // Center hitbox horizontally, vertically centered by default
@@ -179,7 +187,7 @@ export default class PlayerManager {
 
     // Draw player body/hitbox (red, thicker)
     if (this.player && this.player.body) {
-      this.playerHitboxGraphics.lineStyle(3, 0xff0000, 0.8); // Red color, 3px width for body
+      this.playerHitboxGraphics.lineStyle(3, 0x008000, 0.8); // Red color, 3px width for body
       this.playerHitboxGraphics.strokeRect(
         this.player.body.x,
         this.player.body.y,

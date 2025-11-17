@@ -14,6 +14,25 @@ export default class PlayerManager {
     // Player constants
     this.playerWidth = 80;
     this.playerHeight = 120;
+
+    // Device-specific configuration
+    this.deviceConfig = null;
+
+    // Safe area insets (for landscape positioning)
+    this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+    this.safePlayArea = null;
+  }
+
+  /**
+   * Set device config and safe area insets for player positioning
+   * In landscape: player needs to be positioned after left safe area (notch)
+   */
+  setDeviceConfig(config, insets, playArea) {
+    this.deviceConfig = config;
+    this.safeAreaInsets = insets;
+    this.safePlayArea = playArea;
+    console.log('🏃 PlayerManager: Device Config:', config.deviceType);
+    console.log('🏃 PlayerManager: Safe Area Insets:', insets);
   }
 
   /**
@@ -22,8 +41,22 @@ export default class PlayerManager {
   createPlayer(groundY) {
     const { width, height } = this.scene.scale;
 
-    // Position player further left on smaller screens
-    const playerX = width < 600 ? 100 : 150;
+    // Get device-specific player config
+    const config = this.deviceConfig || {
+      player: { baseX: 100, baseXLarge: 150 }
+    };
+
+    // Position player after left safe area (notch in landscape)
+    const basePlayerX = width < 600 ? config.player.baseX : config.player.baseXLarge;
+    const playerX = basePlayerX + this.safeAreaInsets.left;
+
+    console.log('🏃 Player X Position:', {
+      deviceType: config.deviceType,
+      screenWidth: width,
+      baseX: basePlayerX,
+      leftSafeArea: this.safeAreaInsets.left,
+      finalX: playerX
+    });
 
     // Player Y position - use default origin (0.5, 0.5) for simpler calculation
     const playerY = groundY - this.playerHeight / 2;

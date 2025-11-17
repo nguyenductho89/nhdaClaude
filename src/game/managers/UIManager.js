@@ -43,8 +43,12 @@ export default class UIManager {
     this.startTime = 0;
     this.gameTime = 0;
 
-    // Safe area
-    this.safeAreaTop = 0;
+    // Device-specific configuration
+    this.deviceConfig = null;
+
+    // Safe area insets (for landscape: left/right/bottom are critical)
+    this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+    this.safePlayArea = null;
 
     // Event listeners (stored for cleanup)
     this.eventListeners = [];
@@ -59,38 +63,16 @@ export default class UIManager {
   }
 
   /**
-   * Set safe area for mobile devices
+   * Set device-specific config and safe area insets
+   * In landscape: left/right/bottom insets are critical
    */
-  setSafeArea(safeAreaTop) {
-    this.safeAreaTop = safeAreaTop;
-  }
-
-  /**
-   * Get safe area bottom inset (for iPhone home indicator)
-   */
-  getSafeAreaBottom() {
-    // Try to get safe area insets from CSS environment variables
-    if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('padding-bottom: env(safe-area-inset-bottom)')) {
-      // Create a temporary element to measure safe area
-      const temp = document.createElement('div');
-      temp.style.paddingBottom = 'env(safe-area-inset-bottom)';
-      temp.style.position = 'absolute';
-      temp.style.visibility = 'hidden';
-      document.body.appendChild(temp);
-      const computedStyle = window.getComputedStyle(temp);
-      const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
-      document.body.removeChild(temp);
-      return paddingBottom;
-    }
-    
-    // Fallback: return typical iPhone safe area bottom (usually 20-34px)
-    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isIPhone) {
-      // iPhone X and later have home indicator (~34px), older iPhones have less
-      return 34;
-    }
-    
-    return 0;
+  setDeviceConfig(config, insets, playArea) {
+    this.deviceConfig = config;
+    this.safeAreaInsets = insets;
+    this.safePlayArea = playArea;
+    console.log('🎨 UIManager: Device Config:', config.deviceType);
+    console.log('🎨 UIManager: Safe Area Insets:', insets);
+    console.log('🎨 UIManager: Safe Play Area:', playArea);
   }
 
   /**
@@ -189,40 +171,26 @@ export default class UIManager {
     const isMobile = this.isMobileDevice();
     const isLandscape = width > height;
 
-    // Font sizes - smaller for landscape
-    let baseFontSize, smallFontSize;
-    if (isMobile && isLandscape) {
-      baseFontSize = 14;
-      smallFontSize = 11;
-    } else if (isMobile) {
-      baseFontSize = 16;
-      smallFontSize = 12;
-    } else {
-      baseFontSize = 24;
-      smallFontSize = 18;
-    }
+    // Get device-specific configuration
+    const config = this.deviceConfig || {
+      margins: { top: 8, left: 8, right: 8, bottom: 15 },
+      fonts: { baseFontSize: 14, smallFontSize: 11, padding: 3, lineSpacing: 18 }
+    };
 
-    // Margins - reduced for landscape
-    let topMargin, leftMargin, rightMargin, padding, lineSpacing;
-    if (isMobile && isLandscape) {
-      topMargin = 3 + this.safeAreaTop;
-      leftMargin = 3;
-      rightMargin = 3;
-      padding = 3;
-      lineSpacing = 18;
-    } else if (isMobile) {
-      topMargin = 5 + this.safeAreaTop;
-      leftMargin = 5;
-      rightMargin = 5;
-      padding = 4;
-      lineSpacing = 22;
-    } else {
-      topMargin = 60;
-      leftMargin = 20;
-      rightMargin = 20;
-      padding = 8;
-      lineSpacing = 35;
-    }
+    // Font sizes from device config
+    const baseFontSize = config.fonts.baseFontSize;
+    const smallFontSize = config.fonts.smallFontSize;
+    const padding = config.fonts.padding;
+    const lineSpacing = config.fonts.lineSpacing;
+
+    // Margins - combine device config margins with safe area insets
+    const topMargin = config.margins.top + this.safeAreaInsets.top;
+    const leftMargin = config.margins.left + this.safeAreaInsets.left;
+    const rightMargin = config.margins.right + this.safeAreaInsets.right;
+    const bottomMargin = config.margins.bottom + this.safeAreaInsets.bottom;
+
+    console.log('🎨 UI Config:', config.deviceType);
+    console.log('🎨 UI Margins:', { topMargin, leftMargin, rightMargin, bottomMargin });
 
     // === LEFT COLUMN CONTAINER - Score and Distance ===
     this.scoreContainer = this.scene.add.container(leftMargin, topMargin);
@@ -324,21 +292,38 @@ export default class UIManager {
   createMobileJumpButton() {
     const { width, height } = this.scene.scale;
     const isLandscape = width > height;
-    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    const buttonSize = isLandscape ? 80 : 100; // Smaller in landscape
-    let margin = 10;
-    let rightMargin = 30; // Increased right margin to avoid being covered
+    // Get device-specific button config
+    const config = this.deviceConfig || {
+      jumpButton: { size: 80, rightMargin: 15, bottomMargin: 20 }
+    };
 
-    // Increase bottom margin for iPhone to avoid safe area (home indicator)
-    if (isIPhone) {
-      // Get safe area insets if available
-      const safeAreaBottom = this.getSafeAreaBottom();
-      margin = Math.max(20, safeAreaBottom + 10); // At least 20px, or safe area + 10px
+    const buttonSize = config.jumpButton.size;
+    const configRightMargin = config.jumpButton.rightMargin;
+    const configBottomMargin = config.jumpButton.bottomMargin;
+
+    // Skip button creation on desktop
+    if (buttonSize === 0) {
+      console.log('🎮 Jump button disabled for desktop');
+      return;
     }
 
+    // Position accounting for safe areas
+    const rightMargin = configRightMargin + this.safeAreaInsets.right;
+    const bottomMargin = configBottomMargin + this.safeAreaInsets.bottom;
+
     const buttonX = width - buttonSize / 2 - rightMargin;
-    const buttonY = height - buttonSize / 2 - margin;
+    const buttonY = height - buttonSize / 2 - bottomMargin;
+
+    console.log('🎮 Jump Button Position:', {
+      deviceType: config.deviceType,
+      buttonX,
+      buttonY,
+      rightSafeArea: this.safeAreaInsets.right,
+      bottomSafeArea: this.safeAreaInsets.bottom,
+      totalRightMargin: rightMargin,
+      totalBottomMargin: bottomMargin
+    });
 
     // Create container for jump button
     this.jumpButtonContainer = this.scene.add.container(buttonX, buttonY);

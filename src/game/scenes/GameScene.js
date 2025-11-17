@@ -6,6 +6,12 @@ import {
   refreshOrientationLayout,
   getLandscapeViewportSize
 } from '../../services/orientation.js';
+import {
+  getDeviceConfig,
+  getSafeAreaInsets,
+  getSafePlayArea,
+  logDeviceInfo
+} from '../../utils/deviceUtils.js';
 
 // Import managers
 import GroundManager from '../managers/GroundManager.js';
@@ -50,8 +56,12 @@ export default class GameScene extends Phaser.Scene {
     this.lastObstacleTime = 0;
     this.lastCollectibleTime = 0;
 
-    // Safe area
-    this.safeAreaTop = 0;
+    // Device-specific configuration
+    this.deviceConfig = null;
+
+    // Safe area insets (for landscape: left/right are critical)
+    this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+    this.safePlayArea = null;
 
     // Debug graphics
     this.debugGraphics = null;
@@ -260,9 +270,20 @@ export default class GameScene extends Phaser.Scene {
     if (this.gameInitialized) return;
     this.gameInitialized = true;
 
-    // Safe area offset for mobile
+    // Get device-specific configuration
+    this.deviceConfig = getDeviceConfig();
+    console.log('🎮 Using Device Config:', this.deviceConfig.deviceType);
+
+    // Get device info and safe area insets
+    logDeviceInfo();
+
+    // Get safe area insets (in landscape: left/right/bottom are critical)
+    this.safeAreaInsets = getSafeAreaInsets();
+    this.safePlayArea = getSafePlayArea(this.scale.width, this.scale.height);
+
+    console.log('🎮 Safe Play Area:', this.safePlayArea);
+
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    this.safeAreaTop = isMobile ? 50 : 0;
 
     // Force fullscreen on mobile devices
     if (isMobile) {
@@ -274,17 +295,18 @@ export default class GameScene extends Phaser.Scene {
 
     // Initialize all managers
     this.gameStateManager = new GameStateManager(this);
-    this.gameStateManager.setSafeArea(this.safeAreaTop);
+    this.gameStateManager.setSafeArea(this.safeAreaInsets.top); // Keep for compatibility
     this.gameStateManager.initialize();
 
     this.backgroundManager = new SceneBackgroundManager(this);
-    this.backgroundManager.setSafeArea(this.safeAreaTop);
+    this.backgroundManager.setSafeArea(this.safeAreaInsets.top); // Keep for compatibility
     this.backgroundManager.createParallaxBackground(this.gameStateManager.getSceneType());
 
     this.groundManager = new GroundManager(this);
     this.groundManager.createGround();
 
     this.playerManager = new PlayerManager(this);
+    this.playerManager.setDeviceConfig(this.deviceConfig, this.safeAreaInsets, this.safePlayArea);
     this.playerManager.createPlayer(this.groundManager.getGroundY());
     this.playerManager.addGroundCollision(this.groundManager.getGroundBody());
 
@@ -292,16 +314,17 @@ export default class GameScene extends Phaser.Scene {
 
     // ✅ Initialize UI Manager with event-based system
     this.uiManager = new UIManager(this);
-    this.uiManager.setSafeArea(this.safeAreaTop);
+    this.uiManager.setDeviceConfig(this.deviceConfig, this.safeAreaInsets, this.safePlayArea);
     this.uiManager.initialize(); // Changed from createUI() - sets up events too
     this.uiManager.setupControls(() => this.jump());
 
     this.obstacleManager = new ObstacleManager(this);
+    this.obstacleManager.setDeviceConfig(this.deviceConfig, this.safePlayArea);
     this.obstacleManager.initialize();
 
     this.collectibleManager = new CollectibleManager(this);
+    this.collectibleManager.setDeviceConfig(this.deviceConfig, this.safePlayArea);
     this.collectibleManager.initialize();
-    this.collectibleManager.setSafeAreaTop(this.safeAreaTop);
 
     // ✅ Set manager references for scene switching
     this.gameStateManager.setManagers(
@@ -424,8 +447,7 @@ export default class GameScene extends Phaser.Scene {
     if (time - this.lastCollectibleTime > GAME_CONSTANTS.COLLECTIBLE_SPAWN_INTERVAL) {
       this.collectibleManager.spawnCollectible(
         this.gameStateManager.isSwitching(),
-        this.groundManager.getGroundY(),
-        this.safeAreaTop
+        this.groundManager.getGroundY()
       );
       this.lastCollectibleTime = time;
     }

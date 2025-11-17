@@ -30,8 +30,25 @@ export default class CollectibleManager {
       vang: 0
     };
 
+    // Device-specific configuration
+    this.deviceConfig = null;
+
+    // Safe play area (for landscape: avoid spawning in notch/home indicator areas)
+    this.safePlayArea = null;
+
     // Debug graphics reference
     this.debugGraphics = null;
+  }
+
+  /**
+   * Set device config and safe play area for collectible spawning
+   * Collectibles spawn at right edge and should stay within safe horizontal bounds
+   */
+  setDeviceConfig(config, playArea) {
+    this.deviceConfig = config;
+    this.safePlayArea = playArea;
+    console.log('✨ CollectibleManager: Device Config:', config.deviceType);
+    console.log('✨ CollectibleManager: Safe Play Area:', playArea);
   }
 
   /**
@@ -51,11 +68,19 @@ export default class CollectibleManager {
   /**
    * Spawn a collectible item using Container
    */
-  spawnCollectible(isSwitchingScene, groundY, safeAreaTop) {
+  spawnCollectible(isSwitchingScene, groundY) {
     // Don't spawn if switching scenes
     if (isSwitchingScene) return;
 
     const { width, height } = this.scene.scale;
+
+    // Get device-specific spawn config
+    const deviceConfig = this.deviceConfig || { spawn: { rightOffset: 50 } };
+
+    // Spawn at right edge of safe play area (before home indicator in landscape)
+    const spawnX = this.safePlayArea
+      ? this.safePlayArea.right + deviceConfig.spawn.rightOffset
+      : width + deviceConfig.spawn.rightOffset;
 
     // Determine item type based on rarity
     const rand = Math.random();
@@ -76,12 +101,14 @@ export default class CollectibleManager {
     const config = this.itemConfig[itemType];
 
     // Items float in the AIR above ground - player must JUMP to collect
-    const maxHeightAboveGround = Math.min(200, groundY - safeAreaTop - 100);
+    // Use safe play area top if available
+    const safeTop = this.safePlayArea ? this.safePlayArea.top : 0;
+    const maxHeightAboveGround = Math.min(200, groundY - safeTop - 100);
     const heightAboveGround = Phaser.Math.Between(50, maxHeightAboveGround);
     const y = groundY - heightAboveGround;
 
     // ✅ Container for emoji + value text
-    const container = this.scene.add.container(width + 50, y);
+    const container = this.scene.add.container(spawnX, y);
 
     // Create emoji (centered)
     const emoji = this.scene.add.text(0, 0, config.emoji, {
@@ -164,11 +191,19 @@ export default class CollectibleManager {
   updateCollectibles(deltaInSeconds, scrollSpeed) {
     const scrollDistance = scrollSpeed * deltaInSeconds;
 
+    // Get device-specific cleanup config
+    const deviceConfig = this.deviceConfig || { spawn: { leftCleanup: -100 } };
+
+    // Calculate cleanup position (left edge of safe area + cleanup offset)
+    const cleanupX = this.safePlayArea
+      ? this.safePlayArea.left + deviceConfig.spawn.leftCleanup
+      : deviceConfig.spawn.leftCleanup;
+
     this.collectibles.getChildren().forEach(item => {
       item.x -= scrollDistance;
 
-      // Remove off-screen collectibles
-      if (item.x < -100) {
+      // Remove off-screen collectibles (past left safe area)
+      if (item.x < cleanupX) {
         // Stop any tweens on this collectible
         this.scene.tweens.killTweensOf(item);
         item.destroy();
@@ -189,13 +224,6 @@ export default class CollectibleManager {
       null,
       this.scene
     );
-  }
-
-  /**
-   * Set safe area top (needed for spawn calculation)
-   */
-  setSafeAreaTop(safeAreaTop) {
-    this.safeAreaTop = safeAreaTop;
   }
 
   /**

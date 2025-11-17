@@ -21,8 +21,25 @@ export default class ObstacleManager {
       { key: 'meeting', emoji: '📊', height: 50 }
     ];
 
+    // Device-specific configuration
+    this.deviceConfig = null;
+
+    // Safe play area (for landscape: avoid spawning in notch/home indicator areas)
+    this.safePlayArea = null;
+
     // Debug graphics reference
     this.debugGraphics = null;
+  }
+
+  /**
+   * Set device config and safe play area for obstacle spawning
+   * Obstacles spawn at right edge and should stay within safe horizontal bounds
+   */
+  setDeviceConfig(config, playArea) {
+    this.deviceConfig = config;
+    this.safePlayArea = playArea;
+    console.log('🚧 ObstacleManager: Device Config:', config.deviceType);
+    console.log('🚧 ObstacleManager: Safe Play Area:', playArea);
   }
 
   /**
@@ -76,6 +93,14 @@ export default class ObstacleManager {
   spawnGroundObstacle(groundY) {
     const { width } = this.scene.scale;
 
+    // Get device-specific spawn config
+    const deviceConfig = this.deviceConfig || { spawn: { rightOffset: 50 } };
+
+    // Spawn at right edge of safe play area (before home indicator in landscape)
+    const spawnX = this.safePlayArea
+      ? this.safePlayArea.right + deviceConfig.spawn.rightOffset
+      : width + deviceConfig.spawn.rightOffset;
+
     const type = Phaser.Utils.Array.GetRandom(this.groundObstacles);
 
     // Obstacle stands ON the ground (smaller than player)
@@ -83,7 +108,7 @@ export default class ObstacleManager {
     const obstacleY = groundY - obstacleHeight / 2;
 
     // Container for emoji obstacle
-    const container = this.scene.add.container(width + 50, obstacleY);
+    const container = this.scene.add.container(spawnX, obstacleY);
 
     // Create emoji obstacle (small - easy to see and avoid)
     const emoji = this.scene.add.text(0, 0, type.emoji, {
@@ -117,11 +142,19 @@ export default class ObstacleManager {
   updateObstacles(deltaInSeconds, scrollSpeed) {
     const scrollDistance = scrollSpeed * deltaInSeconds;
 
+    // Get device-specific cleanup config
+    const deviceConfig = this.deviceConfig || { spawn: { leftCleanup: -100 } };
+
+    // Calculate cleanup position (left edge of safe area + cleanup offset)
+    const cleanupX = this.safePlayArea
+      ? this.safePlayArea.left + deviceConfig.spawn.leftCleanup
+      : deviceConfig.spawn.leftCleanup;
+
     this.obstacles.getChildren().forEach(obstacle => {
       obstacle.x -= scrollDistance;
 
-      // Remove off-screen obstacles
-      if (obstacle.x < -100) {
+      // Remove off-screen obstacles (past left safe area)
+      if (obstacle.x < cleanupX) {
         obstacle.destroy();
       }
     });

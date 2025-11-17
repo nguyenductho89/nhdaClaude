@@ -35,7 +35,7 @@ export default class GameScene extends Phaser.Scene {
     super({ key: 'GameScene' });
 
     // Debug settings
-    this.DEBUG_HITBOXES = false;
+    this.DEBUG_HITBOXES = true;
 
     // Game initialization flags
     this.isWaitingForLandscape = false;

@@ -34,13 +34,6 @@ export const iPhoneUIConfig = {
     lineSpacing: 18
   },
 
-  // Jump button configuration
-  jumpButton: {
-    size: 80,
-    rightMargin: 100,  // Extra margin from right edge (cộng với home indicator)
-    bottomMargin: 15  // Margin from playable bottom (đã tính safe area rồi, chỉ cần margin nhỏ)
-  },
-
   // Player positioning
   player: {
     baseX: 100,  // Base X position for smaller screens

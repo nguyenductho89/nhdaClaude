@@ -37,13 +37,6 @@ export const androidUIConfig = {
     lineSpacing: 18
   },
 
-  // Jump button configuration
-  jumpButton: {
-    size: 80,
-    rightMargin: 15,  // Margin from right edge
-    bottomMargin: 10  // Bottom margin (landscape không có nav bar ở dưới)
-  },
-
   // Player positioning
   player: {
     baseX: 100,  // Base X position for smaller screens

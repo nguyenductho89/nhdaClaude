@@ -279,113 +279,6 @@ export default class UIManager {
     }).setOrigin(0.5, 0);
 
     this.multiplierContainer.add(this.multiplierText);
-
-    // === MOBILE JUMP BUTTON CONTAINER ===
-    if (isMobile) {
-      this.createMobileJumpButton();
-    }
-  }
-
-  /**
-   * Create mobile jump button using Container
-   */
-  createMobileJumpButton() {
-    const { width, height } = this.scene.scale;
-    const isLandscape = width > height;
-
-    // Get device-specific button config
-    const config = this.deviceConfig || {
-      jumpButton: { size: 80, rightMargin: 15, bottomMargin: 20 }
-    };
-
-    const buttonSize = config.jumpButton.size;
-    const configRightMargin = config.jumpButton.rightMargin;
-    const configBottomMargin = config.jumpButton.bottomMargin;
-
-    // Skip button creation on desktop
-    if (buttonSize === 0) {
-      console.log('🎮 Jump button disabled for desktop');
-      return;
-    }
-
-    // Calculate button position
-    // X: from right edge, accounting for safe area
-    const rightMargin = configRightMargin + this.safeAreaInsets.right;
-    const buttonX = width - buttonSize / 2 - rightMargin;
-
-    // Y: from bottom, using PLAYABLE area (above safe area bottom)
-    // safePlayArea.bottom is already the bottom of playable area
-    const playableBottom = this.safePlayArea ? this.safePlayArea.bottom : height;
-    const buttonY = playableBottom - buttonSize / 2 - configBottomMargin;
-
-    // Sanity check: make sure button is not off-screen
-    const minY = buttonSize / 2 + 10; // At least 10px from top
-    const maxY = height - buttonSize / 2 - 10; // At least 10px from bottom
-    const finalButtonY = Math.max(minY, Math.min(buttonY, maxY));
-
-    console.log('🎮 Jump Button Position Calculation:');
-    console.log('  - Device type:', config.deviceType);
-    console.log('  - Screen size:', `${width}x${height}`);
-    console.log('  - Button size:', buttonSize);
-    console.log('  - Config bottom margin:', configBottomMargin);
-    console.log('  - Safe area bottom:', this.safeAreaInsets.bottom);
-    console.log('  - Playable bottom:', playableBottom);
-    console.log('  - Calculated button Y:', buttonY);
-    console.log('  - Final button Y (clamped):', finalButtonY);
-    console.log('  - Button X:', buttonX);
-
-    if (finalButtonY !== buttonY) {
-      console.warn('⚠️ Button Y was clamped! Original:', buttonY, 'Clamped:', finalButtonY);
-    }
-
-    // Create container for jump button
-    this.jumpButtonContainer = this.scene.add.container(buttonX, finalButtonY);
-    this.jumpButtonContainer.setScrollFactor(0);
-    this.jumpButtonContainer.setDepth(100);
-
-    // Button background circle
-    const bg = this.scene.add.circle(0, 0, buttonSize / 2, 0xFFFFFF, 0.4);
-
-    // Button border
-    const border = this.scene.add.circle(0, 0, buttonSize / 2 + 4, 0xFFFFFF, 0.2);
-
-    // Button icon - adjust size based on button size
-    const iconSize = isLandscape ? '44px' : '56px';
-    const icon = this.scene.add.text(0, 0, '⬆', {
-      fontSize: iconSize,
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: isLandscape ? 2 : 3
-    }).setOrigin(0.5);
-
-    // Hit area (larger for easier tapping)
-    const hitAreaSize = isLandscape ? buttonSize + 15 : buttonSize + 25;
-    const hitArea = this.scene.add.rectangle(0, 0, hitAreaSize, hitAreaSize, 0x000000, 0)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.onJumpButtonDown();
-        bg.setAlpha(0.7);
-        icon.setScale(1.2);
-        border.setAlpha(0.5);
-      })
-      .on('pointerup', () => {
-        bg.setAlpha(0.4);
-        icon.setScale(1);
-        border.setAlpha(0.2);
-      })
-      .on('pointerout', () => {
-        bg.setAlpha(0.4);
-        icon.setScale(1);
-        border.setAlpha(0.2);
-      });
-
-    this.jumpButtonContainer.add([border, bg, icon, hitArea]);
-
-    // Store references
-    this.jumpButtonContainer.bg = bg;
-    this.jumpButtonContainer.icon = icon;
-    this.jumpButtonContainer.border = border;
   }
 
   /**
@@ -398,25 +291,20 @@ export default class UIManager {
     this.spaceKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.upKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
 
-    // Mouse/Touch controls - tap anywhere to jump (except UI elements)
-    if (!this.isMobileDevice()) {
-      // Desktop: click anywhere to jump
-      this.scene.input.on('pointerdown', (pointer) => {
-        // Don't jump if clicking on UI buttons
-        if (pointer.y > 140) { // Below UI area
-          this.onJumpCallback();
-        }
-      });
-    }
-  }
+    // Pointer reference for checking if clicking on pause button
+    this.pauseButton = this.timerContainer?.list?.[1]; // Second element in timer container
 
-  /**
-   * Handle jump button press
-   */
-  onJumpButtonDown() {
-    if (this.onJumpCallback) {
+    // Mouse/Touch controls - tap anywhere to jump (except pause button)
+    this.scene.input.on('pointerdown', (pointer) => {
+      // Check if clicking on pause button
+      if (this.pauseButton && this.pauseButton.getBounds().contains(pointer.x, pointer.y)) {
+        // Let the pause button handle it
+        return;
+      }
+
+      // Otherwise, jump!
       this.onJumpCallback();
-    }
+    });
   }
 
   /**

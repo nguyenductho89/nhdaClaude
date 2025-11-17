@@ -52,14 +52,21 @@ export default class SceneBackgroundManager {
   }
 
   /**
+   * Detect device type (helper method)
+   */
+  detectDeviceType() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || window.innerWidth < 768;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return { isMobile, isIOS };
+  }
+
+  /**
    * Create mountain and river scene
    */
   createMountainRiverScene() {
     const { width, height } = this.scene.scale;
-
-    // Detect mobile để tối ưu số lượng particles
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      || window.innerWidth < 768;
+    const { isMobile, isIOS } = this.detectDeviceType();
 
     // Sky layer with beautiful gradient (top to bottom: dark blue to light blue)
     const skyGraphics = this.scene.add.graphics();
@@ -77,7 +84,8 @@ export default class SceneBackgroundManager {
 
     // Clouds layer (beautiful fluffy clouds) - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    const cloudCount = isMobile ? 4 : 8;
+    // iOS needs even fewer particles due to Safari WebGL issues
+    const cloudCount = isIOS ? 2 : (isMobile ? 4 : 8);
     for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 250 + Math.random() * 150;
       const cloudY = this.safeAreaTop + 40 + Math.random() * 120;
@@ -99,7 +107,8 @@ export default class SceneBackgroundManager {
 
     // Birds flying (chim bay) - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    const birdCount = isMobile ? 3 : 5;
+    // iOS: even fewer birds
+    const birdCount = isIOS ? 2 : (isMobile ? 3 : 5);
     for (let i = 0; i < birdCount; i++) {
       const birdX = Math.random() * width;
       const birdY = this.safeAreaTop + 80 + Math.random() * 150;
@@ -122,15 +131,17 @@ export default class SceneBackgroundManager {
       bird.setData('speed', 1.5 + Math.random() * 1);
       this.birdsLayer.add(bird);
 
-      // Animate bird flapping
-      this.scene.tweens.add({
-        targets: bird,
-        scaleY: 0.8,
-        duration: 300,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
+      // Animate bird flapping - disable on iOS to save performance
+      if (!isIOS) {
+        this.scene.tweens.add({
+          targets: bird,
+          scaleY: 0.8,
+          duration: 300,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
     }
 
     // Far mountains (núi xa - darker, smaller)
@@ -189,7 +200,8 @@ export default class SceneBackgroundManager {
 
     // Water waves (sóng nước) - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    const waveCount = isMobile ? 5 : 10;
+    // iOS: minimal waves
+    const waveCount = isIOS ? 3 : (isMobile ? 5 : 10);
     for (let i = 0; i < waveCount; i++) {
       const waveX = i * 200;
       const waveY = height - 70;
@@ -215,15 +227,17 @@ export default class SceneBackgroundManager {
       wave.setData('phase', i * 0.5);
       this.wavesLayer.add(wave);
 
-      // Animate waves
-      this.scene.tweens.add({
-        targets: wave,
-        y: waveY - 3,
-        duration: 1000 + Math.random() * 500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
+      // Animate waves - disable on iOS to save performance
+      if (!isIOS) {
+        this.scene.tweens.add({
+          targets: wave,
+          y: waveY - 3,
+          duration: 1000 + Math.random() * 500,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
     }
   }
 
@@ -232,10 +246,7 @@ export default class SceneBackgroundManager {
    */
   createStreetScene() {
     const { width, height } = this.scene.scale;
-
-    // Detect mobile để tối ưu số lượng particles
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      || window.innerWidth < 768;
+    const { isMobile, isIOS } = this.detectDeviceType();
 
     // Sky layer - urban evening gradient (orange/purple sunset)
     const skyGraphics = this.scene.add.graphics();
@@ -252,7 +263,7 @@ export default class SceneBackgroundManager {
 
     // Clouds layer - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    const cloudCount = isMobile ? 3 : 6;
+    const cloudCount = isIOS ? 2 : (isMobile ? 3 : 6);
     for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 300 + Math.random() * 150;
       const cloudY = this.safeAreaTop + 50 + Math.random() * 100;
@@ -270,7 +281,7 @@ export default class SceneBackgroundManager {
 
     // Birds flying - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    const birdCount = isMobile ? 2 : 4;
+    const birdCount = isIOS ? 1 : (isMobile ? 2 : 4);
     for (let i = 0; i < birdCount; i++) {
       const birdX = Math.random() * width;
       const birdY = this.safeAreaTop + 80 + Math.random() * 120;
@@ -374,7 +385,7 @@ export default class SceneBackgroundManager {
 
     // Street lights - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    const lightCount = isMobile ? 4 : 8;
+    const lightCount = isIOS ? 2 : (isMobile ? 4 : 8);
     for (let i = 0; i < lightCount; i++) {
       const lightX = i * 250 + 100;
       const lightY = height - 120;
@@ -396,15 +407,17 @@ export default class SceneBackgroundManager {
       light.setData('baseX', lightX);
       this.wavesLayer.add(light);
 
-      // Flickering animation
-      this.scene.tweens.add({
-        targets: light,
-        alpha: 0.7,
-        duration: 2000 + Math.random() * 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
+      // Flickering animation - disable on iOS
+      if (!isIOS) {
+        this.scene.tweens.add({
+          targets: light,
+          alpha: 0.7,
+          duration: 2000 + Math.random() * 1000,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
     }
   }
 
@@ -413,10 +426,7 @@ export default class SceneBackgroundManager {
    */
   createForestScene() {
     const { width, height } = this.scene.scale;
-
-    // Detect mobile để tối ưu số lượng particles
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      || window.innerWidth < 768;
+    const { isMobile, isIOS } = this.detectDeviceType();
 
     console.log('🌲 Creating forest scene...');
 
@@ -440,7 +450,7 @@ export default class SceneBackgroundManager {
     // 3. LIGHT BEAMS - Mystical sun rays through canopy - giảm số lượng trên mobile
     const beamGraphics = this.scene.add.graphics();
     beamGraphics.fillStyle(0xFFFFFF, 0.1);
-    const beamCount = isMobile ? 3 : 5;
+    const beamCount = isIOS ? 0 : (isMobile ? 3 : 5);  // Disable on iOS
     for (let i = 0; i < beamCount; i++) {
       const beamX = width * (0.3 + i * 0.15);
       const beamWidth = 40 + Math.random() * 30;
@@ -455,7 +465,7 @@ export default class SceneBackgroundManager {
 
     // 4. CLOUDS/MIST - Misty forest atmosphere - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    const cloudCount = isMobile ? 3 : 5;
+    const cloudCount = isIOS ? 2 : (isMobile ? 3 : 5);
     for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 350 + Math.random() * 100;
       const cloudY = this.safeAreaTop + 100 + Math.random() * 150;
@@ -473,7 +483,7 @@ export default class SceneBackgroundManager {
 
     // 5. BIRDS/BUTTERFLIES - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    const butterflyCount = isMobile ? 3 : 6;
+    const butterflyCount = isIOS ? 2 : (isMobile ? 3 : 6);
     for (let i = 0; i < butterflyCount; i++) {
       const butterflyX = Math.random() * width;
       const butterflyY = this.safeAreaTop + 100 + Math.random() * 200;
@@ -495,16 +505,18 @@ export default class SceneBackgroundManager {
       butterfly.setData('speed', 0.8 + Math.random() * 0.6);
       this.birdsLayer.add(butterfly);
 
-      // Fluttering animation
-      this.scene.tweens.add({
-        targets: butterfly,
-        scaleX: 0.7,
-        scaleY: 1.2,
-        duration: 200,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
+      // Fluttering animation - disable on iOS
+      if (!isIOS) {
+        this.scene.tweens.add({
+          targets: butterfly,
+          scaleX: 0.7,
+          scaleY: 1.2,
+          duration: 200,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
     }
 
     // 6. FAR TREES - Dark silhouettes in distance
@@ -606,7 +618,7 @@ export default class SceneBackgroundManager {
 
     // 9. FIREFLIES/PARTICLES - Magical forest atmosphere - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    const fireflyCount = isMobile ? 6 : 12;
+    const fireflyCount = isIOS ? 3 : (isMobile ? 6 : 12);
     for (let i = 0; i < fireflyCount; i++) {
       const fireflyX = i * 150 + Math.random() * 100;
       const fireflyY = height - 200 + Math.random() * 100;
@@ -625,16 +637,18 @@ export default class SceneBackgroundManager {
       firefly.setData('baseY', fireflyY);
       this.wavesLayer.add(firefly);
 
-      // Floating and glowing animation
-      this.scene.tweens.add({
-        targets: firefly,
-        y: fireflyY - 30,
-        alpha: 0.3,
-        duration: 1500 + Math.random() * 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
+      // Floating and glowing animation - disable on iOS
+      if (!isIOS) {
+        this.scene.tweens.add({
+          targets: firefly,
+          y: fireflyY - 30,
+          alpha: 0.3,
+          duration: 1500 + Math.random() * 1000,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
     }
 
     console.log('✨ Mystical forest scene created!');
@@ -737,21 +751,27 @@ export default class SceneBackgroundManager {
   }
 
   /**
-   * Update parallax scrolling (optimized for mobile)
+   * Update parallax scrolling (optimized for mobile, extra optimization for iOS)
    */
   updateParallax(deltaInSeconds, scrollSpeed) {
     const scrollDistance = scrollSpeed * deltaInSeconds;
     this.frameCount++;
 
-    // On mobile, throttle non-critical layers to every 2 frames
-    const updateSlowLayers = !this.isMobile || (this.frameCount % 2 === 0);
+    // Detect iOS
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // On mobile, throttle non-critical layers
+    // iOS: every 3 frames (even more throttling)
+    // Android: every 2 frames
+    const throttleInterval = isIOS ? 3 : 2;
+    const updateSlowLayers = !this.isMobile || (this.frameCount % throttleInterval === 0);
 
     // Clouds (slow) - throttled on mobile
     if (updateSlowLayers && this.cloudsLayer) {
       this.cloudsLayer.getChildren().forEach(cloud => {
         const speed = cloud.getData('speed') || 1;
-        // On mobile, use double distance since we update half as often
-        const distance = this.isMobile ? scrollDistance * 2 : scrollDistance;
+        // Compensate for throttling: multiply distance by throttle interval
+        const distance = this.isMobile ? scrollDistance * throttleInterval : scrollDistance;
         cloud.x -= distance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
         if (cloud.x < -150) {
           cloud.x = this.scene.scale.width + 150;
@@ -763,11 +783,13 @@ export default class SceneBackgroundManager {
     if (updateSlowLayers && this.birdsLayer) {
       this.birdsLayer.getChildren().forEach(bird => {
         const speed = bird.getData('speed') || 1;
-        const distance = this.isMobile ? scrollDistance * 2 : scrollDistance;
+        const distance = this.isMobile ? scrollDistance * throttleInterval : scrollDistance;
         bird.x -= distance * 0.3 * speed;
-        // Add slight vertical bobbing
-        const baseY = bird.getData('baseY');
-        bird.y = baseY + Math.sin(Date.now() * 0.001 + bird.x * 0.01) * 10;
+        // Add slight vertical bobbing - skip on iOS for performance
+        if (!isIOS) {
+          const baseY = bird.getData('baseY');
+          bird.y = baseY + Math.sin(Date.now() * 0.001 + bird.x * 0.01) * 10;
+        }
 
         if (bird.x < -50) {
           bird.x = this.scene.scale.width + 50;

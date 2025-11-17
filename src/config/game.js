@@ -1,13 +1,24 @@
 import Phaser from 'phaser';
 
-// Detect if mobile device
+// Detect device type
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || window.innerWidth < 768;
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 // Tối ưu resolution trên mobile để cải thiện performance
-// Giới hạn resolution tối đa = 1.5 trên mobile (thay vì devicePixelRatio có thể = 2-3)
+// iOS cần resolution thấp hơn do Safari WebGL limitations
 const devicePixelRatio = window.devicePixelRatio || 1;
-const maxResolution = isMobile ? Math.min(devicePixelRatio, 1.5) : devicePixelRatio;
+let maxResolution;
+if (isIOS) {
+  // iOS: giảm xuống 1.0 để tránh giật (Safari WebGL performance issues)
+  maxResolution = 1.0;
+} else if (isMobile) {
+  // Android: 1.5 max
+  maxResolution = Math.min(devicePixelRatio, 1.5);
+} else {
+  // Desktop: full resolution
+  maxResolution = devicePixelRatio;
+}
 
 export const gameConfig = {
   type: Phaser.WEBGL, // Force WebGL for better rendering quality
@@ -18,7 +29,9 @@ export const gameConfig = {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 }, // Set to 0, we'll use per-object gravity
-      debug: false
+      debug: false,
+      // iOS optimization: reduce physics iterations
+      fps: isIOS ? 45 : 60  // Lower physics FPS on iOS
     }
   },
   scale: {
@@ -43,9 +56,18 @@ export const gameConfig = {
   },
   render: {
     pixelArt: false,
-    antialias: true,
-    roundPixels: false // Changed to false for sharper text
+    antialias: !isIOS, // Disable antialias on iOS for better performance
+    roundPixels: isIOS, // Enable on iOS for better performance
+    // iOS-specific optimizations
+    powerPreference: isIOS ? 'low-power' : 'high-performance',
+    failIfMajorPerformanceCaveat: false
+  },
+  // FPS config
+  fps: {
+    target: isIOS ? 50 : 60,  // Lower target FPS on iOS
+    smoothStep: true
   }
+}
 };
 
 // Game constants for Endless Runner

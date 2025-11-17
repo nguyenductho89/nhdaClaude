@@ -37,7 +37,7 @@ export const iPhoneUIConfig = {
   // Jump button configuration
   jumpButton: {
     size: 80,
-    rightMargin: 50,  // Extra margin from right edge (cộng với home indicator)
+    rightMargin: 15,  // Extra margin from right edge (cộng với home indicator)
     bottomMargin: 220  // Margin from bottom (landscape không có navigation bar ở dưới)
   },
 

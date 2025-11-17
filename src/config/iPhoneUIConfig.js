@@ -14,7 +14,7 @@ export const iPhoneUIConfig = {
 
   // Safe area insets cho LANDSCAPE (đọc từ CSS env variables + fallback)
   getSafeAreaInsets: () => {
-    let top = 0, right = 0, bottom = 10, left = 0;
+    let top = 0, right = 0, bottom = 5, left = 0;
     return { top, right, bottom, left };
   },
 

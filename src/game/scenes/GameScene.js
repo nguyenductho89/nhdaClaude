@@ -77,6 +77,9 @@ export default class GameScene extends Phaser.Scene {
     this.frameCount = 0; // For throttling updates on iOS
     this.lastScoreUpdate = 0; // Cache score calculation on iOS
     this.scoreUpdateInterval = this.isIOS ? 2 : 1; // Update score every 2 frames on iOS
+
+    // Event listeners to cleanup (iOS memory optimization)
+    this.eventListeners = [];
   }
 
   preload() {
@@ -139,14 +142,20 @@ export default class GameScene extends Phaser.Scene {
       }
     };
 
-    // Listen to fullscreen change events
+    // Listen to fullscreen change events - save references for cleanup
     document.addEventListener('fullscreenchange', onFullscreenChange);
     document.addEventListener('webkitfullscreenchange', onFullscreenChange);
     document.addEventListener('mozfullscreenchange', onFullscreenChange);
     document.addEventListener('msfullscreenchange', onFullscreenChange);
+    this.eventListeners.push(
+      { target: document, event: 'fullscreenchange', handler: onFullscreenChange },
+      { target: document, event: 'webkitfullscreenchange', handler: onFullscreenChange },
+      { target: document, event: 'mozfullscreenchange', handler: onFullscreenChange },
+      { target: document, event: 'msfullscreenchange', handler: onFullscreenChange }
+    );
 
     // Also listen to resize events (for iOS which doesn't support fullscreen API)
-    window.addEventListener('resize', () => {
+    const onResize = () => {
       const isGameOver = this.gameStateManager && this.gameStateManager.isOver();
       if (!isGameOver) {
         // Make sure canvas fills the entire screen
@@ -160,7 +169,9 @@ export default class GameScene extends Phaser.Scene {
           container.style.zIndex = '9999';
         }
       }
-    });
+    };
+    window.addEventListener('resize', onResize);
+    this.eventListeners.push({ target: window, event: 'resize', handler: onResize });
 
     // Force game container to fill screen
     const container = document.getElementById('game-container');
@@ -179,9 +190,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // Setup cleanup handlers first
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, releaseLandscapeOrientation);
-    this.events.once(Phaser.Scenes.Events.DESTROY, releaseLandscapeOrientation);
+    // Setup cleanup handlers first - iOS memory optimization
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      releaseLandscapeOrientation();
+      this.cleanupEventListeners();
+    });
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
+      releaseLandscapeOrientation();
+      this.cleanupEventListeners();
+    });
 
     // Check if currently in landscape
     const isCurrentlyLandscape = window.innerWidth >= window.innerHeight;
@@ -392,6 +409,17 @@ export default class GameScene extends Phaser.Scene {
       this.scoringSystem.comboCount,
       this.scoringSystem.comboActive
     );
+  }
+
+  /**
+   * Cleanup event listeners (iOS memory optimization)
+   * Prevents memory leaks by removing all registered event listeners
+   */
+  cleanupEventListeners() {
+    this.eventListeners.forEach(({ target, event, handler }) => {
+      target.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
   }
 
   update(time, delta) {

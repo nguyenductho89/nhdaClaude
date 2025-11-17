@@ -22,6 +22,11 @@ export default class SceneBackgroundManager {
 
     // Safe area
     this.safeAreaTop = 0;
+
+    // Performance optimization - throttle parallax updates on mobile
+    this.frameCount = 0;
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || window.innerWidth < 768;
   }
 
   /**
@@ -732,27 +737,34 @@ export default class SceneBackgroundManager {
   }
 
   /**
-   * Update parallax scrolling
+   * Update parallax scrolling (optimized for mobile)
    */
   updateParallax(deltaInSeconds, scrollSpeed) {
     const scrollDistance = scrollSpeed * deltaInSeconds;
+    this.frameCount++;
 
-    // Clouds (slow)
-    if (this.cloudsLayer) {
+    // On mobile, throttle non-critical layers to every 2 frames
+    const updateSlowLayers = !this.isMobile || (this.frameCount % 2 === 0);
+
+    // Clouds (slow) - throttled on mobile
+    if (updateSlowLayers && this.cloudsLayer) {
       this.cloudsLayer.getChildren().forEach(cloud => {
         const speed = cloud.getData('speed') || 1;
-        cloud.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
+        // On mobile, use double distance since we update half as often
+        const distance = this.isMobile ? scrollDistance * 2 : scrollDistance;
+        cloud.x -= distance * GAME_CONSTANTS.PARALLAX_CLOUDS * speed;
         if (cloud.x < -150) {
           cloud.x = this.scene.scale.width + 150;
         }
       });
     }
 
-    // Birds/boats flying (very slow, natural movement)
-    if (this.birdsLayer) {
+    // Birds/boats flying (very slow, natural movement) - throttled on mobile
+    if (updateSlowLayers && this.birdsLayer) {
       this.birdsLayer.getChildren().forEach(bird => {
         const speed = bird.getData('speed') || 1;
-        bird.x -= scrollDistance * 0.3 * speed;
+        const distance = this.isMobile ? scrollDistance * 2 : scrollDistance;
+        bird.x -= distance * 0.3 * speed;
         // Add slight vertical bobbing
         const baseY = bird.getData('baseY');
         bird.y = baseY + Math.sin(Date.now() * 0.001 + bird.x * 0.01) * 10;
@@ -764,7 +776,7 @@ export default class SceneBackgroundManager {
       });
     }
 
-    // Far mountains (slower than near mountains)
+    // Far mountains (slower than near mountains) - always update but simplified on mobile
     if (this.farMountainsBg && this.farMountainsBg2) {
       this.farMountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS * 0.5;
       this.farMountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS * 0.5;
@@ -777,7 +789,7 @@ export default class SceneBackgroundManager {
       }
     }
 
-    // Near mountains (medium)
+    // Near mountains (medium) - always update (critical for visual quality)
     if (this.mountainsBg && this.mountainsBg2) {
       this.mountainsBg.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
       this.mountainsBg2.x -= scrollDistance * GAME_CONSTANTS.PARALLAX_MOUNTAINS;
@@ -790,7 +802,7 @@ export default class SceneBackgroundManager {
       }
     }
 
-    // River (fast, like ground)
+    // River (fast, like ground) - always update (critical for visual quality)
     if (this.riverBg && this.riverBg2) {
       this.riverBg.x -= scrollDistance * 0.8;
       this.riverBg2.x -= scrollDistance * 0.8;
@@ -803,7 +815,7 @@ export default class SceneBackgroundManager {
       }
     }
 
-    // Waves (fast with water)
+    // Waves (fast with water) - always update
     if (this.wavesLayer) {
       this.wavesLayer.getChildren().forEach(wave => {
         wave.x -= scrollDistance * 0.9;

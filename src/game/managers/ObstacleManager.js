@@ -21,6 +21,10 @@ export default class ObstacleManager {
       { key: 'meeting', emoji: '📊', height: 50 }
     ];
 
+    // Object pooling for obstacles
+    this.obstaclePool = [];
+    this.maxPoolSize = 15; // Max obstacles to keep in pool
+
     // Device-specific configuration
     this.deviceConfig = null;
 
@@ -88,7 +92,7 @@ export default class ObstacleManager {
   }
 
   /**
-   * Spawn ground obstacle
+   * Spawn ground obstacle (with object pooling)
    */
   spawnGroundObstacle(groundY) {
     const { width } = this.scene.scale;
@@ -107,37 +111,62 @@ export default class ObstacleManager {
     const obstacleHeight = type.height;
     const obstacleY = groundY - obstacleHeight / 2;
 
-    // Container for emoji obstacle
-    const container = this.scene.add.container(spawnX, obstacleY);
+    let container;
 
-    // Create emoji obstacle (small - easy to see and avoid)
-    const emoji = this.scene.add.text(0, 0, type.emoji, {
-      fontSize: '48px'
-    }).setOrigin(0.5, 0.5);
+    // Try to reuse from pool
+    if (this.obstaclePool.length > 0) {
+      container = this.obstaclePool.pop();
+      container.setActive(true);
+      container.setVisible(true);
 
-    container.add([emoji]);
+      // Update position
+      container.x = spawnX;
+      container.y = obstacleY;
 
-    // Physics on container
-    this.scene.physics.add.existing(container);
-    container.body.setAllowGravity(false);
-    container.body.setImmovable(true);
+      // Update emoji
+      const emoji = container.list[0]; // First child is the emoji text
+      emoji.setText(type.emoji);
 
-    // Hitbox - compact (much smaller than player)
-    const obstacleBodyWidth = 45;
-    const obstacleBodyHeight = 45;
-    container.body.setSize(obstacleBodyWidth, obstacleBodyHeight);
-    container.body.setOffset(-obstacleBodyWidth / 2, -obstacleBodyHeight / 2);
-    container.setData('type', type.key);
-    container.setData('isFlying', false);
+      // Update data
+      container.setData('type', type.key);
 
-    // Set depth to appear above background
-    container.setDepth(30);
+      // Re-enable physics body
+      if (container.body) {
+        container.body.enable = true;
+      }
+    } else {
+      // Create new obstacle if pool is empty
+      container = this.scene.add.container(spawnX, obstacleY);
+
+      // Create emoji obstacle (small - easy to see and avoid)
+      const emoji = this.scene.add.text(0, 0, type.emoji, {
+        fontSize: '48px'
+      }).setOrigin(0.5, 0.5);
+
+      container.add([emoji]);
+
+      // Physics on container
+      this.scene.physics.add.existing(container);
+      container.body.setAllowGravity(false);
+      container.body.setImmovable(true);
+
+      // Hitbox - compact (much smaller than player)
+      const obstacleBodyWidth = 45;
+      const obstacleBodyHeight = 45;
+      container.body.setSize(obstacleBodyWidth, obstacleBodyHeight);
+      container.body.setOffset(-obstacleBodyWidth / 2, -obstacleBodyHeight / 2);
+      container.setData('type', type.key);
+      container.setData('isFlying', false);
+
+      // Set depth to appear above background
+      container.setDepth(30);
+    }
 
     this.obstacles.add(container);
   }
 
   /**
-   * Update obstacles (scrolling and cleanup)
+   * Update obstacles (scrolling and cleanup with object pooling)
    */
   updateObstacles(deltaInSeconds, scrollSpeed) {
     const scrollDistance = scrollSpeed * deltaInSeconds;
@@ -153,11 +182,36 @@ export default class ObstacleManager {
     this.obstacles.getChildren().forEach(obstacle => {
       obstacle.x -= scrollDistance;
 
-      // Remove off-screen obstacles (past left safe area)
+      // Recycle off-screen obstacles (past left safe area)
       if (obstacle.x < cleanupX) {
-        obstacle.destroy();
+        this.recycleObstacle(obstacle);
       }
     });
+  }
+
+  /**
+   * Recycle obstacle to pool instead of destroying
+   */
+  recycleObstacle(obstacle) {
+    // Remove from active group
+    this.obstacles.remove(obstacle);
+
+    // Hide and deactivate
+    obstacle.setActive(false);
+    obstacle.setVisible(false);
+
+    // Disable physics body
+    if (obstacle.body) {
+      obstacle.body.enable = false;
+    }
+
+    // Add to pool if not full
+    if (this.obstaclePool.length < this.maxPoolSize) {
+      this.obstaclePool.push(obstacle);
+    } else {
+      // Pool is full, destroy excess obstacles
+      obstacle.destroy();
+    }
   }
 
   /**

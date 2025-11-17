@@ -30,6 +30,10 @@ export default class CollectibleManager {
       vang: 0
     };
 
+    // Object pooling for collectibles
+    this.collectiblePool = [];
+    this.maxPoolSize = 15; // Max collectibles to keep in pool
+
     // Device-specific configuration
     this.deviceConfig = null;
 
@@ -107,35 +111,64 @@ export default class CollectibleManager {
     const heightAboveGround = Phaser.Math.Between(50, maxHeightAboveGround);
     const y = groundY - heightAboveGround;
 
-    // ✅ Container for emoji + value text
-    const container = this.scene.add.container(spawnX, y);
+    let container;
 
-    // Create emoji (centered)
-    const emoji = this.scene.add.text(0, 0, config.emoji, {
-      fontSize: `${config.size}px`
-    }).setOrigin(0.5, 0.5);
+    // Try to reuse from pool
+    if (this.collectiblePool.length > 0) {
+      container = this.collectiblePool.pop();
+      container.setActive(true);
+      container.setVisible(true);
 
-    // Add value text above emoji (small)
-    const valueLabel = this.scene.add.text(0, -28, config.valueText, {
-      fontSize: '11px',
-      fontFamily: 'Arial',
-      color: '#FFD700',
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      padding: { x: 4, y: 2 }
-    }).setOrigin(0.5, 0.5);
+      // Update position
+      container.x = spawnX;
+      container.y = y;
 
-    container.add([emoji, valueLabel]);
+      // Update emoji and value text
+      const emoji = container.list[0]; // First child is emoji
+      const valueLabel = container.list[1]; // Second child is value text
+      emoji.setText(config.emoji);
+      emoji.setFontSize(config.size);
+      valueLabel.setText(config.valueText);
 
-    // Physics on container
-    this.scene.physics.add.existing(container);
-    container.body.setAllowGravity(false);
-    container.body.setSize(config.hitbox, config.hitbox);
-    container.body.setOffset(-config.hitbox / 2, -config.hitbox / 2);
-    container.setData('itemType', itemType);
-    container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+      // Update physics hitbox
+      container.body.setSize(config.hitbox, config.hitbox);
+      container.body.setOffset(-config.hitbox / 2, -config.hitbox / 2);
+      container.body.enable = true;
 
-    // Set depth to appear above background
-    container.setDepth(30);
+      // Update data
+      container.setData('itemType', itemType);
+      container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+    } else {
+      // Create new collectible if pool is empty
+      container = this.scene.add.container(spawnX, y);
+
+      // Create emoji (centered)
+      const emoji = this.scene.add.text(0, 0, config.emoji, {
+        fontSize: `${config.size}px`
+      }).setOrigin(0.5, 0.5);
+
+      // Add value text above emoji (small)
+      const valueLabel = this.scene.add.text(0, -28, config.valueText, {
+        fontSize: '11px',
+        fontFamily: 'Arial',
+        color: '#FFD700',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5, 0.5);
+
+      container.add([emoji, valueLabel]);
+
+      // Physics on container
+      this.scene.physics.add.existing(container);
+      container.body.setAllowGravity(false);
+      container.body.setSize(config.hitbox, config.hitbox);
+      container.body.setOffset(-config.hitbox / 2, -config.hitbox / 2);
+      container.setData('itemType', itemType);
+      container.setData('score', GAME_CONSTANTS.ITEM_SCORES[itemType]);
+
+      // Set depth to appear above background
+      container.setDepth(30);
+    }
 
     this.collectibles.add(container);
 
@@ -181,8 +214,8 @@ export default class CollectibleManager {
     // ✅ Emit event for UI to show collect effect and floating text
     gameEvents.emitEvent(GAME_EVENTS.ITEM_COLLECTED, item.x, item.y, itemType, itemScore);
 
-    // Destroy item
-    item.destroy();
+    // Recycle item instead of destroying
+    this.recycleCollectible(item);
   }
 
   /**
@@ -202,13 +235,39 @@ export default class CollectibleManager {
     this.collectibles.getChildren().forEach(item => {
       item.x -= scrollDistance;
 
-      // Remove off-screen collectibles (past left safe area)
+      // Recycle off-screen collectibles (past left safe area)
       if (item.x < cleanupX) {
-        // Stop any tweens on this collectible
-        this.scene.tweens.killTweensOf(item);
-        item.destroy();
+        this.recycleCollectible(item);
       }
     });
+  }
+
+  /**
+   * Recycle collectible to pool instead of destroying
+   */
+  recycleCollectible(item) {
+    // Stop any tweens on this collectible
+    this.scene.tweens.killTweensOf(item);
+
+    // Remove from active group
+    this.collectibles.remove(item);
+
+    // Hide and deactivate
+    item.setActive(false);
+    item.setVisible(false);
+
+    // Disable physics body
+    if (item.body) {
+      item.body.enable = false;
+    }
+
+    // Add to pool if not full
+    if (this.collectiblePool.length < this.maxPoolSize) {
+      this.collectiblePool.push(item);
+    } else {
+      // Pool is full, destroy excess collectibles
+      item.destroy();
+    }
   }
 
   /**

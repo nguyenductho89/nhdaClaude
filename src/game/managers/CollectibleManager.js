@@ -42,6 +42,10 @@ export default class CollectibleManager {
 
     // Debug graphics reference
     this.debugGraphics = null;
+
+    // Cache iOS detection for performance
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
   }
 
   /**
@@ -173,14 +177,17 @@ export default class CollectibleManager {
     this.collectibles.add(container);
 
     // Floating animation - gentle bobbing in the sky
-    this.scene.tweens.add({
-      targets: container,
-      y: y - 20,
-      duration: 1200,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
+    // iOS optimization: Disable tweens for better performance
+    if (!this.isIOS) {
+      this.scene.tweens.add({
+        targets: container,
+        y: y - 20,
+        duration: 1200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
   }
 
   /**

@@ -52,14 +52,19 @@ export default class UIManager {
 
     // Event listeners (stored for cleanup)
     this.eventListeners = [];
+
+    // Cache device detection for performance (iOS optimization)
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)
+      || (window.innerWidth < 768);
   }
 
   /**
-   * Check if device is mobile
+   * Check if device is mobile (cached)
    */
   isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      || (window.innerWidth < 768);
+    return this.isMobile;
   }
 
   /**
@@ -79,8 +84,9 @@ export default class UIManager {
    * Initialize UI system
    */
   initialize() {
-    // Create effect pool
-    this.effectPool = new UIEffectPool(this.scene, 30);
+    // Create effect pool - reduce size on iOS for performance
+    const poolSize = this.isIOS ? 20 : 30;
+    this.effectPool = new UIEffectPool(this.scene, poolSize);
 
     // Setup event listeners (event-based updates)
     this.setupEventListeners();
@@ -168,7 +174,7 @@ export default class UIManager {
    */
   createUI() {
     const { width, height } = this.scene.scale;
-    const isMobile = this.isMobileDevice();
+    const isMobile = this.isMobile; // Use cached value
     const isLandscape = width > height;
 
     // Get device-specific configuration
@@ -328,7 +334,7 @@ export default class UIManager {
    * Update score and distance display (event-driven)
    */
   updateScoreDisplay(score, distance) {
-    const isMobile = this.isMobileDevice();
+    const isMobile = this.isMobile; // Use cached value
 
     // Mobile: compact format, Desktop: full format
     if (isMobile) {

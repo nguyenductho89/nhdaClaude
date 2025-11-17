@@ -23,7 +23,10 @@ export default class ObstacleManager {
 
     // Object pooling for obstacles
     this.obstaclePool = [];
-    this.maxPoolSize = 15; // Max obstacles to keep in pool
+    // iOS optimization: Smaller pool size to reduce memory usage
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
+    this.maxPoolSize = this.isIOS ? 10 : 15; // Max obstacles to keep in pool
 
     // Device-specific configuration
     this.deviceConfig = null;

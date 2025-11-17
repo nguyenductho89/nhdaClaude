@@ -13,6 +13,10 @@ export default class GroundManager {
 
     // Safe area insets (for positioning ground above bottom safe area)
     this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+    // Cache iOS detection for performance
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
   }
 
   /**
@@ -44,7 +48,9 @@ export default class GroundManager {
     console.log('  - Distance from bottom:', height - this.groundY);
 
     // Create a wide seamless ground texture
-    const groundWidth = Math.max(width * 2, 2048); // Ensure minimum width
+    // iOS optimization: Smaller texture width to reduce memory usage
+    const minWidth = this.isIOS ? 1024 : 2048;
+    const groundWidth = Math.max(width * 2, minWidth);
     const groundGraphics = this.scene.add.graphics();
 
     // Layer 1: Grass (top) - bright green

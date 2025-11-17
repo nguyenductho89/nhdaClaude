@@ -21,6 +21,10 @@ export default class PlayerManager {
     // Safe area insets (for landscape positioning)
     this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
     this.safePlayArea = null;
+
+    // Cache iOS detection for performance
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
   }
 
   /**
@@ -102,13 +106,15 @@ export default class PlayerManager {
     // Physics - Chrome Dino style (simple gravity)
     this.player.body.setGravityY(GAME_CONSTANTS.GRAVITY);
 
-    // DEBUG: Create graphics for hitbox visualization
-    this.playerHitboxGraphics = this.scene.add.graphics();
-    this.playerHitboxGraphics.setDepth(1000);
+    // DEBUG: Create graphics for hitbox visualization (skip on iOS for performance)
+    if (!this.isIOS) {
+      this.playerHitboxGraphics = this.scene.add.graphics();
+      this.playerHitboxGraphics.setDepth(1000);
 
-    // DEBUG: Create red border for player sprite
-    this.playerBorderGraphics = this.scene.add.graphics();
-    this.playerBorderGraphics.setDepth(1000);
+      // DEBUG: Create red border for player sprite
+      this.playerBorderGraphics = this.scene.add.graphics();
+      this.playerBorderGraphics.setDepth(1000);
+    }
 
     // No running animation tween - keep it simple and stable
     // Player stays at fixed position, only jumps

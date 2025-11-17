@@ -30,7 +30,12 @@ export default class GameStateManager {
     this.sceneTypes = ['mountain-river', 'street', 'forest'];
     this.currentSceneIndex = Phaser.Math.Between(0, this.sceneTypes.length - 1);
     this.sceneType = this.sceneTypes[this.currentSceneIndex];
-    this.sceneChangeInterval = 19000;
+    
+    // iOS optimization: Longer scene change interval to reduce switching overhead
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
+    this.sceneChangeInterval = this.isIOS ? 25000 : 19000; // 25s on iOS vs 19s on others
+    
     this.isSwitchingScene = false;
     this.lastSceneChangeTime = 0;
     this.visitedScenes = new Set([this.sceneType]);
@@ -163,24 +168,29 @@ export default class GameStateManager {
     const currentTime = Date.now();
     const timeSinceStart = currentTime - this.startTime;
 
-    console.log('=== SWITCH SCENE CALLED ===');
-    console.log('Time since start:', timeSinceStart, 'ms');
-    console.log('isSwitchingScene:', this.isSwitchingScene);
-    console.log('isGameOver:', this.isGameOver);
+    // iOS optimization: Reduce console logging for better performance
+    if (!this.isIOS) {
+      console.log('=== SWITCH SCENE CALLED ===');
+      console.log('Time since start:', timeSinceStart, 'ms');
+      console.log('isSwitchingScene:', this.isSwitchingScene);
+      console.log('isGameOver:', this.isGameOver);
+    }
 
     // Prevent concurrent scene switches
     if (this.isSwitchingScene) {
-      console.log('Scene switch blocked: already in progress');
+      if (!this.isIOS) console.log('Scene switch blocked: already in progress');
       return;
     }
 
     if (this.isGameOver) {
-      console.log('Scene switch blocked: game over');
+      if (!this.isIOS) console.log('Scene switch blocked: game over');
       return;
     }
 
-    console.log('Starting scene switch...');
-    console.log('Current scene:', this.sceneType, 'Index:', this.currentSceneIndex);
+    if (!this.isIOS) {
+      console.log('Starting scene switch...');
+      console.log('Current scene:', this.sceneType, 'Index:', this.currentSceneIndex);
+    }
     this.isSwitchingScene = true;
 
     // Update last scene change time

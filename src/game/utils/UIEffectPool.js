@@ -11,6 +11,12 @@ export class UIEffectPool {
       floatingText: [],
       notification: []
     };
+
+    // Cache device detection for performance (iOS optimization)
+    const ua = navigator.userAgent;
+    this.isIOS = /iPhone|iPad|iPod/i.test(ua);
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)
+      || (window.innerWidth < 768);
   }
 
   /**
@@ -113,18 +119,20 @@ export class UIEffectPool {
         const bg = this.scene.add.rectangle(0, 0, 400, 100, 0x000000, 0.8);
         bg.setOrigin(0.5);
 
-        // Check if mobile for font size
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-          || (window.innerWidth < 768);
+        // Use cached device detection
         const { width, height } = this.scene.scale;
         const isLandscape = width > height;
         
         // Adjust font size based on device and orientation
+        // iOS: Smaller fonts for better performance
         let fontSize, strokeThickness;
-        if (isMobile && isLandscape) {
+        if (this.isIOS && isLandscape) {
+          fontSize = '16px'; // Even smaller on iOS landscape
+          strokeThickness = 2;
+        } else if (this.isMobile && isLandscape) {
           fontSize = '18px'; // Smaller for landscape to fit better
           strokeThickness = 2;
-        } else if (isMobile) {
+        } else if (this.isMobile) {
           fontSize = '24px';
           strokeThickness = 3;
         } else {
@@ -174,6 +182,11 @@ export class UIEffectPool {
    * Play collect effect animation
    */
   playCollectEffect(x, y) {
+    // iOS optimization: Skip collect effect animation for better performance
+    if (this.isIOS) {
+      return; // Skip animation on iOS
+    }
+
     const circle = this.getCollectCircle();
     circle.setPosition(x, y);
 
@@ -193,16 +206,21 @@ export class UIEffectPool {
    * Play floating text effect
    */
   playFloatingText(x, y, text, color = '#FFD700') {
+    // iOS optimization: Simpler animation for better performance
     const floatingText = this.getFloatingText();
     floatingText.setPosition(x, y);
     floatingText.textObj.setText(text);
     floatingText.textObj.setColor(color);
 
+    // iOS: Faster, simpler animation
+    const duration = this.isIOS ? 600 : 1000;
+    const distance = this.isIOS ? 30 : 50;
+
     this.scene.tweens.add({
       targets: floatingText,
-      y: y - 50,
+      y: y - distance,
       alpha: 0,
-      duration: 1000,
+      duration: duration,
       ease: 'Power2',
       onComplete: () => {
         this.releaseFloatingText(floatingText);
@@ -217,21 +235,17 @@ export class UIEffectPool {
     const notification = this.getNotification();
     const { width, height } = this.scene.scale;
 
-    // Check if mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      || (window.innerWidth < 768);
-
-    // Check if landscape mode (width > height)
+    // Use cached device detection
     const isLandscape = width > height;
-    
-    // Check if iPhone (has safe area insets)
-    const isIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     // Position notification at same Y as combo text
+    // iOS: Slightly higher to avoid notch area
     let notificationY;
-    if (isMobile && isLandscape) {
+    if (this.isIOS && isLandscape) {
+      notificationY = 30; // Higher on iOS landscape to avoid notch
+    } else if (this.isMobile && isLandscape) {
       notificationY = 35; // Same as combo text in landscape
-    } else if (isMobile) {
+    } else if (this.isMobile) {
       notificationY = 60; // Same as combo text in portrait mobile
     } else {
       notificationY = 100; // Same as combo text in desktop

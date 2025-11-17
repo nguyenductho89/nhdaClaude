@@ -34,9 +34,13 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
 
+    // Device detection - cache for performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    this.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    this.isMobile = isMobile;
+
     // Debug settings - tắt trên mobile để tối ưu performance
     // Có thể bật bằng query param ?debug=true
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const urlParams = new URLSearchParams(window.location.search);
     this.DEBUG_HITBOXES = !isMobile && (urlParams.get('debug') === 'true');
 
@@ -68,6 +72,11 @@ export default class GameScene extends Phaser.Scene {
 
     // Debug graphics
     this.debugGraphics = null;
+
+    // iOS performance optimizations
+    this.frameCount = 0; // For throttling updates on iOS
+    this.lastScoreUpdate = 0; // Cache score calculation on iOS
+    this.scoreUpdateInterval = this.isIOS ? 2 : 1; // Update score every 2 frames on iOS
   }
 
   preload() {
@@ -297,10 +306,9 @@ export default class GameScene extends Phaser.Scene {
     console.log('Playable Height:', this.safePlayArea.height);
     console.log('═══════════════════════════════════════════════');
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
     // Force fullscreen on mobile devices
-    if (isMobile) {
+    // iOS: More aggressive fullscreen to maximize performance
+    if (this.isIOS || this.isMobile) {
       this.forceFullscreenOnMobile();
     } else {
       // Desktop: just try normal fullscreen
@@ -363,12 +371,19 @@ export default class GameScene extends Phaser.Scene {
       this.scoringSystem
     );
 
-    // Create debug graphics
-    this.debugGraphics = this.add.graphics();
-    this.debugGraphics.setDepth(1000);
-    this.playerManager.setDebugGraphics = this.debugGraphics;
-    this.obstacleManager.setDebugGraphics(this.debugGraphics);
-    this.collectibleManager.setDebugGraphics(this.debugGraphics);
+    // Create debug graphics (only if debug mode enabled, skip on iOS for performance)
+    if (this.DEBUG_HITBOXES && !this.isIOS) {
+      this.debugGraphics = this.add.graphics();
+      this.debugGraphics.setDepth(1000);
+      this.playerManager.setDebugGraphics = this.debugGraphics;
+      this.obstacleManager.setDebugGraphics(this.debugGraphics);
+      this.collectibleManager.setDebugGraphics(this.debugGraphics);
+    } else {
+      // iOS: Don't create debug graphics even if debug mode is enabled
+      // Safari WebGL has issues with frequent graphics.clear() calls
+      this.debugGraphics = null;
+      console.log('🍎 iOS: Debug graphics disabled for performance');
+    }
 
     // ✅ Setup game timers (event-based - no timer callback needed)
     this.gameStateManager.setupGameTimers(
@@ -401,48 +416,58 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // Early exit if game over - critical for performance
     if (this.gameStateManager.isOver()) return;
 
-    const deltaInSeconds = delta / 1000;
+    // Increment frame counter for throttling
+    this.frameCount++;
 
-    // Update distance
+    const deltaInSeconds = delta / 1000;
+    const scrollSpeed = this.gameStateManager.getScrollSpeed();
+
+    // Update distance (always needed)
     this.gameStateManager.updateDistance(deltaInSeconds);
 
-    // Update score
-    const distanceScore = Math.floor(
-      this.gameStateManager.distanceTraveled * GAME_CONSTANTS.DISTANCE_SCORE_MULTIPLIER
-    );
-    this.scoringSystem.score = distanceScore;
+    // iOS optimization: Throttle score calculation (every 2 frames instead of every frame)
+    // Score updates are not visually critical at 60fps, so 30fps updates are fine
+    const shouldUpdateScore = (this.frameCount % this.scoreUpdateInterval === 0) || !this.isIOS;
+    if (shouldUpdateScore) {
+      // Update score
+      const distanceScore = Math.floor(
+        this.gameStateManager.distanceTraveled * GAME_CONSTANTS.DISTANCE_SCORE_MULTIPLIER
+      );
+      this.scoringSystem.score = distanceScore;
 
-    // Add item scores
-    const itemsCollected = this.collectibleManager.getItemsCollected();
-    for (const [itemType, count] of Object.entries(itemsCollected)) {
-      this.scoringSystem.score += count * GAME_CONSTANTS.ITEM_SCORES[itemType];
+      // Add item scores
+      const itemsCollected = this.collectibleManager.getItemsCollected();
+      for (const [itemType, count] of Object.entries(itemsCollected)) {
+        this.scoringSystem.score += count * GAME_CONSTANTS.ITEM_SCORES[itemType];
+      }
+
+      // ✅ Emit event instead of direct UI update
+      gameEvents.emitEvent(
+        GAME_EVENTS.SCORE_CHANGED,
+        this.scoringSystem.score,
+        this.gameStateManager.distanceTraveled
+      );
     }
 
-    // ✅ Emit event instead of direct UI update
-    gameEvents.emitEvent(
-      GAME_EVENTS.SCORE_CHANGED,
-      this.scoringSystem.score,
-      this.gameStateManager.distanceTraveled
-    );
-
-    // Update parallax backgrounds
+    // Update parallax backgrounds (always needed for smooth scrolling)
     this.backgroundManager.updateParallax(
       deltaInSeconds,
-      this.gameStateManager.getScrollSpeed()
+      scrollSpeed
     );
 
-    // Update ground
+    // Update ground (always needed for smooth scrolling)
     this.groundManager.updateGround(
       deltaInSeconds,
-      this.gameStateManager.getScrollSpeed()
+      scrollSpeed
     );
 
-    // Update obstacles
+    // Update obstacles (always needed for collision detection)
     this.obstacleManager.updateObstacles(
       deltaInSeconds,
-      this.gameStateManager.getScrollSpeed()
+      scrollSpeed
     );
     this.obstacleManager.updateSpawnTimer(
       delta,
@@ -452,10 +477,10 @@ export default class GameScene extends Phaser.Scene {
       this.gameStateManager.getCurrentSpeedTier()
     );
 
-    // Update collectibles
+    // Update collectibles (always needed for collision detection)
     this.collectibleManager.updateCollectibles(
       deltaInSeconds,
-      this.gameStateManager.getScrollSpeed()
+      scrollSpeed
     );
 
     // Spawn collectibles
@@ -472,8 +497,8 @@ export default class GameScene extends Phaser.Scene {
       this.jump();
     }
 
-    // DEBUG: Draw hitboxes
-    if (this.DEBUG_HITBOXES) {
+    // DEBUG: Draw hitboxes (only if enabled and not on iOS for performance)
+    if (this.DEBUG_HITBOXES && !this.isIOS) {
       this.debugGraphics.clear();
       this.playerManager.debugDrawPlayerHitbox(this.DEBUG_HITBOXES);
       this.obstacleManager.debugDrawHitboxes(this.DEBUG_HITBOXES);

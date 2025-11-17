@@ -34,8 +34,11 @@ export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
 
-    // Debug settings
-    this.DEBUG_HITBOXES = true;
+    // Debug settings - tắt trên mobile để tối ưu performance
+    // Có thể bật bằng query param ?debug=true
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const urlParams = new URLSearchParams(window.location.search);
+    this.DEBUG_HITBOXES = !isMobile && (urlParams.get('debug') === 'true');
 
     // Game initialization flags
     this.isWaitingForLandscape = false;

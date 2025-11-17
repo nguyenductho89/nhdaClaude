@@ -4,6 +4,11 @@ import Phaser from 'phaser';
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || window.innerWidth < 768;
 
+// Tối ưu resolution trên mobile để cải thiện performance
+// Giới hạn resolution tối đa = 1.5 trên mobile (thay vì devicePixelRatio có thể = 2-3)
+const devicePixelRatio = window.devicePixelRatio || 1;
+const maxResolution = isMobile ? Math.min(devicePixelRatio, 1.5) : devicePixelRatio;
+
 export const gameConfig = {
   type: Phaser.WEBGL, // Force WebGL for better rendering quality
   width: window.innerWidth,
@@ -24,8 +29,8 @@ export const gameConfig = {
     parent: 'game-container',
     fullscreenTarget: 'game-container',
     expandParent: true,
-    // High DPI support for sharp rendering on Retina/mobile displays
-    resolution: window.devicePixelRatio || 1,
+    // Tối ưu resolution trên mobile để giảm số pixel cần render
+    resolution: maxResolution,
     // iOS specific scale settings
     min: {
       width: 320,

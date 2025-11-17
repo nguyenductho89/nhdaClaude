@@ -52,6 +52,10 @@ export default class SceneBackgroundManager {
   createMountainRiverScene() {
     const { width, height } = this.scene.scale;
 
+    // Detect mobile để tối ưu số lượng particles
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || window.innerWidth < 768;
+
     // Sky layer with beautiful gradient (top to bottom: dark blue to light blue)
     const skyGraphics = this.scene.add.graphics();
     skyGraphics.fillGradientStyle(0x5B9BD5, 0x5B9BD5, 0x87CEEB, 0x87CEEB, 1);
@@ -66,9 +70,10 @@ export default class SceneBackgroundManager {
     // Sun glow
     const sunGlow = this.scene.add.circle(width * 0.85, sunY, 55, 0xFDB813, 0.3);
 
-    // Clouds layer (beautiful fluffy clouds)
+    // Clouds layer (beautiful fluffy clouds) - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    for (let i = 0; i < 8; i++) {
+    const cloudCount = isMobile ? 4 : 8;
+    for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 250 + Math.random() * 150;
       const cloudY = this.safeAreaTop + 40 + Math.random() * 120;
 
@@ -87,9 +92,10 @@ export default class SceneBackgroundManager {
       this.cloudsLayer.add(cloudContainer);
     }
 
-    // Birds flying (chim bay)
+    // Birds flying (chim bay) - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    for (let i = 0; i < 5; i++) {
+    const birdCount = isMobile ? 3 : 5;
+    for (let i = 0; i < birdCount; i++) {
       const birdX = Math.random() * width;
       const birdY = this.safeAreaTop + 80 + Math.random() * 150;
 
@@ -176,9 +182,10 @@ export default class SceneBackgroundManager {
     this.riverBg = this.scene.add.image(0, height - 100, 'river').setOrigin(0);
     this.riverBg2 = this.scene.add.image(width * 2, height - 100, 'river').setOrigin(0);
 
-    // Water waves (sóng nước)
+    // Water waves (sóng nước) - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    for (let i = 0; i < 10; i++) {
+    const waveCount = isMobile ? 5 : 10;
+    for (let i = 0; i < waveCount; i++) {
       const waveX = i * 200;
       const waveY = height - 70;
 
@@ -221,6 +228,10 @@ export default class SceneBackgroundManager {
   createStreetScene() {
     const { width, height } = this.scene.scale;
 
+    // Detect mobile để tối ưu số lượng particles
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || window.innerWidth < 768;
+
     // Sky layer - urban evening gradient (orange/purple sunset)
     const skyGraphics = this.scene.add.graphics();
     skyGraphics.fillGradientStyle(0xFF7F50, 0xFF7F50, 0x9370DB, 0x9370DB, 1);
@@ -234,9 +245,10 @@ export default class SceneBackgroundManager {
     sun.setAlpha(0.8);
     const sunGlow = this.scene.add.circle(width * 0.15, sunY, 70, 0xFF6347, 0.3);
 
-    // Clouds layer
+    // Clouds layer - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    for (let i = 0; i < 6; i++) {
+    const cloudCount = isMobile ? 3 : 6;
+    for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 300 + Math.random() * 150;
       const cloudY = this.safeAreaTop + 50 + Math.random() * 100;
 
@@ -251,9 +263,10 @@ export default class SceneBackgroundManager {
       this.cloudsLayer.add(cloudContainer);
     }
 
-    // Birds flying
+    // Birds flying - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    for (let i = 0; i < 4; i++) {
+    const birdCount = isMobile ? 2 : 4;
+    for (let i = 0; i < birdCount; i++) {
       const birdX = Math.random() * width;
       const birdY = this.safeAreaTop + 80 + Math.random() * 120;
 
@@ -354,9 +367,10 @@ export default class SceneBackgroundManager {
     this.riverBg = this.scene.add.image(0, height - 100, 'street').setOrigin(0);
     this.riverBg2 = this.scene.add.image(width * 2, height - 100, 'street').setOrigin(0);
 
-    // Street lights
+    // Street lights - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    for (let i = 0; i < 8; i++) {
+    const lightCount = isMobile ? 4 : 8;
+    for (let i = 0; i < lightCount; i++) {
       const lightX = i * 250 + 100;
       const lightY = height - 120;
 
@@ -395,6 +409,10 @@ export default class SceneBackgroundManager {
   createForestScene() {
     const { width, height } = this.scene.scale;
 
+    // Detect mobile để tối ưu số lượng particles
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || window.innerWidth < 768;
+
     console.log('🌲 Creating forest scene...');
 
     // === MYSTICAL FOREST SCENE ===
@@ -414,10 +432,11 @@ export default class SceneBackgroundManager {
     const sun = this.scene.add.circle(sunX, sunY, 45, 0xFFE87C, 0.6);
     const sunGlow = this.scene.add.circle(sunX, sunY, 70, 0xFFE87C, 0.2);
 
-    // 3. LIGHT BEAMS - Mystical sun rays through canopy
+    // 3. LIGHT BEAMS - Mystical sun rays through canopy - giảm số lượng trên mobile
     const beamGraphics = this.scene.add.graphics();
     beamGraphics.fillStyle(0xFFFFFF, 0.1);
-    for (let i = 0; i < 5; i++) {
+    const beamCount = isMobile ? 3 : 5;
+    for (let i = 0; i < beamCount; i++) {
       const beamX = width * (0.3 + i * 0.15);
       const beamWidth = 40 + Math.random() * 30;
       const beamHeight = height * 0.6;
@@ -429,9 +448,10 @@ export default class SceneBackgroundManager {
       );
     }
 
-    // 4. CLOUDS/MIST - Misty forest atmosphere
+    // 4. CLOUDS/MIST - Misty forest atmosphere - giảm số lượng trên mobile
     this.cloudsLayer = this.scene.add.group();
-    for (let i = 0; i < 5; i++) {
+    const cloudCount = isMobile ? 3 : 5;
+    for (let i = 0; i < cloudCount; i++) {
       const cloudX = i * 350 + Math.random() * 100;
       const cloudY = this.safeAreaTop + 100 + Math.random() * 150;
       const cloudContainer = this.scene.add.container(cloudX, cloudY);
@@ -446,9 +466,10 @@ export default class SceneBackgroundManager {
       this.cloudsLayer.add(cloudContainer);
     }
 
-    // 5. BIRDS/BUTTERFLIES
+    // 5. BIRDS/BUTTERFLIES - giảm số lượng trên mobile
     this.birdsLayer = this.scene.add.group();
-    for (let i = 0; i < 6; i++) {
+    const butterflyCount = isMobile ? 3 : 6;
+    for (let i = 0; i < butterflyCount; i++) {
       const butterflyX = Math.random() * width;
       const butterflyY = this.safeAreaTop + 100 + Math.random() * 200;
 
@@ -578,9 +599,10 @@ export default class SceneBackgroundManager {
     this.riverBg = this.scene.add.image(0, height - 100, 'forestFloor').setOrigin(0);
     this.riverBg2 = this.scene.add.image(width * 2, height - 100, 'forestFloor').setOrigin(0);
 
-    // 9. FIREFLIES/PARTICLES - Magical forest atmosphere
+    // 9. FIREFLIES/PARTICLES - Magical forest atmosphere - giảm số lượng trên mobile
     this.wavesLayer = this.scene.add.group();
-    for (let i = 0; i < 12; i++) {
+    const fireflyCount = isMobile ? 6 : 12;
+    for (let i = 0; i < fireflyCount; i++) {
       const fireflyX = i * 150 + Math.random() * 100;
       const fireflyY = height - 200 + Math.random() * 100;
 

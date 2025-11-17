@@ -16,7 +16,7 @@ export const androidUIConfig = {
 
   // Safe area insets cho LANDSCAPE
   getSafeAreaInsets: () => {
-    let top = 0, right = 0, bottom = 0, left = 0;
+    let top = 0, right = 0, bottom = 25, left = 0;
     console.log('🤖 Android Safe Area (Landscape):', { top, right, bottom, left });
     return { top, right, bottom, left };
   },

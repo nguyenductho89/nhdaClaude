@@ -308,25 +308,38 @@ export default class UIManager {
       return;
     }
 
-    // Position accounting for safe areas
+    // Calculate button position
+    // X: from right edge, accounting for safe area
     const rightMargin = configRightMargin + this.safeAreaInsets.right;
-    const bottomMargin = configBottomMargin + this.safeAreaInsets.bottom;
-
     const buttonX = width - buttonSize / 2 - rightMargin;
-    const buttonY = height - buttonSize / 2 - bottomMargin;
 
-    console.log('🎮 Jump Button Position:', {
-      deviceType: config.deviceType,
-      buttonX,
-      buttonY,
-      rightSafeArea: this.safeAreaInsets.right,
-      bottomSafeArea: this.safeAreaInsets.bottom,
-      totalRightMargin: rightMargin,
-      totalBottomMargin: bottomMargin
-    });
+    // Y: from bottom, using PLAYABLE area (above safe area bottom)
+    // safePlayArea.bottom is already the bottom of playable area
+    const playableBottom = this.safePlayArea ? this.safePlayArea.bottom : height;
+    const buttonY = playableBottom - buttonSize / 2 - configBottomMargin;
+
+    // Sanity check: make sure button is not off-screen
+    const minY = buttonSize / 2 + 10; // At least 10px from top
+    const maxY = height - buttonSize / 2 - 10; // At least 10px from bottom
+    const finalButtonY = Math.max(minY, Math.min(buttonY, maxY));
+
+    console.log('🎮 Jump Button Position Calculation:');
+    console.log('  - Device type:', config.deviceType);
+    console.log('  - Screen size:', `${width}x${height}`);
+    console.log('  - Button size:', buttonSize);
+    console.log('  - Config bottom margin:', configBottomMargin);
+    console.log('  - Safe area bottom:', this.safeAreaInsets.bottom);
+    console.log('  - Playable bottom:', playableBottom);
+    console.log('  - Calculated button Y:', buttonY);
+    console.log('  - Final button Y (clamped):', finalButtonY);
+    console.log('  - Button X:', buttonX);
+
+    if (finalButtonY !== buttonY) {
+      console.warn('⚠️ Button Y was clamped! Original:', buttonY, 'Clamped:', finalButtonY);
+    }
 
     // Create container for jump button
-    this.jumpButtonContainer = this.scene.add.container(buttonX, buttonY);
+    this.jumpButtonContainer = this.scene.add.container(buttonX, finalButtonY);
     this.jumpButtonContainer.setScrollFactor(0);
     this.jumpButtonContainer.setDepth(100);
 

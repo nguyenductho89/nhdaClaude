@@ -67,7 +67,6 @@ export const gameConfig = {
     target: isIOS ? 50 : 60,  // Lower target FPS on iOS
     smoothStep: true
   }
-}
 };
 
 // Game constants for Endless Runner

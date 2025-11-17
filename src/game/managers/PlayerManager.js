@@ -12,8 +12,8 @@ export default class PlayerManager {
     this.playerBorderGraphics = null;
 
     // Player constants
-    this.playerWidth = 80;
-    this.playerHeight = 120;
+    this.playerWidth = 120;
+    this.playerHeight = 180;
 
     // Device-specific configuration
     this.deviceConfig = null;

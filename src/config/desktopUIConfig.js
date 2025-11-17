@@ -43,10 +43,12 @@ export const desktopUIConfig = {
     bottomMargin: 0
   },
 
-  // Player positioning
+  // Player positioning and size
   player: {
     baseX: 150,  // Fixed position
-    baseXLarge: 150
+    baseXLarge: 150,
+    width: 150,  // Player width for desktop (larger)
+    height: 180  // Player height for desktop (larger)
   },
 
   // Spawn positions for obstacles/collectibles

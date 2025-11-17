@@ -11,9 +11,9 @@ export default class PlayerManager {
     this.playerHitboxGraphics = null;
     this.playerBorderGraphics = null;
 
-    // Player constants
-    this.playerWidth = 120;
-    this.playerHeight = 180;
+    // Player constants (will be set from device config)
+    this.playerWidth = 120;  // Default fallback
+    this.playerHeight = 140; // Default fallback
 
     // Device-specific configuration
     this.deviceConfig = null;
@@ -31,6 +31,14 @@ export default class PlayerManager {
     this.deviceConfig = config;
     this.safeAreaInsets = insets;
     this.safePlayArea = playArea;
+
+    // Set player size from device config
+    if (config.player && config.player.width && config.player.height) {
+      this.playerWidth = config.player.width;
+      this.playerHeight = config.player.height;
+      console.log('🏃 PlayerManager: Player size from config:', this.playerWidth, 'x', this.playerHeight);
+    }
+
     console.log('🏃 PlayerManager: Device Config:', config.deviceType);
     console.log('🏃 PlayerManager: Safe Area Insets:', insets);
   }

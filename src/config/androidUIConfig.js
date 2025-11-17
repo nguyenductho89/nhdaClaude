@@ -37,10 +37,12 @@ export const androidUIConfig = {
     lineSpacing: 18
   },
 
-  // Player positioning
+  // Player positioning and size
   player: {
     baseX: 100,  // Base X position for smaller screens
-    baseXLarge: 150  // Base X position for larger screens
+    baseXLarge: 150,  // Base X position for larger screens
+    width: 90,   // Player width for mobile
+    height: 110  // Player height for mobile
   },
 
   // Spawn positions for obstacles/collectibles

@@ -12,13 +12,13 @@ export default class CollectibleManager {
     this.scene = scene;
     this.collectibles = null;
 
-    // Collectible configuration
+    // Collectible configuration (no text labels for better performance)
     this.itemConfig = {
-      tien: { emoji: '💰', valueText: '+10', size: 36, hitbox: 30 },
-      tin: { emoji: '❤️', valueText: '+50', size: 40, hitbox: 32 },
-      nha: { emoji: '🏡', valueText: '+100', size: 44, hitbox: 36 },
-      xe: { emoji: '🚗', valueText: '+150', size: 44, hitbox: 36 },
-      vang: { emoji: '💍', valueText: '+300', size: 44, hitbox: 36 }
+      tien: { emoji: '💰', size: 36, hitbox: 30 },
+      tin: { emoji: '❤️', size: 40, hitbox: 32 },
+      nha: { emoji: '🏡', size: 44, hitbox: 36 },
+      xe: { emoji: '🚗', size: 44, hitbox: 36 },
+      vang: { emoji: '💍', size: 44, hitbox: 36 }
     };
 
     // Tracking
@@ -125,12 +125,10 @@ export default class CollectibleManager {
       container.x = spawnX;
       container.y = y;
 
-      // Update emoji and value text
+      // Update emoji only (no text label)
       const emoji = container.list[0]; // First child is emoji
-      const valueLabel = container.list[1]; // Second child is value text
       emoji.setText(config.emoji);
       emoji.setFontSize(config.size);
-      valueLabel.setText(config.valueText);
 
       // Update physics hitbox
       container.body.setSize(config.hitbox, config.hitbox);
@@ -144,21 +142,12 @@ export default class CollectibleManager {
       // Create new collectible if pool is empty
       container = this.scene.add.container(spawnX, y);
 
-      // Create emoji (centered)
+      // Create emoji only (no text label for better performance)
       const emoji = this.scene.add.text(0, 0, config.emoji, {
         fontSize: `${config.size}px`
       }).setOrigin(0.5, 0.5);
 
-      // Add value text above emoji (small)
-      const valueLabel = this.scene.add.text(0, -28, config.valueText, {
-        fontSize: '11px',
-        fontFamily: 'Arial',
-        color: '#FFD700',
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        padding: { x: 4, y: 2 }
-      }).setOrigin(0.5, 0.5);
-
-      container.add([emoji, valueLabel]);
+      container.add([emoji]);
 
       // Physics on container
       this.scene.physics.add.existing(container);

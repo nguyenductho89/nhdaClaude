@@ -2,10 +2,10 @@
  * iPhone UI Configuration (LANDSCAPE MODE)
  *
  * Safe Area trong landscape:
- * - LEFT: Notch (~44-50px)
- * - RIGHT: Home indicator (~34-44px)
- * - BOTTOM: Có thể có góc màn hình cong (~21px)
- * - TOP: Thường ~0px
+ * - LEFT: Notch (~44-50px) - bên trái màn hình
+ * - RIGHT: Home indicator (~34-44px) - bên phải màn hình
+ * - TOP: Status bar nếu có (~20-24px) hoặc 0px nếu fullscreen
+ * - BOTTOM: Thường ~0px (không có gì)
  */
 
 export const iPhoneUIConfig = {
@@ -14,65 +14,16 @@ export const iPhoneUIConfig = {
 
   // Safe area insets cho LANDSCAPE (đọc từ CSS env variables + fallback)
   getSafeAreaInsets: () => {
-    let top = 0, right = 0, bottom = 0, left = 0;
-
-    // Try to read from CSS environment variables
-    if (typeof getComputedStyle !== 'undefined') {
-      const testDiv = document.createElement('div');
-      testDiv.style.position = 'fixed';
-      testDiv.style.top = '0';
-      testDiv.style.left = '0';
-      testDiv.style.width = '1px';
-      testDiv.style.height = '1px';
-      testDiv.style.visibility = 'hidden';
-      testDiv.style.pointerEvents = 'none';
-
-      // Apply safe area padding
-      testDiv.style.paddingTop = 'env(safe-area-inset-top, 0px)';
-      testDiv.style.paddingRight = 'env(safe-area-inset-right, 0px)';
-      testDiv.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
-      testDiv.style.paddingLeft = 'env(safe-area-inset-left, 0px)';
-
-      // Fallback for older iOS
-      testDiv.style.paddingTop = 'constant(safe-area-inset-top, 0px)';
-      testDiv.style.paddingRight = 'constant(safe-area-inset-right, 0px)';
-      testDiv.style.paddingBottom = 'constant(safe-area-inset-bottom, 0px)';
-      testDiv.style.paddingLeft = 'constant(safe-area-inset-left, 0px)';
-
-      document.body.appendChild(testDiv);
-      const computed = window.getComputedStyle(testDiv);
-      top = parseFloat(computed.paddingTop) || 0;
-      right = parseFloat(computed.paddingRight) || 0;
-      bottom = parseFloat(computed.paddingBottom) || 0;
-      left = parseFloat(computed.paddingLeft) || 0;
-      document.body.removeChild(testDiv);
-    }
-
-    // Fallback values for iPhone in landscape
-    // iPhone with notch: left=44, right=34, bottom=21
-    // Older iPhone: smaller values
-    if (left === 0 && right === 0) {
-      console.warn('⚠️ iPhone: Could not read safe area, using fallback');
-      left = 44;   // Notch side
-      right = 44;  // Home indicator side (increased to be safe)
-      bottom = 21; // Rounded corners
-    }
-
-    // Make sure bottom has at least some padding for rounded corners
-    if (bottom < 10) {
-      bottom = 21; // Ensure enough space for rounded corners
-    }
-
-    console.log('🍎 iPhone Safe Area (Landscape):', { top, right, bottom, left });
+    let top = 0, right = 0, bottom = 80, left = 0;
     return { top, right, bottom, left };
   },
 
   // UI Margins (added to safe area insets)
   margins: {
-    top: 8,
-    left: 10,
-    right: 10,
-    bottom: 15  // Extra margin for bottom to avoid rounded corners
+    top: 8,     // Margin from top (thêm vào safe area top nếu có)
+    left: 10,   // Margin from left (thêm vào notch safe area)
+    right: 10,  // Margin from right (thêm vào home indicator safe area)
+    bottom: 8   // Margin from bottom (landscape không cần nhiều)
   },
 
   // Font sizes for landscape
@@ -86,8 +37,8 @@ export const iPhoneUIConfig = {
   // Jump button configuration
   jumpButton: {
     size: 80,
-    rightMargin: 15,  // Extra margin from right edge
-    bottomMargin: 20  // Extra margin from bottom edge
+    rightMargin: 15,  // Extra margin from right edge (cộng với home indicator)
+    bottomMargin: 10  // Margin from bottom (landscape không có navigation bar ở dưới)
   },
 
   // Player positioning

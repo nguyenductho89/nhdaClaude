@@ -50,16 +50,19 @@ export default class PlayerManager {
     const basePlayerX = width < 600 ? config.player.baseX : config.player.baseXLarge;
     const playerX = basePlayerX + this.safeAreaInsets.left;
 
-    console.log('🏃 Player X Position:', {
-      deviceType: config.deviceType,
-      screenWidth: width,
-      baseX: basePlayerX,
-      leftSafeArea: this.safeAreaInsets.left,
-      finalX: playerX
-    });
-
     // Player Y position - use default origin (0.5, 0.5) for simpler calculation
     const playerY = groundY - this.playerHeight / 2;
+
+    console.log('🏃 Player Position Calculation:');
+    console.log('  - Device type:', config.deviceType);
+    console.log('  - Screen width:', width, 'height:', height);
+    console.log('  - Base X:', basePlayerX);
+    console.log('  - Left safe area:', this.safeAreaInsets.left);
+    console.log('  - Final Player X:', playerX);
+    console.log('  - Ground Y:', groundY);
+    console.log('  - Player height:', this.playerHeight);
+    console.log('  - Final Player Y:', playerY);
+    console.log('  - Distance from bottom:', height - playerY);
 
     // Create player using the loaded image
     this.player = this.scene.physics.add.sprite(playerX, playerY, 'playerImage');

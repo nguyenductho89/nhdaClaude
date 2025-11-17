@@ -10,6 +10,17 @@ export default class GroundManager {
     this.ground = null; // Physics body
     this.groundY = 0;
     this.groundWidth = 0;
+
+    // Safe area insets (for positioning ground above bottom safe area)
+    this.safeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+  }
+
+  /**
+   * Set safe area insets to calculate ground position
+   */
+  setSafeAreaInsets(insets) {
+    this.safeAreaInsets = insets;
+    console.log('🌍 GroundManager: Safe Area Insets set:', insets);
   }
 
   /**
@@ -18,9 +29,19 @@ export default class GroundManager {
   createGround() {
     const { width, height } = this.scene.scale;
 
-    // Ground at the very bottom - thinner ground for more play space
+    // Ground at the bottom - ABOVE safe area bottom (để tránh bị che)
     const groundHeight = 25;
-    this.groundY = height - groundHeight;
+    const safeAreaBottom = this.safeAreaInsets.bottom || 0;
+
+    // Calculate groundY: position ground ABOVE bottom safe area
+    this.groundY = height - groundHeight - safeAreaBottom;
+
+    console.log('🌍 Ground Position Calculation:');
+    console.log('  - Screen height:', height);
+    console.log('  - Ground height:', groundHeight);
+    console.log('  - Safe area bottom:', safeAreaBottom);
+    console.log('  - Ground Y position:', this.groundY);
+    console.log('  - Distance from bottom:', height - this.groundY);
 
     // Create a wide seamless ground texture
     const groundWidth = Math.max(width * 2, 2048); // Ensure minimum width

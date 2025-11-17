@@ -272,7 +272,10 @@ export default class GameScene extends Phaser.Scene {
 
     // Get device-specific configuration
     this.deviceConfig = getDeviceConfig();
-    console.log('🎮 Using Device Config:', this.deviceConfig.deviceType);
+    console.log('═══════════════════════════════════════════════');
+    console.log('🎮 GAME INITIALIZATION - Device Config');
+    console.log('═══════════════════════════════════════════════');
+    console.log('Device Type:', this.deviceConfig.deviceType);
 
     // Get device info and safe area insets
     logDeviceInfo();
@@ -281,7 +284,15 @@ export default class GameScene extends Phaser.Scene {
     this.safeAreaInsets = getSafeAreaInsets();
     this.safePlayArea = getSafePlayArea(this.scale.width, this.scale.height);
 
-    console.log('🎮 Safe Play Area:', this.safePlayArea);
+    console.log('─────────────────────────────────────────────');
+    console.log('📐 SCREEN & SAFE AREA INFO');
+    console.log('─────────────────────────────────────────────');
+    console.log('Screen Size:', `${this.scale.width}x${this.scale.height}`);
+    console.log('Safe Area Insets:', this.safeAreaInsets);
+    console.log('Safe Play Area:', this.safePlayArea);
+    console.log('Playable Width:', this.safePlayArea.width);
+    console.log('Playable Height:', this.safePlayArea.height);
+    console.log('═══════════════════════════════════════════════');
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -303,6 +314,7 @@ export default class GameScene extends Phaser.Scene {
     this.backgroundManager.createParallaxBackground(this.gameStateManager.getSceneType());
 
     this.groundManager = new GroundManager(this);
+    this.groundManager.setSafeAreaInsets(this.safeAreaInsets);
     this.groundManager.createGround();
 
     this.playerManager = new PlayerManager(this);

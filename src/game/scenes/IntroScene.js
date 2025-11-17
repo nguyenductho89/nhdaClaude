@@ -90,7 +90,6 @@ export default class IntroScene extends Phaser.Scene {
       align: 'center'
     }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
       // TODO: Implement settings panel
-      console.log('Settings clicked');
     });
 
     // Animate title

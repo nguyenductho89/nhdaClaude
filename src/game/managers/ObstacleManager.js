@@ -45,8 +45,6 @@ export default class ObstacleManager {
   setDeviceConfig(config, playArea) {
     this.deviceConfig = config;
     this.safePlayArea = playArea;
-    console.log('🚧 ObstacleManager: Device Config:', config.deviceType);
-    console.log('🚧 ObstacleManager: Safe Play Area:', playArea);
   }
 
   /**
@@ -236,24 +234,19 @@ export default class ObstacleManager {
 
     // Verify this is actually an obstacle (not background element)
     if (!obstacle || !this.obstacles.contains(obstacle)) {
-      console.warn('⚠️ False collision detected with:', obstacle);
       return;
     }
 
     // Double-check obstacle is valid and has type data
     const obstacleType = obstacle.getData('type');
     if (!obstacleType) {
-      console.warn('⚠️ Obstacle missing type data:', obstacle);
       return;
     }
 
     // Check if it's marked as decoration (should not collide)
     if (obstacle.getData('isDecoration')) {
-      console.warn('⚠️ Collision with decoration element ignored:', obstacle);
       return;
     }
-
-    console.log('💥 Hit obstacle:', obstacleType);
 
     // Game over on collision
     if (onGameOver) {

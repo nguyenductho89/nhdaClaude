@@ -11,7 +11,6 @@ export const desktopUIConfig = {
 
   // No safe area insets needed for desktop
   getSafeAreaInsets: () => {
-    console.log('🖥️ Desktop: No safe area insets needed');
     return {
       top: 0,
       right: 0,

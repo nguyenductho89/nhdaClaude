@@ -55,8 +55,6 @@ export default class CollectibleManager {
   setDeviceConfig(config, playArea) {
     this.deviceConfig = config;
     this.safePlayArea = playArea;
-    console.log('✨ CollectibleManager: Device Config:', config.deviceType);
-    console.log('✨ CollectibleManager: Safe Play Area:', playArea);
   }
 
   /**

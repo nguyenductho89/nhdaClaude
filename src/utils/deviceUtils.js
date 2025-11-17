@@ -35,13 +35,10 @@ export const getDeviceConfig = () => {
   const device = detectDevice();
 
   if (device.isIPhone) {
-    console.log('📱 Loading iPhone UI Config');
     return iPhoneUIConfig;
   } else if (device.isAndroid) {
-    console.log('📱 Loading Android UI Config');
     return androidUIConfig;
   } else {
-    console.log('🖥️ Loading Desktop UI Config');
     return desktopUIConfig;
   }
 };
@@ -89,26 +86,6 @@ export const logDeviceInfo = () => {
   const config = getDeviceConfig();
   const insets = getSafeAreaInsets();
   const orientation = isLandscape() ? 'LANDSCAPE' : 'PORTRAIT';
-
-  console.log('=== DEVICE INFO ===');
-  console.log('Device Type:', config.deviceType);
-  console.log('Device:', device);
-  console.log('Orientation:', orientation);
-  console.log('Screen:', `${window.innerWidth}x${window.innerHeight}`);
-  console.log('Safe Area Insets:', insets);
-  console.log('UI Config:', {
-    margins: config.margins,
-    fonts: config.fonts,
-    jumpButton: config.jumpButton
-  });
-
-  if (isLandscape()) {
-    console.log('🎮 LANDSCAPE MODE:');
-    console.log('  - Top safe area:', insets.top + 'px');
-    console.log('  - Right safe area:', insets.right + 'px');
-    console.log('  - Bottom safe area:', insets.bottom + 'px');
-    console.log('  - Left safe area:', insets.left + 'px');
-  }
 
   return { device, config, insets, orientation };
 };

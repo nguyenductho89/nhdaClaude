@@ -49,8 +49,6 @@ export default class GameStateManager {
 
     // Safe area
     this.safeAreaTop = 0;
-
-    console.log('Starting with scene:', this.sceneType);
   }
 
   /**
@@ -85,8 +83,6 @@ export default class GameStateManager {
    * Setup all game timers (event-based)
    */
   setupGameTimers(onCompleteGame) {
-    console.log('Setting up game timers...');
-
     // Update game timer every second - emit event instead of callback
     this.scene.time.addEvent({
       delay: 1000,
@@ -120,7 +116,6 @@ export default class GameStateManager {
     this.scene.time.addEvent({
       delay: GAME_CONSTANTS.SAFE_PERIOD_START,
       callback: () => {
-        console.log('Safe period ended');
         this.isInSafePeriod = false;
       },
       callbackScope: this.scene,
@@ -128,17 +123,14 @@ export default class GameStateManager {
     });
 
     // Scene change timer - switch scenes every 19 seconds
-    console.log('Setting up scene change timer with interval:', this.sceneChangeInterval, 'ms');
     this.sceneChangeTimer = this.scene.time.addEvent({
       delay: this.sceneChangeInterval,
       callback: () => {
-        console.log('⏰ Scene change timer fired!');
         this.switchScene();
       },
       callbackScope: this,
       loop: true
     });
-    console.log('Scene change timer created:', this.sceneChangeTimer);
   }
 
   /**
@@ -168,29 +160,15 @@ export default class GameStateManager {
     const currentTime = Date.now();
     const timeSinceStart = currentTime - this.startTime;
 
-    // iOS optimization: Reduce console logging for better performance
-    if (!this.isIOS) {
-      console.log('=== SWITCH SCENE CALLED ===');
-      console.log('Time since start:', timeSinceStart, 'ms');
-      console.log('isSwitchingScene:', this.isSwitchingScene);
-      console.log('isGameOver:', this.isGameOver);
-    }
-
     // Prevent concurrent scene switches
     if (this.isSwitchingScene) {
-      if (!this.isIOS) console.log('Scene switch blocked: already in progress');
       return;
     }
 
     if (this.isGameOver) {
-      if (!this.isIOS) console.log('Scene switch blocked: game over');
       return;
     }
 
-    if (!this.isIOS) {
-      console.log('Starting scene switch...');
-      console.log('Current scene:', this.sceneType, 'Index:', this.currentSceneIndex);
-    }
     this.isSwitchingScene = true;
 
     // Update last scene change time
@@ -198,7 +176,6 @@ export default class GameStateManager {
 
     try {
       // Clear current scene
-      console.log('Step 1: Clearing scene...');
       if (this.backgroundManager) {
         this.backgroundManager.clearScene(
           this.obstacleManager?.getObstacles(),
@@ -207,10 +184,6 @@ export default class GameStateManager {
       }
 
       // Move to next scene - ensure all 3 scenes appear in one game
-      console.log('Step 2: Selecting next scene...');
-      console.log('Visited scenes:', Array.from(this.visitedScenes));
-      console.log('Current scene index:', this.currentSceneIndex);
-      console.log('Current scene type:', this.sceneType);
 
       let nextSceneType;
 
@@ -220,17 +193,14 @@ export default class GameStateManager {
       if (unvisitedScenes.length > 0) {
         // Pick from unvisited scenes to ensure all 3 appear
         nextSceneType = Phaser.Utils.Array.GetRandom(unvisitedScenes);
-        console.log('Selecting unvisited scene:', nextSceneType);
       } else {
         // All scenes visited, now random but avoid immediate repeat
         const availableScenes = this.sceneTypes.filter((_, index) => index !== this.currentSceneIndex);
         if (availableScenes.length > 0) {
           nextSceneType = Phaser.Utils.Array.GetRandom(availableScenes);
-          console.log('All scenes visited, random selection:', nextSceneType);
         } else {
           // Fallback: cycle to next scene
           nextSceneType = this.sceneTypes[(this.currentSceneIndex + 1) % this.sceneTypes.length];
-          console.log('Cycling to next scene:', nextSceneType);
         }
       }
 
@@ -238,11 +208,6 @@ export default class GameStateManager {
       this.currentSceneIndex = this.sceneTypes.indexOf(nextSceneType);
       this.sceneType = nextSceneType;
       this.visitedScenes.add(nextSceneType);
-
-      console.log('Selected next scene:', nextSceneType, 'at index:', this.currentSceneIndex);
-      console.log('Total scenes visited:', this.visitedScenes.size, '/', this.sceneTypes.length);
-
-      console.log('Step 3: Creating new scene:', this.sceneType, 'Index:', this.currentSceneIndex);
 
       // Create new scene
       if (this.backgroundManager) {
@@ -254,20 +219,14 @@ export default class GameStateManager {
         const player = this.playerManager.getPlayer();
         if (player) {
           player.setDepth(50);
-          console.log('Player depth set to 50 (on top)');
         }
       }
-
-      console.log('Scene switch completed successfully');
     } catch (error) {
-      console.error('Error switching scene:', error);
-      console.error('Error stack:', error.stack);
+      // Scene switch error - silent handling for performance
     }
 
     // Reset flag immediately after scene creation (don't wait)
     this.isSwitchingScene = false;
-    console.log('Scene switch lock released immediately');
-    console.log('=== SWITCH SCENE DONE ===\n');
 
     // ✅ Emit scene changed event for UI notification
     gameEvents.emitEvent(GAME_EVENTS.SCENE_CHANGED, this.sceneType);
@@ -396,7 +355,6 @@ export default class GameStateManager {
             window.location.href = `wedding-info.html?score=${finalScore}&name=${encodeURIComponent(nameInput)}`;
           })
           .catch(err => {
-            console.error('Failed to submit score:', err);
             // Redirect anyway
             window.location.href = 'wedding-info.html';
           });

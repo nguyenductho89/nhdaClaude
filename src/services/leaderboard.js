@@ -15,20 +15,15 @@ try {
     db = getFirestore(app);
     functions = getFunctions(app);
     firebaseReady = true;
-    console.log('✅ Firebase initialized successfully');
-  } else {
-    console.warn('⚠️ Firebase not configured. Using mock data. Please set up .env file with Firebase credentials.');
   }
 } catch (error) {
-  console.error('❌ Firebase initialization error:', error);
-  console.warn('Using mock data instead.');
+  // Silent fallback to mock data
 }
 
 // Submit score to leaderboard
 export async function submitScore(name, score, time, items, device) {
   try {
     if (!firebaseReady || !db) {
-      console.log('🎮 Mock: Submit score', { name, score, time, items, device });
       // Save to localStorage as fallback
       const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
       const newScore = {
@@ -59,7 +54,6 @@ export async function submitScore(name, score, time, items, device) {
     };
 
     const docRef = await addDoc(collection(db, 'scores'), scoreData);
-    console.log('✅ Score submitted to Firebase:', docRef.id);
 
     return {
       success: true,
@@ -67,8 +61,6 @@ export async function submitScore(name, score, time, items, device) {
       message: 'Score saved successfully!'
     };
   } catch (error) {
-    console.error('❌ Error submitting score:', error);
-
     // Fallback to localStorage
     const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
     const newScore = {
@@ -96,7 +88,6 @@ export async function submitScore(name, score, time, items, device) {
 export async function getLeaderboard(period = 'all', limitCount = 100) {
   try {
     if (!firebaseReady || !db) {
-      console.log('🎮 Mock: Get leaderboard from localStorage');
       // Get from localStorage
       const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
 
@@ -151,11 +142,9 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
       });
     });
 
-    console.log(`✅ Loaded ${scores.length} scores from Firebase`);
     return scores;
 
   } catch (error) {
-    console.error('❌ Error getting leaderboard:', error);
 
     // Fallback to localStorage
     const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
@@ -167,7 +156,6 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
 export async function submitRSVP(data) {
   try {
     if (!firebaseReady || !db) {
-      console.log('🎮 Mock: Submit RSVP', data);
       // Save to localStorage
       const localRSVPs = JSON.parse(localStorage.getItem('gameRSVPs') || '[]');
       const newRSVP = {
@@ -188,7 +176,6 @@ export async function submitRSVP(data) {
     };
 
     const docRef = await addDoc(collection(db, 'rsvps'), rsvpData);
-    console.log('✅ RSVP submitted to Firebase:', docRef.id);
 
     return {
       success: true,
@@ -196,8 +183,6 @@ export async function submitRSVP(data) {
       message: 'RSVP saved successfully!'
     };
   } catch (error) {
-    console.error('❌ Error submitting RSVP:', error);
-
     // Fallback to localStorage
     const localRSVPs = JSON.parse(localStorage.getItem('gameRSVPs') || '[]');
     const newRSVP = {

@@ -75,9 +75,6 @@ export default class UIManager {
     this.deviceConfig = config;
     this.safeAreaInsets = insets;
     this.safePlayArea = playArea;
-    console.log('🎨 UIManager: Device Config:', config.deviceType);
-    console.log('🎨 UIManager: Safe Area Insets:', insets);
-    console.log('🎨 UIManager: Safe Play Area:', playArea);
   }
 
   /**
@@ -194,9 +191,6 @@ export default class UIManager {
     const leftMargin = config.margins.left + this.safeAreaInsets.left;
     const rightMargin = config.margins.right + this.safeAreaInsets.right;
     const bottomMargin = config.margins.bottom + this.safeAreaInsets.bottom;
-
-    console.log('🎨 UI Config:', config.deviceType);
-    console.log('🎨 UI Margins:', { topMargin, leftMargin, rightMargin, bottomMargin });
 
     // === LEFT COLUMN CONTAINER - Score and Distance ===
     this.scoreContainer = this.scene.add.container(leftMargin, topMargin);

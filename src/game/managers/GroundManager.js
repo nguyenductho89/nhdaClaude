@@ -24,7 +24,6 @@ export default class GroundManager {
    */
   setSafeAreaInsets(insets) {
     this.safeAreaInsets = insets;
-    console.log('🌍 GroundManager: Safe Area Insets set:', insets);
   }
 
   /**
@@ -39,13 +38,6 @@ export default class GroundManager {
 
     // Calculate groundY: position ground ABOVE bottom safe area
     this.groundY = height - groundHeight - safeAreaBottom;
-
-    console.log('🌍 Ground Position Calculation:');
-    console.log('  - Screen height:', height);
-    console.log('  - Ground height:', groundHeight);
-    console.log('  - Safe area bottom:', safeAreaBottom);
-    console.log('  - Ground Y position:', this.groundY);
-    console.log('  - Distance from bottom:', height - this.groundY);
 
     // Create a wide seamless ground texture
     // iOS optimization: Smaller texture width to reduce memory usage

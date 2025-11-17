@@ -41,7 +41,6 @@ export default class SceneBackgroundManager {
    */
   createParallaxBackground(sceneType) {
     // Create scene based on selected type
-    console.log('🎨 Creating background for scene:', sceneType);
     if (sceneType === 'street') {
       this.createStreetScene();
     } else if (sceneType === 'forest') {
@@ -428,8 +427,6 @@ export default class SceneBackgroundManager {
     const { width, height } = this.scene.scale;
     const { isMobile, isIOS } = this.detectDeviceType();
 
-    console.log('🌲 Creating forest scene...');
-
     // === MYSTICAL FOREST SCENE ===
 
     // 1. SKY - Forest canopy light filtering through
@@ -650,15 +647,12 @@ export default class SceneBackgroundManager {
         });
       }
     }
-
-    console.log('✨ Mystical forest scene created!');
   }
 
   /**
    * Clear all scene elements
    */
   clearScene(obstacles, collectibles) {
-    console.log('Clearing scene...');
 
     // Clear all scene-specific layers
     if (this.cloudsLayer) {
@@ -735,7 +729,6 @@ export default class SceneBackgroundManager {
           obstacle.setDepth(30);
         }
       });
-      console.log('✅ Obstacles kept:', obstacles.getLength());
     }
 
     if (collectibles) {
@@ -744,10 +737,7 @@ export default class SceneBackgroundManager {
           item.setDepth(30);
         }
       });
-      console.log('✅ Collectibles kept:', collectibles.getLength());
     }
-
-    console.log('Scene cleared successfully');
   }
 
   /**

@@ -89,8 +89,6 @@ export default class GameScene extends Phaser.Scene {
    * Continuously tries to maintain fullscreen mode
    */
   forceFullscreenOnMobile() {
-    console.log('🔒 Force fullscreen on mobile device');
-
     const requestFullscreen = () => {
       const element = document.documentElement;
 
@@ -100,7 +98,7 @@ export default class GameScene extends Phaser.Scene {
       // Also try browser's native fullscreen API
       if (element.requestFullscreen) {
         element.requestFullscreen().catch(err => {
-          console.log('Fullscreen request failed:', err);
+          // Silent error handling
         });
       } else if (element.webkitRequestFullscreen) { // Safari
         element.webkitRequestFullscreen();
@@ -132,7 +130,6 @@ export default class GameScene extends Phaser.Scene {
       const isGameOver = this.gameStateManager && this.gameStateManager.isOver();
       if (!isFullscreen && !isGameOver) {
         // User exited fullscreen during game - re-request after small delay
-        console.log('⚠️ Fullscreen exited, re-requesting...');
         setTimeout(() => {
           const stillPlaying = this.gameStateManager && !this.gameStateManager.isOver();
           if (stillPlaying) {
@@ -195,7 +192,6 @@ export default class GameScene extends Phaser.Scene {
 
       requireLandscapeOrientation({
         onLandscape: () => {
-          console.log('Landscape detected, resuming game...');
           this.isWaitingForLandscape = false;
 
           if (this.scene.isPaused()) {
@@ -239,7 +235,6 @@ export default class GameScene extends Phaser.Scene {
           }
         },
         onPortrait: () => {
-          console.log('Portrait detected, pausing game...');
           if (this.gameInitialized && !this.gameStateManager.isOver() && !this.isWaitingForLandscape) {
             this.isWaitingForLandscape = true;
             this.scene.pause();
@@ -270,7 +265,6 @@ export default class GameScene extends Phaser.Scene {
     // If not in landscape, pause immediately after initialization
     if (!isCurrentlyLandscape) {
       this.isWaitingForLandscape = true;
-      console.log('Starting in portrait mode - pausing after initialization');
       setTimeout(() => {
         this.scene.pause();
       }, 100);
@@ -284,10 +278,6 @@ export default class GameScene extends Phaser.Scene {
 
     // Get device-specific configuration
     this.deviceConfig = getDeviceConfig();
-    console.log('═══════════════════════════════════════════════');
-    console.log('🎮 GAME INITIALIZATION - Device Config');
-    console.log('═══════════════════════════════════════════════');
-    console.log('Device Type:', this.deviceConfig.deviceType);
 
     // Get device info and safe area insets
     logDeviceInfo();
@@ -295,16 +285,6 @@ export default class GameScene extends Phaser.Scene {
     // Get safe area insets (in landscape: left/right/bottom are critical)
     this.safeAreaInsets = getSafeAreaInsets();
     this.safePlayArea = getSafePlayArea(this.scale.width, this.scale.height);
-
-    console.log('─────────────────────────────────────────────');
-    console.log('📐 SCREEN & SAFE AREA INFO');
-    console.log('─────────────────────────────────────────────');
-    console.log('Screen Size:', `${this.scale.width}x${this.scale.height}`);
-    console.log('Safe Area Insets:', this.safeAreaInsets);
-    console.log('Safe Play Area:', this.safePlayArea);
-    console.log('Playable Width:', this.safePlayArea.width);
-    console.log('Playable Height:', this.safePlayArea.height);
-    console.log('═══════════════════════════════════════════════');
 
     // Force fullscreen on mobile devices
     // iOS: More aggressive fullscreen to maximize performance
@@ -382,7 +362,6 @@ export default class GameScene extends Phaser.Scene {
       // iOS: Don't create debug graphics even if debug mode is enabled
       // Safari WebGL has issues with frequent graphics.clear() calls
       this.debugGraphics = null;
-      console.log('🍎 iOS: Debug graphics disabled for performance');
     }
 
     // ✅ Setup game timers (event-based - no timer callback needed)

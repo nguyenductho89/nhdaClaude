@@ -14,7 +14,7 @@ export const iPhoneUIConfig = {
 
   // Safe area insets cho LANDSCAPE (đọc từ CSS env variables + fallback)
   getSafeAreaInsets: () => {
-    let top = 0, right = 0, bottom = 160, left = 0;
+    let top = 0, right = 0, bottom = 220, left = 0;
     return { top, right, bottom, left };
   },
 
@@ -37,8 +37,8 @@ export const iPhoneUIConfig = {
   // Jump button configuration
   jumpButton: {
     size: 80,
-    rightMargin: 15,  // Extra margin from right edge (cộng với home indicator)
-    bottomMargin: 10  // Margin from bottom (landscape không có navigation bar ở dưới)
+    rightMargin: 50,  // Extra margin from right edge (cộng với home indicator)
+    bottomMargin: 220  // Margin from bottom (landscape không có navigation bar ở dưới)
   },
 
   // Player positioning

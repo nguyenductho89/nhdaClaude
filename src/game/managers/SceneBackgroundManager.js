@@ -751,9 +751,9 @@ export default class SceneBackgroundManager {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     // On mobile, throttle non-critical layers
-    // iOS: every 3 frames (even more throttling)
+    // iOS: every 2 frames (same as Android) to prevent stutter
     // Android: every 2 frames
-    const throttleInterval = isIOS ? 3 : 2;
+    const throttleInterval = 2;
     const updateSlowLayers = !this.isMobile || (this.frameCount % throttleInterval === 0);
 
     // Clouds (slow) - throttled on mobile

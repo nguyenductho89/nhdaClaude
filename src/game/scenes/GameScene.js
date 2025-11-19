@@ -76,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
     // iOS performance optimizations
     this.frameCount = 0; // For throttling updates on iOS
     this.lastScoreUpdate = 0; // Cache score calculation on iOS
-    this.scoreUpdateInterval = this.isIOS ? 2 : 1; // Update score every 2 frames on iOS
+    this.scoreUpdateInterval = 1; // Update score every frame for smooth UI
 
     // Event listeners to cleanup (iOS memory optimization)
     this.eventListeners = [];
@@ -164,8 +164,8 @@ export default class GameScene extends Phaser.Scene {
           container.style.position = 'fixed';
           container.style.top = '0';
           container.style.left = '0';
-          container.style.width = '100vw';
-          container.style.height = '100vh';
+          container.style.width = '100%';
+          container.style.height = window.innerHeight + 'px';
           container.style.zIndex = '9999';
         }
       }
@@ -179,8 +179,8 @@ export default class GameScene extends Phaser.Scene {
       container.style.position = 'fixed';
       container.style.top = '0';
       container.style.left = '0';
-      container.style.width = '100vw';
-      container.style.height = '100vh';
+      container.style.width = '100%';
+      container.style.height = window.innerHeight + 'px';
       container.style.zIndex = '9999';
       container.style.backgroundColor = '#000';
     }
@@ -435,9 +435,8 @@ export default class GameScene extends Phaser.Scene {
     // Update distance (always needed)
     this.gameStateManager.updateDistance(deltaInSeconds);
 
-    // iOS optimization: Throttle score calculation (every 2 frames instead of every frame)
-    // Score updates are not visually critical at 60fps, so 30fps updates are fine
-    const shouldUpdateScore = (this.frameCount % this.scoreUpdateInterval === 0) || !this.isIOS;
+    // Update score every frame for smooth UI
+    const shouldUpdateScore = (this.frameCount % this.scoreUpdateInterval === 0);
     if (shouldUpdateScore) {
       // Update score
       const distanceScore = Math.floor(

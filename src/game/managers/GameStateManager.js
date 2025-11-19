@@ -30,12 +30,12 @@ export default class GameStateManager {
     this.sceneTypes = ['mountain-river', 'street', 'forest'];
     this.currentSceneIndex = Phaser.Math.Between(0, this.sceneTypes.length - 1);
     this.sceneType = this.sceneTypes[this.currentSceneIndex];
-    
+
     // iOS optimization: Longer scene change interval to reduce switching overhead
     const ua = navigator.userAgent;
     this.isIOS = /iPhone|iPad|iPod/i.test(ua);
     this.sceneChangeInterval = this.isIOS ? 25000 : 19000; // 25s on iOS vs 19s on others
-    
+
     this.isSwitchingScene = false;
     this.lastSceneChangeTime = 0;
     this.visitedScenes = new Set([this.sceneType]);
@@ -240,7 +240,7 @@ export default class GameStateManager {
   /**
    * Handle game over
    */
-  gameOver(player, itemsCollected) {
+  gameOver(score, player, itemsCollected) {
     if (this.isGameOver) return;
 
     this.isGameOver = true;
@@ -251,8 +251,8 @@ export default class GameStateManager {
     // Calculate final score
     const timeElapsed = Math.floor((Date.now() - this.startTime) / 1000);
 
-    // Show game over screen
-    this.showGameOverScreen(0, timeElapsed, false, itemsCollected);
+    // Show game over screen with actual score
+    this.showGameOverScreen(score, timeElapsed, false, itemsCollected);
   }
 
   /**
@@ -346,7 +346,12 @@ export default class GameStateManager {
 
     // Prompt for name (in real app, use HTML form)
     setTimeout(() => {
-      const nameInput = prompt('Nhập tên của bạn:', 'Khách mời');
+      const savedName = localStorage.getItem('user_display_name');
+      let nameInput = savedName;
+
+      if (!nameInput) {
+        nameInput = prompt('Nhập tên của bạn:', 'Khách mời');
+      }
 
       if (nameInput) {
         submitScore(nameInput, finalScore, timeElapsed, itemsCollected, getDeviceType())

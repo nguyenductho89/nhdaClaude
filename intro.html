@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -130,6 +132,7 @@
         opacity: 0;
         transform: translateY(20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -141,6 +144,7 @@
         opacity: 0;
         transform: scale(0.8);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -169,6 +173,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>THIỆP MỜI CƯỚI</h1>
@@ -184,6 +189,8 @@
 
     <a href="game.html" class="button">BẮT ĐẦU CHƠI</a>
     <a href="wedding-info.html" class="button secondary">XEM THÔNG TIN ĐÁM CƯỚI</a>
+    <button id="login-btn" class="button" style="background: #4285F4; display: none;">ĐĂNG NHẬP GOOGLE</button>
+    <div id="user-info" style="margin-top: 10px; font-size: 18px; display: none;"></div>
 
     <div class="controls-text" id="controls-text">
       Phím mũi tên: Di chuyển | Phím Space: Nhảy
@@ -208,5 +215,49 @@
       setTimeout(() => window.scrollTo(0, 0), 0);
     }
   </script>
+
+  <script type="module">
+    import { loginWithGoogle, getCurrentUser, isFirebaseReady } from './src/services/leaderboard.js';
+
+    const loginBtn = document.getElementById('login-btn');
+    const userInfo = document.getElementById('user-info');
+
+    // Check if Firebase is ready
+    // We need to wait a bit for the module to load and init
+    setTimeout(() => {
+      if (isFirebaseReady()) {
+        const user = getCurrentUser();
+        if (user) {
+          showUser(user);
+        } else {
+          loginBtn.style.display = 'inline-block';
+        }
+      } else {
+        console.log('Firebase not configured or not ready');
+      }
+    }, 1000);
+
+    loginBtn.addEventListener('click', async () => {
+      try {
+        const user = await loginWithGoogle();
+        if (user) {
+          showUser(user);
+          // Save user info to localStorage for game scene to use
+          localStorage.setItem('user_display_name', user.displayName);
+          localStorage.setItem('user_uid', user.uid);
+          localStorage.setItem('user_photo', user.photoURL);
+        }
+      } catch (error) {
+        alert('Đăng nhập thất bại: ' + error.message);
+      }
+    });
+
+    function showUser(user) {
+      loginBtn.style.display = 'none';
+      userInfo.style.display = 'block';
+      userInfo.textContent = `Xin chào, ${user.displayName}!`;
+    }
+  </script>
 </body>
+
 </html>

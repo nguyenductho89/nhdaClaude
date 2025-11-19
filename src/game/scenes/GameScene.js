@@ -397,6 +397,7 @@ export default class GameScene extends Phaser.Scene {
   handleGameOver() {
     this.gameStateManager.setCollision();
     this.gameStateManager.gameOver(
+      this.scoringSystem.getScore(),
       this.playerManager.getPlayer(),
       this.collectibleManager.getItemsCollected()
     );

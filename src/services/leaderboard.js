@@ -1,11 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, where, Timestamp } from 'firebase/firestore';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { firebaseConfig, isFirebaseConfigured } from '../config/firebase.js';
 
 let app;
 let db;
 let functions;
+let auth;
 let firebaseReady = false;
 
 // Initialize Firebase
@@ -14,32 +16,42 @@ try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     functions = getFunctions(app);
+    auth = getAuth(app);
     firebaseReady = true;
   }
 } catch (error) {
+  console.error('Firebase initialization error:', error);
   // Silent fallback to mock data
+}
+
+// Auth functions
+export async function loginWithGoogle() {
+  if (!firebaseReady || !auth) {
+    throw new Error('Firebase not initialized');
+  }
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error) {
+    console.error('Login failed:', error);
+    throw error;
+  }
+}
+
+export function getCurrentUser() {
+  return auth?.currentUser;
 }
 
 // Submit score to leaderboard
 export async function submitScore(name, score, time, items, device) {
   try {
     if (!firebaseReady || !db) {
-      // Save to localStorage as fallback
-      const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
-      const newScore = {
-        id: 'local-' + Date.now(),
-        name,
-        score,
-        time,
-        items,
-        device,
-        timestamp: new Date().toISOString()
+      console.error('Firebase not initialized');
+      return {
+        success: false,
+        message: 'Firebase not initialized. Cannot save score.'
       };
-      localScores.push(newScore);
-      // Keep only top 100 scores
-      localScores.sort((a, b) => b.score - a.score);
-      localStorage.setItem('gameScores', JSON.stringify(localScores.slice(0, 100)));
-      return { success: true, playerId: newScore.id };
     }
 
     // Submit to Firestore
@@ -53,7 +65,9 @@ export async function submitScore(name, score, time, items, device) {
       createdAt: new Date().toISOString()
     };
 
-    const docRef = await addDoc(collection(db, 'scores'), scoreData);
+    console.log('📊 Submitting score to Firestore:', scoreData);
+    const docRef = await addDoc(collection(db, 'players'), scoreData);
+    console.log('✅ Score saved successfully! ID:', docRef.id);
 
     return {
       success: true,
@@ -61,25 +75,10 @@ export async function submitScore(name, score, time, items, device) {
       message: 'Score saved successfully!'
     };
   } catch (error) {
-    // Fallback to localStorage
-    const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
-    const newScore = {
-      id: 'local-' + Date.now(),
-      name,
-      score,
-      time,
-      items,
-      device,
-      timestamp: new Date().toISOString()
-    };
-    localScores.push(newScore);
-    localScores.sort((a, b) => b.score - a.score);
-    localStorage.setItem('gameScores', JSON.stringify(localScores.slice(0, 100)));
-
+    console.error('Error saving score to Firestore:', error);
     return {
-      success: true,
-      playerId: newScore.id,
-      message: 'Score saved locally (Firebase error)'
+      success: false,
+      message: 'Error saving score to Firestore: ' + error.message
     };
   }
 }
@@ -88,24 +87,13 @@ export async function submitScore(name, score, time, items, device) {
 export async function getLeaderboard(period = 'all', limitCount = 100) {
   try {
     if (!firebaseReady || !db) {
-      // Get from localStorage
-      const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
-
-      if (localScores.length === 0) {
-        // Return mock data if no local scores
-        return [
-          { id: '1', name: 'Nguyễn Văn A', score: 2500, time: 180, device: 'mobile' },
-          { id: '2', name: 'Trần Thị B', score: 2300, time: 200, device: 'desktop' },
-          { id: '3', name: 'Lê Văn C', score: 2100, time: 190, device: 'mobile' }
-        ];
-      }
-
-      return localScores.slice(0, limitCount);
+      console.error('Firebase not initialized');
+      return [];
     }
 
     // Get from Firestore
     let q = query(
-      collection(db, 'scores'),
+      collection(db, 'players'),
       orderBy('score', 'desc'),
       limit(limitCount)
     );
@@ -115,7 +103,7 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       q = query(
-        collection(db, 'scores'),
+        collection(db, 'players'),
         where('timestamp', '>=', Timestamp.fromDate(today)),
         orderBy('timestamp', 'desc'),
         orderBy('score', 'desc'),
@@ -125,7 +113,7 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       q = query(
-        collection(db, 'scores'),
+        collection(db, 'players'),
         where('timestamp', '>=', Timestamp.fromDate(weekAgo)),
         orderBy('timestamp', 'desc'),
         orderBy('score', 'desc'),
@@ -142,13 +130,12 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
       });
     });
 
+    console.log(`📋 Loaded ${scores.length} scores from Firestore`);
     return scores;
 
   } catch (error) {
-
-    // Fallback to localStorage
-    const localScores = JSON.parse(localStorage.getItem('gameScores') || '[]');
-    return localScores.slice(0, limitCount);
+    console.error('Error getting leaderboard:', error);
+    return [];
   }
 }
 
@@ -156,16 +143,10 @@ export async function getLeaderboard(period = 'all', limitCount = 100) {
 export async function submitRSVP(data) {
   try {
     if (!firebaseReady || !db) {
-      // Save to localStorage
-      const localRSVPs = JSON.parse(localStorage.getItem('gameRSVPs') || '[]');
-      const newRSVP = {
-        id: 'local-rsvp-' + Date.now(),
-        ...data,
-        timestamp: new Date().toISOString()
+      return {
+        success: false,
+        message: 'Firebase not initialized. Cannot save RSVP.'
       };
-      localRSVPs.push(newRSVP);
-      localStorage.setItem('gameRSVPs', JSON.stringify(localRSVPs));
-      return { success: true, rsvpId: newRSVP.id };
     }
 
     // Submit to Firestore
@@ -175,7 +156,7 @@ export async function submitRSVP(data) {
       createdAt: new Date().toISOString()
     };
 
-    const docRef = await addDoc(collection(db, 'rsvps'), rsvpData);
+    const docRef = await addDoc(collection(db, 'rsvp'), rsvpData);
 
     return {
       success: true,
@@ -183,20 +164,10 @@ export async function submitRSVP(data) {
       message: 'RSVP saved successfully!'
     };
   } catch (error) {
-    // Fallback to localStorage
-    const localRSVPs = JSON.parse(localStorage.getItem('gameRSVPs') || '[]');
-    const newRSVP = {
-      id: 'local-rsvp-' + Date.now(),
-      ...data,
-      timestamp: new Date().toISOString()
-    };
-    localRSVPs.push(newRSVP);
-    localStorage.setItem('gameRSVPs', JSON.stringify(localRSVPs));
-
+    console.error('Error saving RSVP to Firestore:', error);
     return {
-      success: true,
-      rsvpId: newRSVP.id,
-      message: 'RSVP saved locally (Firebase error)'
+      success: false,
+      message: 'Error saving RSVP: ' + error.message
     };
   }
 }

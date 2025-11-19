@@ -1,10 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run dev:*)",
-      "Bash(mkdir:*)",
-      "Bash(move srcplayer.png publicplayer.png)",
-      "Bash(mv:*)"
+      "Bash(npm install:*)",
+      "Bash(firebase login:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []

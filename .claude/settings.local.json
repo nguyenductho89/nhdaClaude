@@ -5,7 +5,9 @@
       "Bash(firebase login:*)",
       "Bash(firebase projects:list:*)",
       "Bash(lsof:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "WebFetch(domain:www.landing.love)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
